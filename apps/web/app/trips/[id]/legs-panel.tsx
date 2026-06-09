@@ -1,6 +1,7 @@
 "use client";
 
 import type { LegPublic, MembershipRole, StopPublic } from "@traveltogether/types";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -79,6 +80,9 @@ export default function LegsPanel({
                   {stopLabel(leg.destination_stop_id, stops, origin)}
                 </span>
               </span>
+              <Link href={`/trips/${tripId}/legs/${leg.id}`} className="secondary-button">
+                Passagens
+              </Link>
               {isOrganizer && (
                 <button
                   type="button"
