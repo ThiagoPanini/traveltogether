@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
@@ -37,6 +38,16 @@ export default async function Home() {
         <p>
           DB <span data-state={health.db}>{health.db}</span>
         </p>
+      </section>
+
+      <section style={{ width: "min(100%, 64rem)", margin: "0 auto" }}>
+        <Link
+          className="primary-button trip-new-btn"
+          href="/trips"
+          style={{ display: "inline-flex" }}
+        >
+          Ver Viagens
+        </Link>
       </section>
     </main>
   );

@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@traveltogether/types": "workspace:*",
     "clsx": "^2.1.1",
     "jose": "^6.2.3",
     "next": "^15.1.0",

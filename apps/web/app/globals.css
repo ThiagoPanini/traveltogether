@@ -211,3 +211,128 @@ input {
 .status-strip span[data-state="error"] {
   color: var(--danger);
 }
+
+/* ── trips ─────────────────────────────────────────────── */
+
+.trips-shell {
+  min-height: 100dvh;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  display: grid;
+  align-content: start;
+  gap: 1.5rem;
+}
+
+.trips-header {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: clamp(1rem, 4vw, 3rem);
+}
+
+.trips-header h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.55rem, 5vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.trip-new-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  min-height: 2.5rem;
+  text-decoration: none;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: var(--r-btn);
+}
+
+.trips-empty {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  color: var(--text-muted);
+}
+
+.trips-list {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.trip-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  transition: border-color 0.15s;
+}
+
+.trip-card:hover {
+  border-color: var(--border-strong);
+}
+
+.trip-card-link {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.trip-card-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.trip-card-origin {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.trip-card-role {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.trip-card-role[data-role="member"] {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+.trip-detail-origin {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+}
+
+.trip-detail-desc {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  color: var(--text-muted);
+}
+
+.trip-detail-section {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+}
+
+.trip-detail-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
