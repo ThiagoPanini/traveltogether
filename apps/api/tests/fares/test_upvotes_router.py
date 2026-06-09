@@ -70,9 +70,7 @@ def _create_fare(client: TestClient, headers: dict[str, str]) -> dict[str, objec
     return fare_res.json()
 
 
-def test_post_upvote_adds_upvote(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_post_upvote_adds_upvote(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
     fare = _create_fare(client, headers)
     res = client.post(f"/fares/{fare['id']}/upvote", headers=headers)

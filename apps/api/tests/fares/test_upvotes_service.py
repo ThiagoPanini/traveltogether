@@ -62,9 +62,7 @@ def fare_id_fixture(session: Session, user: User, leg: Leg) -> uuid.UUID:
     return fare.id
 
 
-def test_toggle_upvote_adds_upvote(
-    session: Session, user: User, fare_id: uuid.UUID
-) -> None:
+def test_toggle_upvote_adds_upvote(session: Session, user: User, fare_id: uuid.UUID) -> None:
     count, voted = toggle_upvote(session, fare_id, user.id)
     assert voted is True
     assert count == 1
