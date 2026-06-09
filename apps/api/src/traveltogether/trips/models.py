@@ -69,6 +69,38 @@ class PendingMembershipPublic(SQLModel):
     invited_at: datetime
 
 
+class Stop(SQLModel, table=True):  # type: ignore[call-arg]
+    __tablename__: ClassVar[str] = "stops"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    trip_id: uuid.UUID = Field(foreign_key="trips.id")
+    city: str
+    arrival_date: datetime | None = None
+    departure_date: datetime | None = None
+    order: int
+
+
+class StopPublic(SQLModel):
+    id: uuid.UUID
+    trip_id: uuid.UUID
+    city: str
+    arrival_date: datetime | None
+    departure_date: datetime | None
+    order: int
+
+
+class StopCreate(SQLModel):
+    city: str
+    arrival_date: datetime | None = None
+    departure_date: datetime | None = None
+
+
+class StopUpdate(SQLModel):
+    city: str | None = None
+    arrival_date: datetime | None = None
+    departure_date: datetime | None = None
+
+
 class TripCreate(SQLModel):
     name: str
     description: str = ""

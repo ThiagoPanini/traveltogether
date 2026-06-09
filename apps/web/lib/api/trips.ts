@@ -2,6 +2,7 @@ import type {
   AddMemberResponse,
   MembershipRole,
   MembersListResponse,
+  StopPublic,
   TripPublic,
   TripWithMembership,
 } from "@traveltogether/types";
@@ -152,5 +153,93 @@ export async function removeMember(
     return response.status === 204;
   } catch {
     return false;
+  }
+}
+
+export async function getStops(accessToken: string, tripId: string): Promise<StopPublic[]> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as StopPublic[];
+  } catch {
+    return [];
+  }
+}
+
+export async function createStop(
+  accessToken: string,
+  tripId: string,
+  data: { city: string; arrival_date?: string | null; departure_date?: string | null },
+): Promise<StopPublic | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as StopPublic;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateStop(
+  accessToken: string,
+  tripId: string,
+  stopId: string,
+  data: Partial<{ city: string; arrival_date: string | null; departure_date: string | null }>,
+): Promise<StopPublic | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}`, {
+      method: "PATCH",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as StopPublic;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteStop(
+  accessToken: string,
+  tripId: string,
+  stopId: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}`, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    return response.status === 204;
+  } catch {
+    return false;
+  }
+}
+
+export async function reorderStops(
+  accessToken: string,
+  tripId: string,
+  stopIds: string[],
+): Promise<StopPublic[]> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops`, {
+      method: "PATCH",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ stop_ids: stopIds }),
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as StopPublic[];
+  } catch {
+    return [];
   }
 }

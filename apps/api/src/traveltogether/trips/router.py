@@ -23,6 +23,10 @@ from traveltogether.trips.models import (
     MembershipPublic,
     MembershipRole,
     PendingMembershipPublic,
+    Stop,
+    StopCreate,
+    StopPublic,
+    StopUpdate,
     Trip,
     TripCreate,
     TripPublic,
@@ -33,6 +37,13 @@ from traveltogether.trips.service import (
     get_trip_membership,
     list_user_trips,
     update_trip,
+)
+from traveltogether.trips.stops_service import (
+    create_stop,
+    delete_stop,
+    list_stops,
+    reorder_stops,
+    update_stop,
 )
 
 router = APIRouter(prefix="/trips", tags=["trips"])
@@ -264,4 +275,108 @@ def delete_member(
     except LastOrganizerError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ── stops ─────────────────────────────────────────────────────────────────────
+
+
+class ReorderStopsRequest(BaseModel):
+    stop_ids: list[uuid.UUID]
+
+
+def _get_stop_or_404(session: Session, trip_id: uuid.UUID, stop_id: uuid.UUID) -> Stop:
+    stop = session.get(Stop, stop_id)
+    if stop is None or stop.trip_id != trip_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="stop not found")
+    return stop
+
+
+@router.post(
+    "/{trip_id}/stops",
+    status_code=status.HTTP_201_CREATED,
+    response_model=StopPublic,
+)
+def post_stop(
+    trip_id: uuid.UUID,
+    body: StopCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> StopPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can manage stops",
+        )
+    stop = create_stop(session, trip_id, body.city, body.arrival_date, body.departure_date)
+    return StopPublic.model_validate(stop)
+
+
+@router.get("/{trip_id}/stops", response_model=list[StopPublic])
+def get_stops(
+    trip_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[StopPublic]:
+    _get_trip_or_404(session, trip_id)
+    _require_membership(session, trip_id, current_user.id)
+    return [StopPublic.model_validate(s) for s in list_stops(session, trip_id)]
+
+
+@router.patch("/{trip_id}/stops", response_model=list[StopPublic])
+def patch_stops_reorder(
+    trip_id: uuid.UUID,
+    body: ReorderStopsRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[StopPublic]:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can reorder stops",
+        )
+    reorder_stops(session, trip_id, body.stop_ids)
+    return [StopPublic.model_validate(s) for s in list_stops(session, trip_id)]
+
+
+@router.patch("/{trip_id}/stops/{stop_id}", response_model=StopPublic)
+def patch_stop(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    body: StopUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> StopPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit stops",
+        )
+    stop = _get_stop_or_404(session, trip_id, stop_id)
+    updated = update_stop(session, stop, body.city, body.arrival_date, body.departure_date)
+    return StopPublic.model_validate(updated)
+
+
+@router.delete("/{trip_id}/stops/{stop_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_stop_route(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> Response:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can delete stops",
+        )
+    stop = _get_stop_or_404(session, trip_id, stop_id)
+    delete_stop(session, stop)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
