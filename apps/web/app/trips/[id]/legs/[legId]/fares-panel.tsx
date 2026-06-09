@@ -1,10 +1,10 @@
 "use client";
 
-import type { FareQuotePublic, MembershipRole } from "@traveltogether/types";
+import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltogether/types";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { createFare, deleteFare } from "@/lib/api/fares";
+import { createFare, deleteFare, getUpvote, toggleUpvote } from "@/lib/api/fares";
 
 interface Props {
   legId: string;
@@ -33,7 +33,28 @@ export default function FaresPanel({ legId, initialFares, role, accessToken }: P
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [upvotes, setUpvotes] = useState<Record<string, UpvoteResponse>>({});
   const isOrganizer = role === "organizer";
+
+  useEffect(() => {
+    async function loadUpvotes() {
+      const results = await Promise.all(initialFares.map((f) => getUpvote(accessToken, f.id)));
+      const map: Record<string, UpvoteResponse> = {};
+      initialFares.forEach((f, i) => {
+        const r = results[i];
+        if (r) map[f.id] = r;
+      });
+      setUpvotes(map);
+    }
+    void loadUpvotes();
+  }, [accessToken, initialFares]);
+
+  async function handleUpvote(fareId: string) {
+    const result = await toggleUpvote(accessToken, fareId);
+    if (result) {
+      setUpvotes((prev) => ({ ...prev, [fareId]: result }));
+    }
+  }
 
   function setField(key: keyof typeof EMPTY_FORM, value: string | boolean) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -96,16 +117,25 @@ export default function FaresPanel({ legId, initialFares, role, accessToken }: P
                 {fare.checked_baggage && <span>Despacho incluso</span>}
               </div>
               {fare.notes && <p className="fare-notes">{fare.notes}</p>}
-              {isOrganizer && (
+              <div className="fare-actions">
                 <button
                   type="button"
-                  onClick={() => handleDelete(fare.id)}
-                  disabled={loading}
-                  className="danger-button"
+                  onClick={() => handleUpvote(fare.id)}
+                  className={upvotes[fare.id]?.voted ? "upvote-button voted" : "upvote-button"}
                 >
-                  Remover
+                  ▲ {upvotes[fare.id]?.count ?? 0}
                 </button>
-              )}
+                {isOrganizer && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(fare.id)}
+                    disabled={loading}
+                    className="danger-button"
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

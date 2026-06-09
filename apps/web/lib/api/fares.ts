@@ -1,4 +1,9 @@
-import type { FareQuoteCreate, FareQuotePublic, FareQuoteUpdate } from "@traveltogether/types";
+import type {
+  FareQuoteCreate,
+  FareQuotePublic,
+  FareQuoteUpdate,
+  UpvoteResponse,
+} from "@traveltogether/types";
 
 const apiUrl = () => process.env.TRAVELTOGETHER_API_URL ?? "http://localhost:8000";
 
@@ -72,5 +77,38 @@ export async function deleteFare(
     return response.status === 204;
   } catch {
     return false;
+  }
+}
+
+export async function getUpvote(
+  accessToken: string,
+  fareId: string,
+): Promise<UpvoteResponse | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/fares/${fareId}/upvote`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as UpvoteResponse;
+  } catch {
+    return null;
+  }
+}
+
+export async function toggleUpvote(
+  accessToken: string,
+  fareId: string,
+): Promise<UpvoteResponse | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/fares/${fareId}/upvote`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as UpvoteResponse;
+  } catch {
+    return null;
   }
 }

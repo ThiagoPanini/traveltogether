@@ -139,3 +139,8 @@ export interface FareQuoteUpdate {
   link?: string | null;
   notes?: string | null;
 }
+
+export interface UpvoteResponse {
+  count: number;
+  voted: boolean;
+}
