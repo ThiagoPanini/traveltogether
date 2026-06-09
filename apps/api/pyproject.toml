@@ -8,6 +8,8 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "sqlalchemy>=2.0",
     "psycopg2-binary>=2.9",
+    "pyjwt[crypto]>=2.8",
+    "sqlmodel>=0.0.22",
 ]
 
 [dependency-groups]
@@ -17,6 +19,7 @@ dev = [
     "pyright>=1.1.390",
     "types-psycopg2>=2.9",
     "httpx2>=2.3.0",
+    "pytest-anyio>=0.0.0",
 ]
 
 [build-system]

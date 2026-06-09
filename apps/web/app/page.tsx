@@ -1,39 +1,43 @@
+import { redirect } from "next/navigation";
+
+import { getAuthSession } from "@/auth";
+import { getCurrentUser } from "@/lib/api/current-user";
 import { getApiHealth } from "@/lib/api/health";
 
+import { LogoutButton } from "./logout-button";
+
 export default async function Home() {
-  const health = await getApiHealth();
+  const session = await getAuthSession();
+  if (!session?.apiAccessToken) redirect("/login");
+
+  const [health, currentUser] = await Promise.all([
+    getApiHealth(),
+    getCurrentUser(session.apiAccessToken),
+  ]);
+
+  if (!currentUser) redirect("/login");
 
   return (
-    <main
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100dvh",
-        flexDirection: "column",
-        gap: "1rem",
-      }}
-    >
-      <h1
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "1.5rem",
-          color: "var(--accent-text)",
-          margin: 0,
-        }}
-      >
-        traveltogether
-      </h1>
-      <p style={{ color: "var(--text-muted)", margin: 0, fontFamily: "var(--font-mono)" }}>
-        api{" "}
-        <span style={{ color: health.status === "ok" ? "var(--success)" : "var(--danger)" }}>
-          {health.status}
-        </span>
-        {" · "}db{" "}
-        <span style={{ color: health.db === "ok" ? "var(--success)" : "var(--danger)" }}>
-          {health.db}
-        </span>
-      </p>
+    <main className="home-shell">
+      <section className="home-topbar">
+        <div>
+          <p className="eyebrow">traveltogether</p>
+          <h1>Viagem em construção</h1>
+        </div>
+        <LogoutButton />
+      </section>
+
+      <section className="status-strip" aria-label="Status da plataforma">
+        <p>
+          Sessão <strong>{currentUser.email}</strong>
+        </p>
+        <p>
+          API <span data-state={health.status}>{health.status}</span>
+        </p>
+        <p>
+          DB <span data-state={health.db}>{health.db}</span>
+        </p>
+      </section>
     </main>
   );
 }

@@ -52,3 +52,162 @@ body {
   background: var(--accent-soft);
   color: var(--text);
 }
+
+button,
+input {
+  font: inherit;
+}
+
+.auth-shell,
+.home-shell {
+  min-height: 100dvh;
+  padding: clamp(1rem, 2.5vw, 2rem);
+}
+
+.auth-shell {
+  display: grid;
+  place-items: center;
+}
+
+.login-panel {
+  width: min(100%, 24rem);
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.login-heading {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.login-heading p,
+.eyebrow {
+  margin: 0;
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.login-heading h1,
+.home-topbar h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.55rem, 5vw, 2.4rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.login-field {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+
+.login-field input {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0 0.85rem;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+}
+
+.login-field input:focus {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.primary-button {
+  color: #041015;
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.secondary-button {
+  padding: 0 1rem;
+  color: var(--text);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+.primary-button:hover:not(:disabled),
+.secondary-button:hover {
+  background: var(--accent-hover);
+  color: #041015;
+}
+
+.login-message {
+  min-height: 1.25rem;
+  margin: 0;
+  color: var(--danger);
+}
+
+.home-shell {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.home-topbar,
+.status-strip {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+}
+
+.home-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: clamp(1rem, 4vw, 3rem);
+}
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.status-strip p {
+  margin: 0;
+}
+
+.status-strip strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.status-strip span[data-state="ok"] {
+  color: var(--success);
+}
+
+.status-strip span[data-state="error"] {
+  color: var(--danger);
+}
