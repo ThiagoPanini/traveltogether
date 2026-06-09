@@ -3,14 +3,15 @@
 import uuid
 from collections.abc import Iterator
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
-import traveltogether.fares.models  # noqa: F401
-import traveltogether.identity.models  # noqa: F401
-import traveltogether.trips.models  # noqa: F401
+import traveltogether.fares.models  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import traveltogether.identity.models  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import traveltogether.trips.models  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from traveltogether.fares.chosen_service import mark_chosen
 from traveltogether.fares.models import FareQuote
 from traveltogether.fares.service import create_fare_quote
@@ -34,7 +35,7 @@ def _make_fare(session: Session, leg_id: uuid.UUID) -> FareQuote:
         session=session,
         leg_id=leg_id,
         registered_by=uuid.uuid4(),
-        value="100.00",
+        value=Decimal("100.00"),
         currency="BRL",
         flight_date=datetime(2025, 9, 1, 10, 0, 0),
         duration_minutes=120,
