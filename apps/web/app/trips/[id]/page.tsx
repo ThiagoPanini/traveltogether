@@ -39,6 +39,17 @@ export default async function TripDetailPage({ params }: Props) {
         <h2>Itinerário</h2>
         <p className="trips-empty">Paradas e Trajetos chegam no próximo issue.</p>
       </section>
+
+      <section className="trip-detail-section">
+        <h2>Membros</h2>
+        <Link
+          className="secondary-button trip-new-btn"
+          href={`/trips/${id}/members`}
+          style={{ display: "inline-flex" }}
+        >
+          Gerenciar Membros
+        </Link>
+      </section>
     </main>
   );
 }

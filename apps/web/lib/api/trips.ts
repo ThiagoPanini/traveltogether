@@ -1,4 +1,10 @@
-import type { TripPublic, TripWithMembership } from "@traveltogether/types";
+import type {
+  AddMemberResponse,
+  MembershipRole,
+  MembersListResponse,
+  TripPublic,
+  TripWithMembership,
+} from "@traveltogether/types";
 
 const apiUrl = () => process.env.TRAVELTOGETHER_API_URL ?? "http://localhost:8000";
 
@@ -74,4 +80,77 @@ export async function updateTrip(
   }
   if (!response.ok) return null;
   return (await response.json()) as TripPublic;
+}
+
+export async function getTripMembers(
+  accessToken: string,
+  tripId: string,
+): Promise<MembersListResponse | null> {
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl()}/trips/${tripId}/members`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  return (await response.json()) as MembersListResponse;
+}
+
+export async function addMember(
+  accessToken: string,
+  tripId: string,
+  email: string,
+): Promise<AddMemberResponse | null> {
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl()}/trips/${tripId}/members`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ email }),
+    });
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  return (await response.json()) as AddMemberResponse;
+}
+
+export async function updateMemberRole(
+  accessToken: string,
+  tripId: string,
+  membershipId: string,
+  role: MembershipRole,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/members/${membershipId}`, {
+      method: "PATCH",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ role }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function removeMember(
+  accessToken: string,
+  tripId: string,
+  membershipId: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/members/${membershipId}`, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    return response.status === 204;
+  } catch {
+    return false;
+  }
 }

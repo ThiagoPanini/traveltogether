@@ -51,6 +51,24 @@ class MembershipPublic(SQLModel):
     joined_at: datetime
 
 
+class PendingMembership(SQLModel, table=True):  # type: ignore[call-arg]
+    __tablename__: ClassVar[str] = "pending_memberships"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    trip_id: uuid.UUID = Field(foreign_key="trips.id")
+    email: str = Field(index=True)
+    role: MembershipRole = MembershipRole.member
+    invited_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class PendingMembershipPublic(SQLModel):
+    id: uuid.UUID
+    trip_id: uuid.UUID
+    email: str
+    role: MembershipRole
+    invited_at: datetime
+
+
 class TripCreate(SQLModel):
     name: str
     description: str = ""

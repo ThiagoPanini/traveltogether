@@ -40,4 +40,9 @@ def get_current_user(
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    # resolve pending memberships for this new user (lazy import to avoid circular deps)
+    from traveltogether.trips.members_service import resolve_pending_memberships  # noqa: PLC0415
+
+    resolve_pending_memberships(session, user)
     return user

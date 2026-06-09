@@ -23,3 +23,27 @@ export interface TripWithMembership {
   trip: TripPublic;
   membership: MembershipPublic;
 }
+
+export interface PendingMembershipPublic {
+  id: string;
+  trip_id: string;
+  email: string;
+  role: MembershipRole;
+  invited_at: string;
+}
+
+export interface MemberWithUser {
+  membership: MembershipPublic;
+  email: string;
+}
+
+export interface MembersListResponse {
+  members: MemberWithUser[];
+  pending: PendingMembershipPublic[];
+}
+
+export interface AddMemberResponse {
+  pending: boolean;
+  membership: MembershipPublic | null;
+  pending_membership: PendingMembershipPublic | null;
+}

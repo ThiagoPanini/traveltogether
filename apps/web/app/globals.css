@@ -336,3 +336,95 @@ input {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* ── members ────────────────────────────────────────────── */
+
+.members-panel {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+}
+
+.members-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+}
+
+.member-email {
+  flex: 1;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.member-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.member-btn {
+  min-height: 1.9rem;
+  padding: 0 0.75rem;
+  font-size: 0.8rem;
+}
+
+.member-btn.danger {
+  color: var(--danger);
+  border-color: rgba(240, 97, 109, 0.3);
+}
+
+.members-invite-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.members-invite-input {
+  flex: 1;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  font: inherit;
+}
+
+.members-invite-input:focus {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.members-ok-msg {
+  margin: 0.35rem 0 0;
+  color: var(--success);
+  font-size: 0.85rem;
+}
+
+.trip-card-role[data-role="pending"] {
+  background: rgba(255, 200, 0, 0.08);
+  color: #c8a600;
+}
