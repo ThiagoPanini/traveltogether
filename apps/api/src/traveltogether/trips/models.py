@@ -101,6 +101,38 @@ class StopUpdate(SQLModel):
     departure_date: datetime | None = None
 
 
+class Leg(SQLModel, table=True):  # type: ignore[call-arg]
+    __tablename__: ClassVar[str] = "legs"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    trip_id: uuid.UUID = Field(foreign_key="trips.id")
+    origin_stop_id: uuid.UUID | None = Field(default=None, foreign_key="stops.id")
+    destination_stop_id: uuid.UUID | None = Field(default=None, foreign_key="stops.id")
+    target_date: datetime | None = None
+    order: int
+
+
+class LegPublic(SQLModel):
+    id: uuid.UUID
+    trip_id: uuid.UUID
+    origin_stop_id: uuid.UUID | None
+    destination_stop_id: uuid.UUID | None
+    target_date: datetime | None
+    order: int
+
+
+class LegCreate(SQLModel):
+    origin_stop_id: uuid.UUID | None = None
+    destination_stop_id: uuid.UUID | None = None
+    target_date: datetime | None = None
+
+
+class LegUpdate(SQLModel):
+    origin_stop_id: uuid.UUID | None = None
+    destination_stop_id: uuid.UUID | None = None
+    target_date: datetime | None = None
+
+
 class TripCreate(SQLModel):
     name: str
     description: str = ""

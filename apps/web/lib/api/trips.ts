@@ -1,5 +1,6 @@
 import type {
   AddMemberResponse,
+  LegPublic,
   MembershipRole,
   MembersListResponse,
   StopPublic,
@@ -241,5 +242,54 @@ export async function reorderStops(
     return (await response.json()) as StopPublic[];
   } catch {
     return [];
+  }
+}
+
+export async function getLegs(accessToken: string, tripId: string): Promise<LegPublic[]> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/legs`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as LegPublic[];
+  } catch {
+    return [];
+  }
+}
+
+export async function createLeg(
+  accessToken: string,
+  tripId: string,
+  data: { origin_stop_id?: string | null; destination_stop_id?: string | null },
+): Promise<LegPublic | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/legs`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as LegPublic;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteLeg(
+  accessToken: string,
+  tripId: string,
+  legId: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/legs/${legId}`, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    return response.status === 204;
+  } catch {
+    return false;
   }
 }

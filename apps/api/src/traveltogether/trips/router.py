@@ -10,6 +10,14 @@ from sqlmodel import Session
 from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
 from traveltogether.platform.db import get_session
+from traveltogether.trips.legs_service import (
+    StopAnchoredError,
+    check_stop_not_anchored,
+    create_leg,
+    delete_leg,
+    list_legs,
+    update_leg,
+)
 from traveltogether.trips.members_service import (
     LastOrganizerError,
     MemberAlreadyExists,
@@ -19,6 +27,10 @@ from traveltogether.trips.members_service import (
     remove_member_from_trip,
 )
 from traveltogether.trips.models import (
+    Leg,
+    LegCreate,
+    LegPublic,
+    LegUpdate,
     Membership,
     MembershipPublic,
     MembershipRole,
@@ -378,5 +390,103 @@ def delete_stop_route(
             detail="only organizers can delete stops",
         )
     stop = _get_stop_or_404(session, trip_id, stop_id)
+    try:
+        check_stop_not_anchored(session, stop)
+    except StopAnchoredError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     delete_stop(session, stop)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ── legs ──────────────────────────────────────────────────────────────────────
+
+
+def _get_leg_or_404(session: Session, trip_id: uuid.UUID, leg_id: uuid.UUID) -> Leg:
+    leg = session.get(Leg, leg_id)
+    if leg is None or leg.trip_id != trip_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="leg not found")
+    return leg
+
+
+@router.post(
+    "/{trip_id}/legs",
+    status_code=status.HTTP_201_CREATED,
+    response_model=LegPublic,
+)
+def post_leg(
+    trip_id: uuid.UUID,
+    body: LegCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> LegPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can manage legs",
+        )
+    leg = create_leg(
+        session,
+        trip_id,
+        body.origin_stop_id,
+        body.destination_stop_id,
+        body.target_date,
+    )
+    return LegPublic.model_validate(leg)
+
+
+@router.get("/{trip_id}/legs", response_model=list[LegPublic])
+def get_legs(
+    trip_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[LegPublic]:
+    _get_trip_or_404(session, trip_id)
+    _require_membership(session, trip_id, current_user.id)
+    return [LegPublic.model_validate(leg) for leg in list_legs(session, trip_id)]
+
+
+@router.patch("/{trip_id}/legs/{leg_id}", response_model=LegPublic)
+def patch_leg(
+    trip_id: uuid.UUID,
+    leg_id: uuid.UUID,
+    body: LegUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> LegPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit legs",
+        )
+    leg = _get_leg_or_404(session, trip_id, leg_id)
+    updated = update_leg(
+        session,
+        leg,
+        body.origin_stop_id,
+        body.destination_stop_id,
+        body.target_date,
+    )
+    return LegPublic.model_validate(updated)
+
+
+@router.delete("/{trip_id}/legs/{leg_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_leg_route(
+    trip_id: uuid.UUID,
+    leg_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> Response:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can delete legs",
+        )
+    leg = _get_leg_or_404(session, trip_id, leg_id)
+    delete_leg(session, leg)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
