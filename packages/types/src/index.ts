@@ -47,3 +47,28 @@ export interface AddMemberResponse {
   membership: MembershipPublic | null;
   pending_membership: PendingMembershipPublic | null;
 }
+
+export interface StopPublic {
+  id: string;
+  trip_id: string;
+  city: string;
+  arrival_date: string | null;
+  departure_date: string | null;
+  order: number;
+}
+
+export interface StopCreate {
+  city: string;
+  arrival_date?: string | null;
+  departure_date?: string | null;
+}
+
+export interface StopUpdate {
+  city?: string | null;
+  arrival_date?: string | null;
+  departure_date?: string | null;
+}
+
+export interface ReorderStopsRequest {
+  stop_ids: string[];
+}
