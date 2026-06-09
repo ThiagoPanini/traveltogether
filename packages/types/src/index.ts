@@ -93,3 +93,49 @@ export interface LegUpdate {
   destination_stop_id?: string | null;
   target_date?: string | null;
 }
+
+export interface FareQuotePublic {
+  id: string;
+  leg_id: string;
+  registered_by: string;
+  created_at: string;
+  value: string;
+  currency: string;
+  flight_date: string;
+  duration_minutes: number;
+  stops: number;
+  checked_baggage: boolean;
+  origin_airport: string;
+  destination_airport: string;
+  airline: string;
+  link: string;
+  notes: string;
+}
+
+export interface FareQuoteCreate {
+  value: string;
+  currency: string;
+  flight_date: string;
+  duration_minutes: number;
+  stops?: number;
+  checked_baggage?: boolean;
+  origin_airport: string;
+  destination_airport: string;
+  airline: string;
+  link?: string;
+  notes?: string;
+}
+
+export interface FareQuoteUpdate {
+  value?: string | null;
+  currency?: string | null;
+  flight_date?: string | null;
+  duration_minutes?: number | null;
+  stops?: number | null;
+  checked_baggage?: boolean | null;
+  origin_airport?: string | null;
+  destination_airport?: string | null;
+  airline?: string | null;
+  link?: string | null;
+  notes?: string | null;
+}

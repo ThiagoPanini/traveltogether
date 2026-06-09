@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from traveltogether.fares.router import router as fares_router
 from traveltogether.identity.router import router as identity_router
 from traveltogether.platform.db import check_db, create_db_schema
 from traveltogether.trips.router import router as trips_router
@@ -24,6 +25,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 app = FastAPI(title="traveltogether API", version="0.0.0", lifespan=lifespan)
 app.include_router(identity_router)
 app.include_router(trips_router)
+app.include_router(fares_router)
 
 
 @app.get("/health")
