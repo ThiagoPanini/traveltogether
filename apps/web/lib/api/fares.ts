@@ -112,3 +112,21 @@ export async function toggleUpvote(
     return null;
   }
 }
+
+export async function chooseFare(
+  accessToken: string,
+  legId: string,
+  fareId: string,
+): Promise<FareQuotePublic | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/legs/${legId}/fares/${fareId}/choose`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as FareQuotePublic;
+  } catch {
+    return null;
+  }
+}

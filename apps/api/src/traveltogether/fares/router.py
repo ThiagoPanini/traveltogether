@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 from sqlmodel import Session
 
+from traveltogether.fares.chosen_service import mark_chosen
 from traveltogether.fares.models import (
     FareQuote,
     FareQuoteCreate,
@@ -45,6 +46,12 @@ def _require_trip_membership(session: Session, leg: Leg, user_id: uuid.UUID) -> 
     membership = get_trip_membership(session, leg.trip_id, user_id)
     if membership is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not a member")
+
+
+def _require_organizer(session: Session, leg: Leg, user_id: uuid.UUID) -> None:
+    membership = get_trip_membership(session, leg.trip_id, user_id)
+    if membership is None or membership.role != "organizer":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="organizer required")
 
 
 def _get_fare_or_404(session: Session, leg_id: uuid.UUID, fare_id: uuid.UUID) -> FareQuote:
@@ -138,6 +145,20 @@ def delete_fare(
     fare = _get_fare_or_404(session, leg_id, fare_id)
     delete_fare_quote(session, fare)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{leg_id}/fares/{fare_id}/choose", response_model=FareQuotePublic)
+def post_choose(
+    leg_id: uuid.UUID,
+    fare_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> FareQuotePublic:
+    leg = _get_leg_or_404(session, leg_id)
+    _require_organizer(session, leg, current_user.id)
+    _get_fare_or_404(session, leg_id, fare_id)
+    updated = mark_chosen(session, leg_id, fare_id)
+    return FareQuotePublic.model_validate(updated)
 
 
 # ── upvotes ───────────────────────────────────────────────────────────────────

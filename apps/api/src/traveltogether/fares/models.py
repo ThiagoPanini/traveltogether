@@ -26,6 +26,7 @@ class FareQuote(SQLModel, table=True):  # type: ignore[call-arg]
     airline: str
     link: str = ""
     notes: str = ""
+    is_chosen: bool = False
 
 
 class FareQuotePublic(SQLModel):
@@ -44,6 +45,7 @@ class FareQuotePublic(SQLModel):
     airline: str
     link: str
     notes: str
+    is_chosen: bool
 
 
 class Upvote(SQLModel, table=True):  # type: ignore[call-arg]

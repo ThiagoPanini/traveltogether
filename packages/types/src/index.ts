@@ -110,6 +110,7 @@ export interface FareQuotePublic {
   airline: string;
   link: string;
   notes: string;
+  is_chosen: boolean;
 }
 
 export interface FareQuoteCreate {

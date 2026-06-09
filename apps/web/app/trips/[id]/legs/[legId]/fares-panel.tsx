@@ -4,7 +4,7 @@ import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltog
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { createFare, deleteFare, getUpvote, toggleUpvote } from "@/lib/api/fares";
+import { chooseFare, createFare, deleteFare, getUpvote, toggleUpvote } from "@/lib/api/fares";
 
 interface Props {
   legId: string;
@@ -93,6 +93,13 @@ export default function FaresPanel({ legId, initialFares, role, accessToken }: P
     router.refresh();
   }
 
+  async function handleChoose(fareId: string) {
+    const updated = await chooseFare(accessToken, legId, fareId);
+    if (updated) {
+      setFares((prev) => prev.map((f) => (f.id === fareId ? updated : { ...f, is_chosen: false })));
+    }
+  }
+
   return (
     <div className="fares-panel">
       {fares.length === 0 ? (
@@ -100,9 +107,10 @@ export default function FaresPanel({ legId, initialFares, role, accessToken }: P
       ) : (
         <ul className="fares-list">
           {fares.map((fare) => (
-            <li key={fare.id} className="fare-item">
+            <li key={fare.id} className={fare.is_chosen ? "fare-item fare-chosen" : "fare-item"}>
               <div className="fare-header">
                 <strong>{fare.airline}</strong>
+                {fare.is_chosen && <span className="chosen-badge">Escolhida</span>}
                 <span className="fare-value">
                   {fare.currency} {fare.value}
                 </span>
@@ -126,14 +134,24 @@ export default function FaresPanel({ legId, initialFares, role, accessToken }: P
                   ▲ {upvotes[fare.id]?.count ?? 0}
                 </button>
                 {isOrganizer && (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(fare.id)}
-                    disabled={loading}
-                    className="danger-button"
-                  >
-                    Remover
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleChoose(fare.id)}
+                      disabled={loading}
+                      className={fare.is_chosen ? "choose-button chosen" : "choose-button"}
+                    >
+                      {fare.is_chosen ? "Desmarcar" : "Escolher"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(fare.id)}
+                      disabled={loading}
+                      className="danger-button"
+                    >
+                      Remover
+                    </button>
+                  </>
                 )}
               </div>
             </li>
