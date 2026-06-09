@@ -2,15 +2,16 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
-import { getFares } from "@/lib/api/fares";
+import { getFares, getUpvote } from "@/lib/api/fares";
 import { getTrip } from "@/lib/api/trips";
-import FaresPanel from "./fares-panel";
+import type { FareRow } from "@/lib/compare-fares";
+import ComparePanel from "./compare-panel";
 
 interface Props {
   params: Promise<{ id: string; legId: string }>;
 }
 
-export default async function LegFaresPage({ params }: Props) {
+export default async function ComparePage({ params }: Props) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
 
@@ -21,6 +22,14 @@ export default async function LegFaresPage({ params }: Props) {
   ]);
   if (!data) notFound();
 
+  const token = session.apiAccessToken;
+  const upvotes = await Promise.all(fares.map((f) => getUpvote(token, f.id)));
+
+  const rows: FareRow[] = fares.map((f, i) => ({
+    ...f,
+    upvote_count: upvotes[i]?.count ?? 0,
+  }));
+
   const { trip, membership } = data;
 
   return (
@@ -28,23 +37,14 @@ export default async function LegFaresPage({ params }: Props) {
       <header className="trips-header">
         <div>
           <p className="eyebrow">
-            <Link href={`/trips/${id}`}>← {trip.name}</Link>
+            <Link href={`/trips/${id}/legs/${legId}`}>← Passagens</Link>
           </p>
-          <h1>Pesquisas de Passagem</h1>
+          <h1>Comparar Pesquisas</h1>
+          <p className="trips-empty">{trip.name}</p>
         </div>
-        {fares.length > 0 && (
-          <Link href={`/trips/${id}/legs/${legId}/compare`} className="secondary-button">
-            Comparar
-          </Link>
-        )}
       </header>
 
-      <FaresPanel
-        legId={legId}
-        initialFares={fares}
-        role={membership.role}
-        accessToken={session.apiAccessToken}
-      />
+      <ComparePanel legId={legId} initialRows={rows} role={membership.role} />
     </main>
   );
 }
