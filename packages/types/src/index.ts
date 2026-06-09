@@ -72,3 +72,24 @@ export interface StopUpdate {
 export interface ReorderStopsRequest {
   stop_ids: string[];
 }
+
+export interface LegPublic {
+  id: string;
+  trip_id: string;
+  origin_stop_id: string | null;
+  destination_stop_id: string | null;
+  target_date: string | null;
+  order: number;
+}
+
+export interface LegCreate {
+  origin_stop_id?: string | null;
+  destination_stop_id?: string | null;
+  target_date?: string | null;
+}
+
+export interface LegUpdate {
+  origin_stop_id?: string | null;
+  destination_stop_id?: string | null;
+  target_date?: string | null;
+}

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
-import { getStops, getTrip } from "@/lib/api/trips";
+import { getLegs, getStops, getTrip } from "@/lib/api/trips";
+import LegsPanel from "./legs-panel";
 import StopsPanel from "./stops-panel";
 
 interface Props {
@@ -14,9 +15,10 @@ export default async function TripDetailPage({ params }: Props) {
   if (!session?.apiAccessToken) redirect("/login");
 
   const { id } = await params;
-  const [data, stops] = await Promise.all([
+  const [data, stops, legs] = await Promise.all([
     getTrip(session.apiAccessToken, id),
     getStops(session.apiAccessToken, id),
+    getLegs(session.apiAccessToken, id),
   ]);
   if (!data) notFound();
 
@@ -40,10 +42,22 @@ export default async function TripDetailPage({ params }: Props) {
       {trip.description && <p className="trip-detail-desc">{trip.description}</p>}
 
       <section className="trip-detail-section">
-        <h2>Itinerário</h2>
+        <h2>Paradas</h2>
         <StopsPanel
           tripId={id}
           initialStops={stops}
+          role={membership.role}
+          accessToken={session.apiAccessToken}
+        />
+      </section>
+
+      <section className="trip-detail-section">
+        <h2>Trajetos</h2>
+        <LegsPanel
+          tripId={id}
+          origin={trip.origin}
+          initialLegs={legs}
+          stops={stops}
           role={membership.role}
           accessToken={session.apiAccessToken}
         />
