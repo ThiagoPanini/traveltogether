@@ -56,6 +56,13 @@ def list_fare_quotes(session: Session, leg_id: uuid.UUID) -> list[FareQuote]:
     )
 
 
+def leg_has_fare_quotes(session: Session, leg_id: uuid.UUID) -> bool:
+    return (
+        session.exec(select(FareQuote.id).where(col(FareQuote.leg_id) == leg_id)).first()
+        is not None
+    )
+
+
 def update_fare_quote(
     session: Session,
     fare: FareQuote,

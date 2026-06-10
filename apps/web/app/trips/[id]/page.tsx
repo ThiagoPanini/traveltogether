@@ -132,7 +132,6 @@ export default async function TripDetailPage({ params }: Props) {
             origin={trip.origin}
             initialLegs={legs}
             stops={stops}
-            role={membership.role}
             fareCounts={fareCounts}
           />
         </section>

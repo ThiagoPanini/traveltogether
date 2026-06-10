@@ -11,11 +11,11 @@ from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
 from traveltogether.platform.db import get_session
 from traveltogether.trips.legs_service import (
-    StopAnchoredError,
-    check_stop_not_anchored,
+    LegHasFareError,
     create_leg,
     delete_leg,
     list_legs,
+    sync_legs_from_stops,
     update_leg,
 )
 from traveltogether.trips.members_service import (
@@ -339,7 +339,7 @@ def post_stop(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> StopPublic:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
@@ -354,11 +354,18 @@ def post_stop(
             body.arrival_date,
             body.departure_date,
             airport_code=body.airport_code,
+            commit=False,
         )
+        sync_legs_from_stops(session, trip, commit=False)
+        session.commit()
+        session.refresh(stop)
     except StopDateError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
         ) from exc
+    except LegHasFareError as exc:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return StopPublic.model_validate(stop)
 
 
@@ -380,14 +387,20 @@ def patch_stops_reorder(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[StopPublic]:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="only organizers can reorder stops",
         )
-    reorder_stops(session, trip_id, body.stop_ids)
+    reorder_stops(session, trip_id, body.stop_ids, commit=False)
+    try:
+        sync_legs_from_stops(session, trip, commit=False)
+        session.commit()
+    except LegHasFareError as exc:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return [StopPublic.model_validate(s) for s in list_stops(session, trip_id)]
 
 
@@ -430,7 +443,7 @@ def delete_stop_route(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> Response:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
@@ -438,11 +451,14 @@ def delete_stop_route(
             detail="only organizers can delete stops",
         )
     stop = _get_stop_or_404(session, trip_id, stop_id)
+    remaining_stops = [s for s in list_stops(session, trip_id) if s.id != stop.id]
     try:
-        check_stop_not_anchored(session, stop)
-    except StopAnchoredError as exc:
+        sync_legs_from_stops(session, trip, stops=remaining_stops, commit=False)
+        delete_stop(session, stop, commit=False)
+        session.commit()
+    except LegHasFareError as exc:
+        session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    delete_stop(session, stop)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -37,17 +37,21 @@ def list_stops(session: Session, trip_id: uuid.UUID) -> list[Stop]:
     )
 
 
-def delete_stop(session: Session, stop: Stop) -> None:
+def delete_stop(session: Session, stop: Stop, *, commit: bool = True) -> None:
     session.delete(stop)
-    session.commit()
+    if commit:
+        session.commit()
 
 
-def reorder_stops(session: Session, trip_id: uuid.UUID, stop_ids: list[uuid.UUID]) -> None:
+def reorder_stops(
+    session: Session, trip_id: uuid.UUID, stop_ids: list[uuid.UUID], *, commit: bool = True
+) -> None:
     stops = {s.id: s for s in list_stops(session, trip_id)}
     for new_order, stop_id in enumerate(stop_ids, start=1):
         stops[stop_id].order = new_order
         session.add(stops[stop_id])
-    session.commit()
+    if commit:
+        session.commit()
 
 
 def update_stop(
@@ -86,6 +90,7 @@ def create_stop(
     departure_date: datetime | None = None,
     *,
     airport_code: str | None = None,
+    commit: bool = True,
 ) -> Stop:
     trip = session.get(Trip, trip_id)
     if trip:
@@ -103,6 +108,9 @@ def create_stop(
         order=current_count + 1,
     )
     session.add(stop)
-    session.commit()
-    session.refresh(stop)
+    if commit:
+        session.commit()
+        session.refresh(stop)
+    else:
+        session.flush()
     return stop
