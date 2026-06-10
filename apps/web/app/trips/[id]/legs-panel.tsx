@@ -2,6 +2,7 @@
 
 import type { LegPublic, MembershipRole, StopPublic } from "@traveltogether/types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createLegAction, deleteLegAction } from "./actions";
@@ -29,6 +30,7 @@ function displayCode(value: string): string {
 }
 
 export default function LegsPanel({ tripId, origin, initialLegs, stops, role, fareCounts }: Props) {
+  const router = useRouter();
   const [legs, setLegs] = useState<LegPublic[]>(initialLegs);
   const [originId, setOriginId] = useState<string>("");
   const [destId, setDestId] = useState<string>("");
