@@ -23,16 +23,32 @@ const TRIP: import("@traveltogether/types").TripWithMembership = {
   },
 };
 
+const TRIP_SUMMARY: import("@traveltogether/types").TripSummary = {
+  ...TRIP,
+  stops: [
+    {
+      id: "stop-1",
+      trip_id: "trip-1",
+      city: "Lisboa",
+      airport_code: "LIS",
+      arrival_date: null,
+      departure_date: null,
+      order: 1,
+    },
+  ],
+  cover_image_url: null,
+};
+
 describe("getTrips", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("retorna lista de viagens com token válido", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([TRIP]) }),
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([TRIP_SUMMARY]) }),
     );
 
-    await expect(getTrips("token")).resolves.toEqual([TRIP]);
+    await expect(getTrips("token")).resolves.toEqual([TRIP_SUMMARY]);
     expect(fetch).toHaveBeenCalledWith("http://localhost:8000/trips", expect.any(Object));
   });
 

@@ -27,6 +27,11 @@ export interface TripWithMembership {
   membership: MembershipPublic;
 }
 
+export interface TripSummary extends TripWithMembership {
+  stops: StopPublic[];
+  cover_image_url: string | null;
+}
+
 export interface PendingMembershipPublic {
   id: string;
   trip_id: string;

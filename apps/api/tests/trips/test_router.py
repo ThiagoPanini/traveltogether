@@ -79,6 +79,46 @@ def test_get_trips_returns_user_trips(client: TestClient, monkeypatch: pytest.Mo
     assert names == {"Trip A", "Trip B"}
 
 
+def test_get_trips_returns_summary_with_ordered_stops(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip_res = client.post(
+        "/trips",
+        json={
+            "name": "Euro",
+            "description": "",
+            "origin": "São Paulo",
+            "airport_code": "GRU",
+            "start_date": "2025-07-01",
+            "end_date": "2025-07-20",
+        },
+        headers=headers,
+    )
+    trip_id = trip_res.json()["trip"]["id"]
+    first = client.post(
+        f"/trips/{trip_id}/stops",
+        json={"city": "Lisboa", "airport_code": "lis"},
+        headers=headers,
+    ).json()
+    second = client.post(
+        f"/trips/{trip_id}/stops",
+        json={"city": "Barcelona", "airport_code": "bcn"},
+        headers=headers,
+    ).json()
+
+    response = client.get("/trips", headers=headers)
+
+    assert response.status_code == 200
+    [summary] = response.json()
+    assert summary["trip"]["airport_code"] == "GRU"
+    assert summary["trip"]["start_date"] == "2025-07-01"
+    assert summary["trip"]["end_date"] == "2025-07-20"
+    assert summary["cover_image_url"] is None
+    assert [stop["id"] for stop in summary["stops"]] == [first["id"], second["id"]]
+    assert [stop["airport_code"] for stop in summary["stops"]] == ["LIS", "BCN"]
+
+
 def test_get_trips_returns_empty_list_for_new_user(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
