@@ -9,6 +9,7 @@ import {
   deleteStop,
   reorderStops,
   updateStop,
+  uploadStopCoverImage,
   uploadTripCoverImage,
 } from "@/lib/api/trips";
 
@@ -45,6 +46,14 @@ export async function updateStopAction(
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
   return updateStop(session.apiAccessToken, tripId, stopId, data);
+}
+
+export async function updateStopCoverImageAction(tripId: string, stopId: string, data: FormData) {
+  const session = await getAuthSession();
+  if (!session?.apiAccessToken) redirect("/login");
+  const result = await uploadStopCoverImage(session.apiAccessToken, tripId, stopId, data);
+  revalidatePath(`/trips/${tripId}`);
+  return result;
 }
 
 export async function reorderStopsAction(tripId: string, stopIds: string[]) {

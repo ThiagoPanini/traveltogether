@@ -13,6 +13,7 @@ from traveltogether.platform.db import get_session
 from traveltogether.platform.object_storage import ObjectStorageConfigError, ObjectStorageError
 from traveltogether.trips.cover_images import (
     CoverImageValidationError,
+    update_stop_cover_image,
     update_trip_cover_image,
 )
 from traveltogether.trips.legs_service import (
@@ -483,6 +484,38 @@ def patch_stop(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
+    return StopPublic.model_validate(updated)
+
+
+@router.post("/{trip_id}/stops/{stop_id}/cover-image", response_model=StopPublic)
+def post_stop_cover_image(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> StopPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit stop cover images",
+        )
+    stop = _get_stop_or_404(session, trip_id, stop_id)
+    content = file.file.read()
+    try:
+        updated = update_stop_cover_image(session, stop, content, file.content_type or "")
+    except CoverImageValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except ObjectStorageConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+    except ObjectStorageError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     return StopPublic.model_validate(updated)
 
 

@@ -65,6 +65,8 @@ export interface StopPublic {
   airport_code: string | null;
   arrival_date: string | null;
   departure_date: string | null;
+  cover_image_key: string | null;
+  cover_image_url: string | null;
   order: number;
 }
 

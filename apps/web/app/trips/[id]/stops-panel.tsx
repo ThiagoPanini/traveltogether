@@ -9,6 +9,7 @@ import {
   deleteStopAction,
   reorderStopsAction,
   updateStopAction,
+  updateStopCoverImageAction,
 } from "./actions";
 
 interface Props {
@@ -114,6 +115,19 @@ export default function StopsPanel({ tripId, initialStops, role }: Props) {
     router.refresh();
   }
 
+  async function handleCoverUpload(e: React.FormEvent<HTMLFormElement>, stopId: string) {
+    e.preventDefault();
+    setLoading(true);
+    const form = e.currentTarget;
+    const updated = await updateStopCoverImageAction(tripId, stopId, new FormData(form));
+    if (updated) {
+      setStops((prev) => prev.map((s) => (s.id === stopId ? updated : s)));
+      form.reset();
+    }
+    setLoading(false);
+    router.refresh();
+  }
+
   async function handleMoveUp(index: number) {
     if (index === 0) return;
     const reordered = [...stops];
@@ -198,14 +212,26 @@ export default function StopsPanel({ tripId, initialStops, role }: Props) {
               ) : (
                 <>
                   <div className="cover" data-tone={coverTone(stop.city, index)}>
+                    {stop.cover_image_url && (
+                      // biome-ignore lint/performance/noImgElement: R2/CDN URL is environment-owned and served directly.
+                      <img
+                        alt={`Foto de capa de ${stop.city}`}
+                        className="cover-img"
+                        src={stop.cover_image_url}
+                      />
+                    )}
                     <span className="cover-skyline" />
-                    <span className="cover-note">foto · parada</span>
+                    <span className="cover-note">
+                      {stop.airport_code ?? displayCode(stop.city)}
+                    </span>
                     <span className="cover-caption">{stop.city}</span>
                   </div>
                   <div className="stop-body">
                     <div className="stop-city">
                       {stop.city}
-                      <span className="stop-code">{displayCode(stop.city)}</span>
+                      <span className="stop-code">
+                        {stop.airport_code ?? displayCode(stop.city)}
+                      </span>
                     </div>
                     <div className="stop-date">
                       {formatDate(stop.arrival_date) ?? "Data a definir"}
@@ -222,6 +248,23 @@ export default function StopsPanel({ tripId, initialStops, role }: Props) {
                   </div>
                   {isOrganizer && (
                     <div className="stop-actions">
+                      <form
+                        className="cover-upload-form"
+                        encType="multipart/form-data"
+                        onSubmit={(e) => handleCoverUpload(e, stop.id)}
+                      >
+                        <input
+                          aria-label={`Foto de capa de ${stop.city}`}
+                          className="cover-upload-input"
+                          name="file"
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          required
+                        />
+                        <button type="submit" disabled={loading} className="secondary-button">
+                          Editar foto
+                        </button>
+                      </form>
                       <button
                         type="button"
                         onClick={() => handleMoveUp(index)}

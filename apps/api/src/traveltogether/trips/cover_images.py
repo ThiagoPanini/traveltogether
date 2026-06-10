@@ -7,7 +7,7 @@ from collections.abc import Callable
 from sqlmodel import Session
 
 from traveltogether.platform.object_storage import StoredObject, upload_object
-from traveltogether.trips.models import Trip
+from traveltogether.trips.models import Stop, Trip
 
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
@@ -69,3 +69,24 @@ def update_trip_cover_image(
     session.commit()
     session.refresh(trip)
     return trip
+
+
+def update_stop_cover_image(
+    session: Session,
+    stop: Stop,
+    content: bytes,
+    content_type: str,
+    *,
+    store_object: Callable[[str, bytes, str], StoredObject] | None = None,
+) -> Stop:
+    extension = _validate_image(content, content_type)
+    key = f"trips/{stop.trip_id}/stops/{stop.id}/cover/{uuid.uuid4()}{extension}"
+    uploader = store_object or upload_object
+    stored = uploader(key, content, content_type)
+
+    stop.cover_image_key = stored.key
+    stop.cover_image_url = stored.url
+    session.add(stop)
+    session.commit()
+    session.refresh(stop)
+    return stop

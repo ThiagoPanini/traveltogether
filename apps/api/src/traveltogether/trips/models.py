@@ -88,6 +88,8 @@ class Stop(SQLModel, table=True):  # type: ignore[call-arg]
     airport_code: str | None = None
     arrival_date: datetime | None = None
     departure_date: datetime | None = None
+    cover_image_key: str | None = None
+    cover_image_url: str | None = None
     order: int
 
 
@@ -98,6 +100,8 @@ class StopPublic(SQLModel):
     airport_code: str | None
     arrival_date: datetime | None
     departure_date: datetime | None
+    cover_image_key: str | None
+    cover_image_url: str | None
     order: int
 
 

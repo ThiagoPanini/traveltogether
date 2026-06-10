@@ -241,6 +241,26 @@ export async function updateStop(
   }
 }
 
+export async function uploadStopCoverImage(
+  accessToken: string,
+  tripId: string,
+  stopId: string,
+  data: FormData,
+): Promise<StopPublic | null> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}/cover-image`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authOnlyHeaders(accessToken),
+      body: data,
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as StopPublic;
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteStop(
   accessToken: string,
   tripId: string,
