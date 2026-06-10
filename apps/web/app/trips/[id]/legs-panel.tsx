@@ -1,7 +1,7 @@
 "use client";
 
 import type { LegPublic, MembershipRole, StopPublic } from "@traveltogether/types";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 
 import { createLegAction, deleteLegAction } from "./actions";
@@ -28,15 +28,7 @@ function displayCode(value: string): string {
   return (letters.slice(0, 3) || "LEG").padEnd(3, "X");
 }
 
-export default function LegsPanel({
-  tripId,
-  origin,
-  initialLegs,
-  stops,
-  role,
-  fareCounts,
-}: Props) {
-  const router = useRouter();
+export default function LegsPanel({ tripId, origin, initialLegs, stops, role, fareCounts }: Props) {
   const [legs, setLegs] = useState<LegPublic[]>(initialLegs);
   const [originId, setOriginId] = useState<string>("");
   const [destId, setDestId] = useState<string>("");
@@ -82,49 +74,35 @@ export default function LegsPanel({
             const originLabel = stopLabel(leg.origin_stop_id, stops, origin);
             const destLabel = stopLabel(leg.destination_stop_id, stops, origin);
             const count = fareCounts[leg.id] ?? 0;
-            const open = () => router.push(`/trips/${tripId}/legs/${leg.id}`);
             return (
-              <li
-                key={leg.id}
-                className="leg-item"
-                onClick={open}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    open();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <span className="ticket-ic" aria-hidden="true">
-                  🎫
-                </span>
-                <span className="leg-main">
-                  <span className="leg-route">
-                    {displayCode(originLabel)}
-                    <span className="leg-arrow">→</span>
-                    {displayCode(destLabel)}
+              <li key={leg.id} className="leg-item">
+                <Link href={`/trips/${tripId}/legs/${leg.id}`} className="leg-item-link">
+                  <span className="ticket-ic" aria-hidden="true">
+                    🎫
                   </span>
-                  <span className="leg-cities">
-                    {originLabel} → {destLabel}
+                  <span className="leg-main">
+                    <span className="leg-route">
+                      {displayCode(originLabel)}
+                      <span className="leg-arrow">→</span>
+                      {displayCode(destLabel)}
+                    </span>
+                    <span className="leg-cities">
+                      {originLabel} → {destLabel}
+                    </span>
                   </span>
-                </span>
-                <span className="leg-spacer" />
-                {count === 0 ? (
-                  <span className="lr-empty">sem passagens →</span>
-                ) : (
-                  <span className="lr-count">
-                    {count} {count === 1 ? "pesquisa" : "pesquisas"} →
-                  </span>
-                )}
+                  <span className="leg-spacer" />
+                  {count === 0 ? (
+                    <span className="lr-empty">sem passagens →</span>
+                  ) : (
+                    <span className="lr-count">
+                      {count} {count === 1 ? "pesquisa" : "pesquisas"} →
+                    </span>
+                  )}
+                </Link>
                 {isOrganizer && (
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(leg.id);
-                    }}
+                    onClick={() => handleDelete(leg.id)}
                     disabled={loading}
                     className="danger-button btn-sm"
                   >

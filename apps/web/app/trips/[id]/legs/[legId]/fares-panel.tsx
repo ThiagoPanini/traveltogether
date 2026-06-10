@@ -295,7 +295,9 @@ export default function FaresPanel({
                 <div className="tk-stub">
                   <span className="currency">{fare.currency}</span>
                   <span className="price">{formatMoney(fare).replace(/^R\$\s?/, "")}</span>
-                  <span className="by">{new Date(fare.created_at).toLocaleDateString("pt-BR")}</span>
+                  <span className="by">
+                    {new Date(fare.created_at).toLocaleDateString("pt-BR")}
+                  </span>
                 </div>
               </li>
             );
@@ -347,11 +349,7 @@ export default function FaresPanel({
       {isOrganizer && (
         <>
           {!showForm && (
-            <button
-              className="secondary-button"
-              onClick={() => setShowForm(true)}
-              type="button"
-            >
+            <button className="secondary-button" onClick={() => setShowForm(true)} type="button">
               + Registrar pesquisa
             </button>
           )}
