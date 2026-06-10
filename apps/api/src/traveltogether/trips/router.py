@@ -48,7 +48,7 @@ from traveltogether.trips.service import (
     TripPeriodError,
     create_trip,
     get_trip_membership,
-    list_user_trips,
+    list_user_trip_summaries,
     update_trip,
 )
 from traveltogether.trips.stops_service import (
@@ -66,6 +66,13 @@ router = APIRouter(prefix="/trips", tags=["trips"])
 class TripWithMembershipResponse(BaseModel):
     trip: TripPublic
     membership: MembershipPublic
+
+
+class TripSummaryResponse(BaseModel):
+    trip: TripPublic
+    membership: MembershipPublic
+    stops: list[StopPublic]
+    cover_image_url: str | None = None
 
 
 def _get_trip_or_404(session: Session, trip_id: uuid.UUID) -> Trip:
@@ -109,18 +116,19 @@ def post_trip(
     )
 
 
-@router.get("", response_model=list[TripWithMembershipResponse])
+@router.get("", response_model=list[TripSummaryResponse])
 def get_trips(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
-) -> list[TripWithMembershipResponse]:
-    rows = list_user_trips(session, current_user.id)
+) -> list[TripSummaryResponse]:
+    rows = list_user_trip_summaries(session, current_user.id)
     return [
-        TripWithMembershipResponse(
+        TripSummaryResponse(
             trip=TripPublic.model_validate(trip),
             membership=MembershipPublic.model_validate(membership),
+            stops=[StopPublic.model_validate(stop) for stop in stops],
         )
-        for trip, membership in rows
+        for trip, membership, stops in rows
     ]
 
 

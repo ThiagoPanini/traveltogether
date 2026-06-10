@@ -13,6 +13,17 @@ function displayCode(value: string): string {
   return (letters.slice(0, 3) || "TT").padEnd(3, "X");
 }
 
+function formatDateRange(startDate: string | null, endDate: string | null): string {
+  if (!startDate && !endDate) return "Datas a definir";
+  const format = (value: string) =>
+    new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+    });
+  if (startDate && endDate) return `${format(startDate)} - ${format(endDate)}`;
+  return format(startDate ?? endDate ?? "");
+}
+
 function coverTone(value: string): number {
   return [...value].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 5;
 }
@@ -41,29 +52,45 @@ export default async function TripsPage() {
           <p className="trips-empty">Nenhuma viagem ainda. Emita o primeiro cartão.</p>
         ) : (
           <ul className="trips-list">
-            {items.map(({ trip, membership }) => {
-              const originCode = displayCode(trip.origin);
-              const tripCode = displayCode(trip.name);
+            {items.map(({ trip, membership, stops }) => {
+              const route = [
+                {
+                  key: "origin",
+                  code: trip.airport_code ?? displayCode(trip.origin),
+                  city: trip.origin,
+                },
+                ...stops.map((stop) => ({
+                  key: stop.id,
+                  code: stop.airport_code ?? displayCode(stop.city),
+                  city: stop.city,
+                })),
+              ];
+              const stopCount = stops.length;
               return (
                 <li key={trip.id} className="bp bp-card">
                   <Link href={`/trips/${trip.id}`} className="bp-card-link">
                     <div className="cover" data-tone={coverTone(trip.name)}>
                       <span className="cover-skyline" />
-                      <span className="cover-note">foto · destino</span>
+                      <span className="cover-note">
+                        {formatDateRange(trip.start_date, trip.end_date)}
+                      </span>
                       <span className="cover-caption">{trip.name}</span>
                     </div>
-                    <div className="bp-route">
-                      <span className="bp-iata">{originCode}</span>
-                      <span className="bp-path" aria-hidden="true">
-                        <span className="line" />
-                        <span className="plane">✈</span>
-                      </span>
-                      <span className="bp-iata">{tripCode}</span>
-                    </div>
                     <span className="bp-name">{trip.name}</span>
-                    <span className="bp-meta">
-                      <span>Origem {trip.origin}</span>
-                      <span>{new Date(trip.created_at).toLocaleDateString("pt-BR")}</span>
+                    <span className="bp-route-summary">
+                      {route.map((point, index) => (
+                        <span className="bp-route-seg" key={point.key}>
+                          <span className="bp-route-point">
+                            <span className="bp-iata">{point.code}</span>
+                            <span className="bp-city">{point.city}</span>
+                          </span>
+                          {index < route.length - 1 && (
+                            <span className="bp-connector" aria-hidden="true">
+                              ✈
+                            </span>
+                          )}
+                        </span>
+                      ))}
                     </span>
                     <span className="perf" />
                     <span className="bp-stub">
@@ -74,8 +101,12 @@ export default async function TripsPage() {
                         </span>
                       </span>
                       <span>
-                        <span className="stub-label">origem</span>
-                        <span className="stub-value">{originCode}</span>
+                        <span className="stub-label">rota</span>
+                        <span className="stub-value">
+                          {stopCount === 0
+                            ? "sem paradas"
+                            : `${stopCount} ${stopCount === 1 ? "parada" : "paradas"}`}
+                        </span>
                       </span>
                     </span>
                   </Link>

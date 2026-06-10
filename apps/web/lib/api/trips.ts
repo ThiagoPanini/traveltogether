@@ -5,6 +5,7 @@ import type {
   MembersListResponse,
   StopPublic,
   TripPublic,
+  TripSummary,
   TripWithMembership,
 } from "@traveltogether/types";
 
@@ -14,7 +15,7 @@ function authHeaders(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" };
 }
 
-export async function getTrips(accessToken: string): Promise<TripWithMembership[]> {
+export async function getTrips(accessToken: string): Promise<TripSummary[]> {
   let response: Response;
   try {
     response = await fetch(`${apiUrl()}/trips`, {
@@ -25,7 +26,7 @@ export async function getTrips(accessToken: string): Promise<TripWithMembership[
     return [];
   }
   if (!response.ok) return [];
-  return (await response.json()) as TripWithMembership[];
+  return (await response.json()) as TripSummary[];
 }
 
 export async function getTrip(

@@ -3,9 +3,9 @@
 import uuid
 from datetime import date
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
-from traveltogether.trips.models import Membership, MembershipRole, Trip
+from traveltogether.trips.models import Membership, MembershipRole, Stop, Trip
 
 
 class TripPeriodError(ValueError):
@@ -59,6 +59,26 @@ def list_user_trips(session: Session, user_id: uuid.UUID) -> list[tuple[Trip, Me
         .order_by(Trip.created_at.desc())  # type: ignore[attr-defined]
     ).all()
     return list(rows)
+
+
+def list_user_trip_summaries(
+    session: Session, user_id: uuid.UUID
+) -> list[tuple[Trip, Membership, list[Stop]]]:
+    """Retorna Viagens do usuário com Paradas ordenadas para cards de lista."""
+    rows = list_user_trips(session, user_id)
+    trip_ids = [trip.id for trip, _ in rows]
+    stops_by_trip: dict[uuid.UUID, list[Stop]] = {trip_id: [] for trip_id in trip_ids}
+
+    if trip_ids:
+        stops = session.exec(
+            select(Stop)
+            .where(col(Stop.trip_id).in_(trip_ids))
+            .order_by(col(Stop.trip_id), col(Stop.order))
+        )
+        for stop in stops:
+            stops_by_trip[stop.trip_id].append(stop)
+
+    return [(trip, membership, stops_by_trip[trip.id]) for trip, membership in rows]
 
 
 def get_trip_membership(
