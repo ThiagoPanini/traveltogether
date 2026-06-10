@@ -3,13 +3,18 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from pydantic import BaseModel
 from sqlmodel import Session
 
 from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
 from traveltogether.platform.db import get_session
+from traveltogether.platform.object_storage import ObjectStorageConfigError, ObjectStorageError
+from traveltogether.trips.cover_images import (
+    CoverImageValidationError,
+    update_trip_cover_image,
+)
 from traveltogether.trips.legs_service import (
     LegHasFareError,
     create_leg,
@@ -108,7 +113,7 @@ def post_trip(
         )
     except TripPeriodError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     return TripWithMembershipResponse(
         trip=TripPublic.model_validate(trip),
@@ -127,6 +132,7 @@ def get_trips(
             trip=TripPublic.model_validate(trip),
             membership=MembershipPublic.model_validate(membership),
             stops=[StopPublic.model_validate(stop) for stop in stops],
+            cover_image_url=trip.cover_image_url,
         )
         for trip, membership, stops in rows
     ]
@@ -175,8 +181,44 @@ def patch_trip(
         )
     except TripPeriodError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
+    return TripPublic.model_validate(updated)
+
+
+@router.post("/{trip_id}/cover-image", response_model=TripPublic)
+def post_trip_cover_image(
+    trip_id: uuid.UUID,
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> TripPublic:
+    trip = _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit trip cover image",
+        )
+
+    content = file.file.read()
+    try:
+        updated = update_trip_cover_image(session, trip, content, file.content_type or "")
+    except CoverImageValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except ObjectStorageConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="cover image storage is not configured",
+        ) from exc
+    except ObjectStorageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="cover image storage upload failed",
+        ) from exc
+
     return TripPublic.model_validate(updated)
 
 
@@ -369,7 +411,7 @@ def post_stop(
         session.refresh(stop)
     except StopDateError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     except LegHasFareError as exc:
         session.rollback()
@@ -439,7 +481,7 @@ def patch_stop(
         )
     except StopDateError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     return StopPublic.model_validate(updated)
 

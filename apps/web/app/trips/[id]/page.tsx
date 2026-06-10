@@ -5,6 +5,7 @@ import { AppTopbar } from "@/app/app-topbar";
 import { getAuthSession } from "@/auth";
 import { getFares } from "@/lib/api/fares";
 import { getLegs, getStops, getTrip, getTripMembers } from "@/lib/api/trips";
+import { updateTripCoverImageAction } from "./actions";
 import LegsPanel from "./legs-panel";
 import StopsPanel from "./stops-panel";
 
@@ -22,6 +23,21 @@ function displayCode(value: string): string {
 
 function initials(email: string): string {
   return email.slice(0, 2).toUpperCase();
+}
+
+function formatDateRange(startDate: string | null, endDate: string | null): string {
+  if (!startDate && !endDate) return "Datas a definir";
+  const format = (value: string) =>
+    new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+    });
+  if (startDate && endDate) return `${format(startDate)} - ${format(endDate)}`;
+  return format(startDate ?? endDate ?? "");
+}
+
+function coverTone(value: string): number {
+  return [...value].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 5;
 }
 
 export default async function TripDetailPage({ params }: Props) {
@@ -77,12 +93,46 @@ export default async function TripDetailPage({ params }: Props) {
               </span>
             </h1>
           </div>
-          <span className="trip-card-role" data-role={membership.role}>
-            {membership.role === "organizer" ? "Organizador" : "Membro"}
-          </span>
+          <div className="trip-header-actions">
+            <span className="trip-card-role" data-role={membership.role}>
+              {membership.role === "organizer" ? "Organizador" : "Membro"}
+            </span>
+            {membership.role === "organizer" && (
+              <form
+                action={updateTripCoverImageAction.bind(null, id)}
+                className="cover-upload-form"
+                encType="multipart/form-data"
+              >
+                <input
+                  aria-label="Foto de capa"
+                  className="cover-upload-input"
+                  name="file"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  required
+                />
+                <button className="secondary-button btn-sm" type="submit">
+                  Editar foto
+                </button>
+              </form>
+            )}
+          </div>
         </header>
 
         <section className="bp hero-bp" aria-label="Itinerário da viagem">
+          <div className="trip-hero-cover cover" data-tone={coverTone(trip.name)}>
+            {trip.cover_image_url && (
+              // biome-ignore lint/performance/noImgElement: R2/CDN URL is environment-owned and served directly.
+              <img
+                alt={`Foto de capa de ${trip.name}`}
+                className="cover-img"
+                src={trip.cover_image_url}
+              />
+            )}
+            <span className="cover-skyline" />
+            <span className="cover-note">{formatDateRange(trip.start_date, trip.end_date)}</span>
+            <span className="cover-caption">{trip.name}</span>
+          </div>
           <div className="bp-head">
             <span>Itinerário</span>
             <span className="flight">{new Date(trip.created_at).getFullYear()}</span>

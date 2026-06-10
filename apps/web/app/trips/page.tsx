@@ -52,7 +52,8 @@ export default async function TripsPage() {
           <p className="trips-empty">Nenhuma viagem ainda. Emita o primeiro cartão.</p>
         ) : (
           <ul className="trips-list">
-            {items.map(({ trip, membership, stops }) => {
+            {items.map(({ trip, membership, stops, cover_image_url }) => {
+              const coverImageUrl = trip.cover_image_url ?? cover_image_url;
               const route = [
                 {
                   key: "origin",
@@ -70,6 +71,14 @@ export default async function TripsPage() {
                 <li key={trip.id} className="bp bp-card">
                   <Link href={`/trips/${trip.id}`} className="bp-card-link">
                     <div className="cover" data-tone={coverTone(trip.name)}>
+                      {coverImageUrl && (
+                        // biome-ignore lint/performance/noImgElement: R2/CDN URL is environment-owned and served directly.
+                        <img
+                          alt={`Foto de capa de ${trip.name}`}
+                          className="cover-img"
+                          src={coverImageUrl}
+                        />
+                      )}
                       <span className="cover-skyline" />
                       <span className="cover-note">
                         {formatDateRange(trip.start_date, trip.end_date)}

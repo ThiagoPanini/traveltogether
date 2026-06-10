@@ -23,6 +23,8 @@ class Trip(SQLModel, table=True):  # type: ignore[call-arg]
     airport_code: str | None = None
     start_date: date | None = None
     end_date: date | None = None
+    cover_image_key: str | None = None
+    cover_image_url: str | None = None
     created_by: uuid.UUID = Field(foreign_key="users.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -45,6 +47,8 @@ class TripPublic(SQLModel):
     airport_code: str | None
     start_date: date | None
     end_date: date | None
+    cover_image_key: str | None
+    cover_image_url: str | None
     created_by: uuid.UUID
     created_at: datetime
 

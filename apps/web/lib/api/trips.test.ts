@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createTrip, getTrip, getTrips } from "./trips";
+import { createTrip, getTrip, getTrips, uploadTripCoverImage } from "./trips";
 
 const TRIP: import("@traveltogether/types").TripWithMembership = {
   trip: {
@@ -11,6 +11,8 @@ const TRIP: import("@traveltogether/types").TripWithMembership = {
     airport_code: "GRU",
     start_date: null,
     end_date: null,
+    cover_image_key: null,
+    cover_image_url: null,
     created_by: "user-1",
     created_at: "2026-01-01T00:00:00Z",
   },
@@ -90,6 +92,29 @@ describe("createTrip", () => {
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8000/trips",
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+});
+
+describe("uploadTripCoverImage", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("envia multipart autenticado sem forçar content-type JSON", async () => {
+    const data = new FormData();
+    data.append("file", new Blob(["png"], { type: "image/png" }), "cover.png");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(TRIP.trip) }),
+    );
+
+    await expect(uploadTripCoverImage("token", "trip-1", data)).resolves.toEqual(TRIP.trip);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/trips/trip-1/cover-image",
+      expect.objectContaining({
+        method: "POST",
+        body: data,
+        headers: { Authorization: "Bearer token" },
+      }),
     );
   });
 });

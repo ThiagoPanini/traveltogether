@@ -1,9 +1,24 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
-import { createStop, deleteStop, reorderStops, updateStop } from "@/lib/api/trips";
+import {
+  createStop,
+  deleteStop,
+  reorderStops,
+  updateStop,
+  uploadTripCoverImage,
+} from "@/lib/api/trips";
+
+export async function updateTripCoverImageAction(tripId: string, data: FormData) {
+  const session = await getAuthSession();
+  if (!session?.apiAccessToken) redirect("/login");
+  await uploadTripCoverImage(session.apiAccessToken, tripId, data);
+  revalidatePath("/trips");
+  revalidatePath(`/trips/${tripId}`);
+}
 
 // --- Stops ---
 

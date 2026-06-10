@@ -317,6 +317,34 @@ h1,
   text-decoration: none;
 }
 
+.trip-header-actions,
+.cover-upload-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.cover-upload-input {
+  width: min(100%, 13rem);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.cover-upload-input::file-selector-button {
+  min-height: 2rem;
+  margin-right: 0.55rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .field,
 .login-field {
   display: grid;
@@ -548,6 +576,7 @@ textarea.fare-input {
 .cover::before {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background: linear-gradient(
     180deg,
     var(--cover-a),
@@ -562,13 +591,23 @@ textarea.fare-input {
 .cover::after {
   position: absolute;
   inset: 0;
+  z-index: 2;
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 12, 0.16),
-    rgba(10, 10, 12, 0.56) 60%,
-    rgba(10, 10, 12, 0.94)
+    rgba(10, 10, 12, 0.2),
+    rgba(10, 10, 12, 0.58) 48%,
+    rgba(10, 10, 12, 0.98)
   );
   content: "";
+}
+
+.cover-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cover[data-tone="0"] {
@@ -606,7 +645,7 @@ textarea.fare-input {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1;
+  z-index: 3;
   height: 2rem;
   background: repeating-linear-gradient(
     90deg,
@@ -622,7 +661,7 @@ textarea.fare-input {
 .cover-caption,
 .cover-note {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   font-family: var(--font-mono);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
@@ -1275,6 +1314,10 @@ textarea.fare-input {
 
 .hero-bp {
   margin-top: 1.5rem;
+}
+
+.trip-hero-cover {
+  height: clamp(12rem, 28vw, 19rem);
 }
 
 .hero-flightstrip {

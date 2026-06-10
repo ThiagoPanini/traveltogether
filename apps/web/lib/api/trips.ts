@@ -15,6 +15,10 @@ function authHeaders(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" };
 }
 
+function authOnlyHeaders(accessToken: string): HeadersInit {
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
 export async function getTrips(accessToken: string): Promise<TripSummary[]> {
   let response: Response;
   try {
@@ -84,6 +88,26 @@ export async function updateTrip(
       cache: "no-store",
       headers: authHeaders(accessToken),
       body: JSON.stringify(data),
+    });
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  return (await response.json()) as TripPublic;
+}
+
+export async function uploadTripCoverImage(
+  accessToken: string,
+  tripId: string,
+  data: FormData,
+): Promise<TripPublic | null> {
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl()}/trips/${tripId}/cover-image`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authOnlyHeaders(accessToken),
+      body: data,
     });
   } catch {
     return null;
