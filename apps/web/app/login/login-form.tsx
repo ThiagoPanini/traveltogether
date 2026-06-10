@@ -51,20 +51,11 @@ export function LoginForm() {
         </div>
         <div className="login-heading">
           <p>Acesso privado</p>
-          <h1>Check-in da galera</h1>
+          <h1>Entrar no traveltogether</h1>
         </div>
-        <p className="sub">
-          Beta fechado. Só embarca quem está na lista — use o e-mail do convite.
-        </p>
-        <div className="auth-route" aria-hidden="true">
-          <span className="iata">VOCÊ</span>
-          <span className="line" />
-          <span className="plane">✈</span>
-          <span className="line" />
-          <span className="iata">∞</span>
-        </div>
+        <p className="sub">Use o e-mail autorizado para acessar o beta fechado.</p>
         <label className="login-field">
-          <span>E-mail do passageiro</span>
+          <span>E-mail autorizado</span>
           <input
             autoComplete="email"
             name="email"
@@ -81,7 +72,7 @@ export function LoginForm() {
           style={{ width: "100%" }}
           type="submit"
         >
-          {state === "submitting" ? "Embarcando…" : "Embarcar"}
+          {state === "submitting" ? "Entrando…" : "Entrar"}
         </button>
         <p className={isAccessDenied ? "login-message is-denied" : "login-message"} role="status">
           {message}
