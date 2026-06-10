@@ -45,6 +45,7 @@ from traveltogether.trips.models import (
     TripUpdate,
 )
 from traveltogether.trips.service import (
+    TripPeriodError,
     create_trip,
     get_trip_membership,
     list_user_trips,
@@ -86,13 +87,21 @@ def post_trip(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> TripWithMembershipResponse:
-    trip, membership = create_trip(
-        session,
-        creator_id=current_user.id,
-        name=body.name,
-        description=body.description,
-        origin=body.origin,
-    )
+    try:
+        trip, membership = create_trip(
+            session,
+            creator_id=current_user.id,
+            name=body.name,
+            description=body.description,
+            origin=body.origin,
+            airport_code=body.airport_code,
+            start_date=body.start_date,
+            end_date=body.end_date,
+        )
+    except TripPeriodError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return TripWithMembershipResponse(
         trip=TripPublic.model_validate(trip),
         membership=MembershipPublic.model_validate(membership),
@@ -144,7 +153,21 @@ def patch_trip(
             detail="only organizers can edit trip metadata",
         )
 
-    updated = update_trip(session, trip, body.name, body.description, body.origin)
+    try:
+        updated = update_trip(
+            session,
+            trip,
+            body.name,
+            body.description,
+            body.origin,
+            airport_code=body.airport_code,
+            start_date=body.start_date,
+            end_date=body.end_date,
+        )
+    except TripPeriodError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return TripPublic.model_validate(updated)
 
 

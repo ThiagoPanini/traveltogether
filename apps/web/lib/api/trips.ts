@@ -47,7 +47,14 @@ export async function getTrip(
 
 export async function createTrip(
   accessToken: string,
-  data: { name: string; description: string; origin: string },
+  data: {
+    name: string;
+    description: string;
+    origin: string;
+    airport_code?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+  },
 ): Promise<TripWithMembership | null> {
   let response: Response;
   try {

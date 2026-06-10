@@ -9,6 +9,9 @@ export async function createTripAction(data: {
   name: string;
   description: string;
   origin: string;
+  airport_code?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 }) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");

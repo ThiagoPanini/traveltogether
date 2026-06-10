@@ -1,6 +1,7 @@
 """Testes de domínio para trips.service — sem Postgres real."""
 
 from collections.abc import Iterator
+from datetime import date
 
 import pytest
 from sqlalchemy.pool import StaticPool
@@ -9,6 +10,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from traveltogether.identity.models import User
 from traveltogether.trips.models import MembershipRole
 from traveltogether.trips.service import (
+    TripPeriodError,
     create_trip,
     get_trip_membership,
     list_user_trips,
@@ -104,3 +106,48 @@ def test_update_trip_changes_metadata(session: Session, alice: User) -> None:
     assert updated.name == "New Name"
     assert updated.description == "Old desc"
     assert updated.origin == "São Paulo"
+
+
+def test_create_trip_persists_period_and_airport(session: Session, alice: User) -> None:
+    start = date(2025, 6, 10)
+    end = date(2025, 6, 20)
+    trip, _ = create_trip(
+        session,
+        alice.id,
+        "Euro",
+        "",
+        "São Paulo (GRU)",
+        start_date=start,
+        end_date=end,
+        airport_code="GRU",
+    )
+    assert trip.start_date == start
+    assert trip.end_date == end
+    assert trip.airport_code == "GRU"
+
+
+def test_create_trip_end_before_start_raises(session: Session, alice: User) -> None:
+    with pytest.raises(TripPeriodError):
+        create_trip(
+            session,
+            alice.id,
+            "Bad Trip",
+            "",
+            "SP",
+            start_date=date(2025, 6, 20),
+            end_date=date(2025, 6, 10),
+        )
+
+
+def test_create_trip_airport_code_normalized_uppercase(session: Session, alice: User) -> None:
+    trip, _ = create_trip(
+        session,
+        alice.id,
+        "T",
+        "",
+        "SP",
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 1, 5),
+        airport_code="gru",
+    )
+    assert trip.airport_code == "GRU"

@@ -13,12 +13,22 @@ export function NewTripForm() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [origin, setOrigin] = useState("");
+  const [airportCode, setAirportCode] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState("submitting");
 
-    const result = await createTripAction({ name, description, origin });
+    const result = await createTripAction({
+      name,
+      description,
+      origin,
+      airport_code: airportCode || null,
+      start_date: startDate || null,
+      end_date: endDate || null,
+    });
     if (result) {
       router.push(`/trips/${result.trip.id}`);
       router.refresh();
@@ -52,12 +62,46 @@ export function NewTripForm() {
           <input
             name="origin"
             onChange={(e) => setOrigin(e.target.value)}
-            placeholder="São Paulo (GRU)"
+            placeholder="São Paulo"
             required
             type="text"
             value={origin}
           />
         </label>
+
+        <label className="field">
+          <span>Aeroporto de referência (código IATA)</span>
+          <input
+            maxLength={3}
+            name="airport_code"
+            onChange={(e) => setAirportCode(e.target.value.toUpperCase())}
+            placeholder="GRU"
+            type="text"
+            value={airportCode}
+          />
+        </label>
+
+        <div className="field-row">
+          <label className="field">
+            <span>Ida</span>
+            <input
+              name="start_date"
+              onChange={(e) => setStartDate(e.target.value)}
+              type="date"
+              value={startDate}
+            />
+          </label>
+          <label className="field">
+            <span>Volta</span>
+            <input
+              min={startDate}
+              name="end_date"
+              onChange={(e) => setEndDate(e.target.value)}
+              type="date"
+              value={endDate}
+            />
+          </label>
+        </div>
 
         <label className="field">
           <span>Descrição (opcional)</span>

@@ -1,7 +1,7 @@
 """Modelos do boundary trips."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import StrEnum
 from typing import ClassVar
 
@@ -20,6 +20,9 @@ class Trip(SQLModel, table=True):  # type: ignore[call-arg]
     name: str
     description: str = ""
     origin: str
+    airport_code: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
     created_by: uuid.UUID = Field(foreign_key="users.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -39,6 +42,9 @@ class TripPublic(SQLModel):
     name: str
     description: str
     origin: str
+    airport_code: str | None
+    start_date: date | None
+    end_date: date | None
     created_by: uuid.UUID
     created_at: datetime
 
@@ -137,9 +143,15 @@ class TripCreate(SQLModel):
     name: str
     description: str = ""
     origin: str
+    airport_code: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
 
 
 class TripUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     origin: str | None = None
+    airport_code: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None

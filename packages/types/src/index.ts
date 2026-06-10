@@ -7,6 +7,9 @@ export interface TripPublic {
   name: string;
   description: string;
   origin: string;
+  airport_code: string | null;
+  start_date: string | null;
+  end_date: string | null;
   created_by: string;
   created_at: string;
 }
