@@ -28,9 +28,7 @@ def create_itinerary_item(
     time: str | None = None,
 ) -> ItineraryItem:
     current_count = session.exec(
-        select(func.count())
-        .select_from(ItineraryItem)
-        .where(col(ItineraryItem.stop_id) == stop_id)
+        select(func.count()).select_from(ItineraryItem).where(col(ItineraryItem.stop_id) == stop_id)
     ).one()
     item = ItineraryItem(
         stop_id=stop_id,

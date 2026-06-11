@@ -104,7 +104,11 @@ export default function ItineraryPanel({ tripId, stopId, initialItems, role }: P
     const reordered = [...items];
     [reordered[index - 1], reordered[index]] = [reordered[index], reordered[index - 1]];
     setItems(reordered);
-    await reorderItineraryItemsAction(tripId, stopId, reordered.map((i) => i.id));
+    await reorderItineraryItemsAction(
+      tripId,
+      stopId,
+      reordered.map((i) => i.id),
+    );
     router.refresh();
   }
 
@@ -113,7 +117,11 @@ export default function ItineraryPanel({ tripId, stopId, initialItems, role }: P
     const reordered = [...items];
     [reordered[index], reordered[index + 1]] = [reordered[index + 1], reordered[index]];
     setItems(reordered);
-    await reorderItineraryItemsAction(tripId, stopId, reordered.map((i) => i.id));
+    await reorderItineraryItemsAction(
+      tripId,
+      stopId,
+      reordered.map((i) => i.id),
+    );
     router.refresh();
   }
 
@@ -209,9 +217,7 @@ export default function ItineraryPanel({ tripId, stopId, initialItems, role }: P
                         {item.time ? ` · ${item.time}` : ""}
                       </span>
                     )}
-                    {item.notes && (
-                      <span className="itinerary-item-notes">{item.notes}</span>
-                    )}
+                    {item.notes && <span className="itinerary-item-notes">{item.notes}</span>}
                     {item.link && (
                       <a
                         href={item.link}

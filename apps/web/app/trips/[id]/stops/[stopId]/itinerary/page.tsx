@@ -46,12 +46,7 @@ export default async function StopItineraryPage({ params }: Props) {
 
         <section className="trip-detail-section">
           <h2>Roteiro</h2>
-          <ItineraryPanel
-            tripId={id}
-            stopId={stopId}
-            initialItems={items}
-            role={membership.role}
-          />
+          <ItineraryPanel tripId={id} stopId={stopId} initialItems={items} role={membership.role} />
         </section>
       </main>
     </div>

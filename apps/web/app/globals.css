@@ -2312,6 +2312,24 @@ table.cmp .best {
   .not-found-stamp {
     font-size: 2.2rem;
   }
+
+  .seq-leg-card {
+    max-width: 100%;
+  }
+
+  .stop-actions {
+    gap: 0.35rem;
+  }
+
+  .itinerary-item-body {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .trip-header-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

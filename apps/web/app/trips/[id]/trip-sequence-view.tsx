@@ -54,10 +54,12 @@ export default function TripSequenceView({
   const router = useRouter();
   const [stops, setStops] = useState<StopPublic[]>(initialStops);
   const [newCity, setNewCity] = useState("");
+  const [newAirportCode, setNewAirportCode] = useState("");
   const [newArrivalDate, setNewArrivalDate] = useState("");
   const [newDepartureDate, setNewDepartureDate] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCity, setEditCity] = useState("");
+  const [editAirportCode, setEditAirportCode] = useState("");
   const [editArrivalDate, setEditArrivalDate] = useState("");
   const [editDepartureDate, setEditDepartureDate] = useState("");
   const [loading, setLoading] = useState(false);
@@ -80,12 +82,14 @@ export default function TripSequenceView({
     setLoading(true);
     const stop = await createStopAction(tripId, {
       city: newCity.trim(),
+      airport_code: newAirportCode.trim().toUpperCase() || null,
       arrival_date: nullableDate(newArrivalDate),
       departure_date: nullableDate(newDepartureDate),
     });
     if (stop) {
       setStops((prev) => [...prev, stop]);
       setNewCity("");
+      setNewAirportCode("");
       setNewArrivalDate("");
       setNewDepartureDate("");
     }
@@ -104,6 +108,7 @@ export default function TripSequenceView({
   function handleEdit(stop: StopPublic) {
     setEditingId(stop.id);
     setEditCity(stop.city);
+    setEditAirportCode(stop.airport_code ?? "");
     setEditArrivalDate(inputDate(stop.arrival_date));
     setEditDepartureDate(inputDate(stop.departure_date));
   }
@@ -113,6 +118,7 @@ export default function TripSequenceView({
     setLoading(true);
     const updated = await updateStopAction(tripId, stopId, {
       city: editCity.trim(),
+      airport_code: editAirportCode.trim().toUpperCase() || null,
       arrival_date: nullableDate(editArrivalDate),
       departure_date: nullableDate(editDepartureDate),
     });
@@ -127,7 +133,10 @@ export default function TripSequenceView({
     const reordered = [...stops];
     [reordered[index - 1], reordered[index]] = [reordered[index], reordered[index - 1]];
     setStops(reordered);
-    await reorderStopsAction(tripId, reordered.map((s) => s.id));
+    await reorderStopsAction(
+      tripId,
+      reordered.map((s) => s.id),
+    );
     router.refresh();
   }
 
@@ -136,7 +145,10 @@ export default function TripSequenceView({
     const reordered = [...stops];
     [reordered[index], reordered[index + 1]] = [reordered[index + 1], reordered[index]];
     setStops(reordered);
-    await reorderStopsAction(tripId, reordered.map((s) => s.id));
+    await reorderStopsAction(
+      tripId,
+      reordered.map((s) => s.id),
+    );
     router.refresh();
   }
 
@@ -180,10 +192,7 @@ export default function TripSequenceView({
                 <div key={segment.key} className="seq-leg-connector">
                   <div className="seq-leg-line" />
                   {segment.legId ? (
-                    <Link
-                      href={`/trips/${tripId}/legs/${segment.legId}`}
-                      className="seq-leg-card"
-                    >
+                    <Link href={`/trips/${tripId}/legs/${segment.legId}`} className="seq-leg-card">
                       <span className="seq-leg-icon">✈</span>
                       <span className="seq-leg-info">
                         <span className="seq-leg-route">
@@ -195,8 +204,8 @@ export default function TripSequenceView({
                           <span className="seq-leg-cta">pesquisar passagens →</span>
                         ) : (
                           <span className="seq-leg-count">
-                            {segment.fareCount}{" "}
-                            {segment.fareCount === 1 ? "pesquisa" : "pesquisas"} →
+                            {segment.fareCount} {segment.fareCount === 1 ? "pesquisa" : "pesquisas"}{" "}
+                            →
                           </span>
                         )}
                       </span>
@@ -210,9 +219,7 @@ export default function TripSequenceView({
                           <span className="seq-leg-arrow">→</span>
                           {segment.to.code}
                         </span>
-                        <span className="seq-leg-cta seq-leg-cta--pending">
-                          trajeto a derivar
-                        </span>
+                        <span className="seq-leg-cta seq-leg-cta--pending">trajeto a derivar</span>
                       </span>
                     </div>
                   )}
@@ -228,15 +235,27 @@ export default function TripSequenceView({
               <div key={segment.key} className="seq-stop-node">
                 {editingId === stop.id ? (
                   <div className="stop-edit-row">
-                    <label className="field">
-                      <span>Cidade da Parada</span>
-                      <input
-                        value={editCity}
-                        onChange={(e) => setEditCity(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(stop.id)}
-                        className="stop-edit-input"
-                      />
-                    </label>
+                    <div className="form-row">
+                      <label className="field" style={{ flex: 2 }}>
+                        <span>Cidade da Parada</span>
+                        <input
+                          value={editCity}
+                          onChange={(e) => setEditCity(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(stop.id)}
+                          className="stop-edit-input"
+                        />
+                      </label>
+                      <label className="field" style={{ flex: 1 }}>
+                        <span>IATA</span>
+                        <input
+                          value={editAirportCode}
+                          onChange={(e) => setEditAirportCode(e.target.value)}
+                          placeholder="LIS"
+                          className="stop-edit-input"
+                          maxLength={3}
+                        />
+                      </label>
+                    </div>
                     <div className="form-row">
                       <label className="field">
                         <span>Chegada</span>
@@ -390,16 +409,28 @@ export default function TripSequenceView({
 
       {isOrganizer && (
         <form onSubmit={handleAdd} className="stop-add-form">
-          <label className="field">
-            <span>Cidade da Parada</span>
-            <input
-              value={newCity}
-              onChange={(e) => setNewCity(e.target.value)}
-              placeholder="Lisboa"
-              className="stop-edit-input"
-              required
-            />
-          </label>
+          <div className="form-row">
+            <label className="field" style={{ flex: 2 }}>
+              <span>Cidade da Parada</span>
+              <input
+                value={newCity}
+                onChange={(e) => setNewCity(e.target.value)}
+                placeholder="Lisboa"
+                className="stop-edit-input"
+                required
+              />
+            </label>
+            <label className="field" style={{ flex: 1 }}>
+              <span>IATA</span>
+              <input
+                value={newAirportCode}
+                onChange={(e) => setNewAirportCode(e.target.value)}
+                placeholder="LIS"
+                className="stop-edit-input"
+                maxLength={3}
+              />
+            </label>
+          </div>
           <div className="form-row">
             <label className="field">
               <span>Chegada</span>

@@ -53,9 +53,7 @@ def _create_trip(client: TestClient, headers: dict[str, str]) -> dict[str, objec
     return res.json()["trip"]
 
 
-def _create_stop(
-    client: TestClient, trip_id: str, headers: dict[str, str]
-) -> dict[str, object]:
+def _create_stop(client: TestClient, trip_id: str, headers: dict[str, str]) -> dict[str, object]:
     res = client.post(
         f"/trips/{trip_id}/stops",
         json={"city": "Lisboa"},
@@ -157,15 +155,11 @@ def test_delete_itinerary_item_removes_it(
     )
     assert res.status_code == 204
 
-    list_res = client.get(
-        f"/trips/{trip['id']}/stops/{stop['id']}/itinerary", headers=headers
-    )
+    list_res = client.get(f"/trips/{trip['id']}/stops/{stop['id']}/itinerary", headers=headers)
     assert list_res.json() == []
 
 
-def test_post_reorder_itinerary_items(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_post_reorder_itinerary_items(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
     trip = _create_trip(client, headers)
     stop = _create_stop(client, str(trip["id"]), headers)

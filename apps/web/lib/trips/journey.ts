@@ -46,8 +46,7 @@ function findLeg(
 ): LegPublic | null {
   return (
     legs.find(
-      (leg) =>
-        leg.origin_stop_id === originStopId && leg.destination_stop_id === destinationStopId,
+      (leg) => leg.origin_stop_id === originStopId && leg.destination_stop_id === destinationStopId,
     ) ?? null
   );
 }

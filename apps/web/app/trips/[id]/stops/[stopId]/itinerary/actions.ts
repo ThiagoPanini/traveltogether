@@ -38,11 +38,7 @@ export async function updateItineraryItemAction(
   return updateItineraryItem(session.apiAccessToken, tripId, stopId, itemId, data);
 }
 
-export async function deleteItineraryItemAction(
-  tripId: string,
-  stopId: string,
-  itemId: string,
-) {
+export async function deleteItineraryItemAction(tripId: string, stopId: string, itemId: string) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
   return deleteItineraryItem(session.apiAccessToken, tripId, stopId, itemId);

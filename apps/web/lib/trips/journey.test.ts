@@ -63,13 +63,7 @@ describe("buildJourneySegments", () => {
       "leg-back": 1,
     });
 
-    expect(segments.map((segment) => segment.kind)).toEqual([
-      "leg",
-      "stop",
-      "leg",
-      "stop",
-      "leg",
-    ]);
+    expect(segments.map((segment) => segment.kind)).toEqual(["leg", "stop", "leg", "stop", "leg"]);
     expect(segments[0]).toMatchObject({
       kind: "leg",
       legId: "leg-out",

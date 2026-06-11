@@ -25,7 +25,12 @@ export async function updateTripCoverImageAction(tripId: string, data: FormData)
 
 export async function createStopAction(
   tripId: string,
-  data: { city: string; arrival_date?: string | null; departure_date?: string | null },
+  data: {
+    city: string;
+    airport_code?: string | null;
+    arrival_date?: string | null;
+    departure_date?: string | null;
+  },
 ) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
@@ -41,7 +46,12 @@ export async function deleteStopAction(tripId: string, stopId: string) {
 export async function updateStopAction(
   tripId: string,
   stopId: string,
-  data: Partial<{ city: string; arrival_date: string | null; departure_date: string | null }>,
+  data: Partial<{
+    city: string;
+    airport_code: string | null;
+    arrival_date: string | null;
+    departure_date: string | null;
+  }>,
 ) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");

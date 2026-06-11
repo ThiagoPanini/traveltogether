@@ -208,7 +208,12 @@ export async function getStops(accessToken: string, tripId: string): Promise<Sto
 export async function createStop(
   accessToken: string,
   tripId: string,
-  data: { city: string; arrival_date?: string | null; departure_date?: string | null },
+  data: {
+    city: string;
+    airport_code?: string | null;
+    arrival_date?: string | null;
+    departure_date?: string | null;
+  },
 ): Promise<StopPublic | null> {
   try {
     const response = await fetch(`${apiUrl()}/trips/${tripId}/stops`, {
@@ -228,7 +233,12 @@ export async function updateStop(
   accessToken: string,
   tripId: string,
   stopId: string,
-  data: Partial<{ city: string; arrival_date: string | null; departure_date: string | null }>,
+  data: Partial<{
+    city: string;
+    airport_code: string | null;
+    arrival_date: string | null;
+    departure_date: string | null;
+  }>,
 ): Promise<StopPublic | null> {
   try {
     const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}`, {
@@ -357,10 +367,10 @@ export async function getItineraryItems(
   stopId: string,
 ): Promise<ItineraryItemPublic[]> {
   try {
-    const response = await fetch(
-      `${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary`,
-      { cache: "no-store", headers: authHeaders(accessToken) },
-    );
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
     if (!response.ok) return [];
     return (await response.json()) as ItineraryItemPublic[];
   } catch {
@@ -375,15 +385,12 @@ export async function createItineraryItem(
   data: ItineraryItemCreate,
 ): Promise<ItineraryItemPublic | null> {
   try {
-    const response = await fetch(
-      `${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary`,
-      {
-        method: "POST",
-        cache: "no-store",
-        headers: authHeaders(accessToken),
-        body: JSON.stringify(data),
-      },
-    );
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(data),
+    });
     if (!response.ok) return null;
     return (await response.json()) as ItineraryItemPublic;
   } catch {
@@ -439,15 +446,12 @@ export async function reorderItineraryItems(
   itemIds: string[],
 ): Promise<ItineraryItemPublic[]> {
   try {
-    const response = await fetch(
-      `${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary/reorder`,
-      {
-        method: "POST",
-        cache: "no-store",
-        headers: authHeaders(accessToken),
-        body: JSON.stringify({ item_ids: itemIds }),
-      },
-    );
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/stops/${stopId}/itinerary/reorder`, {
+      method: "POST",
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ item_ids: itemIds }),
+    });
     if (!response.ok) return [];
     return (await response.json()) as ItineraryItemPublic[];
   } catch {
