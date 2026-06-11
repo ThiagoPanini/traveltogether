@@ -150,3 +150,38 @@ def test_organizer_can_delete_any_fare(client: TestClient, monkeypatch: pytest.M
     fare_id = fare_res.json()["id"]
     res = client.delete(f"/legs/{leg['id']}/fares/{fare_id}", headers=alice_headers)
     assert res.status_code == 204
+
+
+def test_get_fares_includes_upvote_count_and_user_voted(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alice_headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    bob_headers = _auth_headers(BOB_EMAIL, monkeypatch)
+    leg = _create_leg(client, alice_headers)
+    fare_res = client.post(f"/legs/{leg['id']}/fares", json=FARE_PAYLOAD, headers=alice_headers)
+    fare_id = fare_res.json()["id"]
+
+    # initially no votes
+    fares = client.get(f"/legs/{leg['id']}/fares", headers=alice_headers).json()
+    assert fares[0]["upvote_count"] == 0
+    assert fares[0]["user_voted"] is False
+
+    # alice upvotes
+    client.post(f"/fares/{fare_id}/upvote", headers=alice_headers)
+
+    # after alice votes: count=1, alice user_voted=True, bob user_voted=False
+    alice_fares = client.get(f"/legs/{leg['id']}/fares", headers=alice_headers).json()
+    assert alice_fares[0]["upvote_count"] == 1
+    assert alice_fares[0]["user_voted"] is True
+
+    # add bob as member
+    client.post(
+        f"/trips/{leg['trip_id']}/members",
+        json={"email": BOB_EMAIL, "role": "member"},
+        headers=alice_headers,
+    )
+    client.get(f"/legs/{leg['id']}/fares", headers=bob_headers)
+
+    bob_fares = client.get(f"/legs/{leg['id']}/fares", headers=bob_headers).json()
+    assert bob_fares[0]["upvote_count"] == 1
+    assert bob_fares[0]["user_voted"] is False

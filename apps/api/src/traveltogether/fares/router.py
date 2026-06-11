@@ -13,6 +13,7 @@ from traveltogether.fares.models import (
     FareQuoteCreate,
     FareQuotePublic,
     FareQuoteUpdate,
+    FareQuoteWithVote,
 )
 from traveltogether.fares.service import (
     create_fare_quote,
@@ -93,15 +94,23 @@ def post_fare(
     return FareQuotePublic.model_validate(fare)
 
 
-@router.get("/{leg_id}/fares", response_model=list[FareQuotePublic])
+@router.get("/{leg_id}/fares", response_model=list[FareQuoteWithVote])
 def get_fares(
     leg_id: uuid.UUID,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
-) -> list[FareQuotePublic]:
+) -> list[FareQuoteWithVote]:
     leg = _get_leg_or_404(session, leg_id)
     _require_trip_membership(session, leg, current_user.id)
-    return [FareQuotePublic.model_validate(f) for f in list_fare_quotes(session, leg_id)]
+    fares = list_fare_quotes(session, leg_id)
+    return [
+        FareQuoteWithVote(
+            **FareQuotePublic.model_validate(f).model_dump(),
+            upvote_count=get_upvote_count(session, f.id),
+            user_voted=user_has_upvoted(session, f.id, current_user.id),
+        )
+        for f in fares
+    ]
 
 
 @router.patch("/{leg_id}/fares/{fare_id}", response_model=FareQuotePublic)

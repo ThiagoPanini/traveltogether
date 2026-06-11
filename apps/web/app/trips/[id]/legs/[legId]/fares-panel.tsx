@@ -3,13 +3,12 @@
 import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltogether/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   chooseFareAction,
   createFareAction,
   deleteFareAction,
-  getUpvoteAction,
   toggleUpvoteAction,
 } from "./actions";
 
@@ -87,22 +86,13 @@ export default function FaresPanel({
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<"tickets" | "compare">("tickets");
-  const [upvotes, setUpvotes] = useState<Record<string, UpvoteResponse>>({});
+  const [upvotes, setUpvotes] = useState<Record<string, UpvoteResponse>>(() =>
+    Object.fromEntries(
+      initialFares.map((f) => [f.id, { count: f.upvote_count, voted: f.user_voted }]),
+    ),
+  );
 
   const isOrganizer = role === "organizer";
-
-  useEffect(() => {
-    async function loadUpvotes() {
-      const results = await Promise.all(initialFares.map((f) => getUpvoteAction(f.id)));
-      const map: Record<string, UpvoteResponse> = {};
-      initialFares.forEach((f, i) => {
-        const r = results[i];
-        if (r) map[f.id] = r;
-      });
-      setUpvotes(map);
-    }
-    void loadUpvotes();
-  }, [initialFares]);
 
   async function handleUpvote(fareId: string) {
     const result = await toggleUpvoteAction(fareId);

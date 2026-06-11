@@ -57,6 +57,11 @@ class Upvote(SQLModel, table=True):  # type: ignore[call-arg]
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class FareQuoteWithVote(FareQuotePublic):
+    upvote_count: int
+    user_voted: bool
+
+
 class FareQuoteCreate(SQLModel):
     value: Decimal
     currency: str

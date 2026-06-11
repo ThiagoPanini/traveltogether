@@ -72,7 +72,7 @@ export interface StopPublic {
 
 export interface StopCreate {
   city: string;
-  airport_code?: string | null;
+  airport_code?: string | null | undefined;
   arrival_date?: string | null;
   departure_date?: string | null;
 }
@@ -157,6 +157,8 @@ export interface FareQuotePublic {
   link: string;
   notes: string;
   is_chosen: boolean;
+  upvote_count: number;
+  user_voted: boolean;
 }
 
 export interface FareQuoteCreate {
