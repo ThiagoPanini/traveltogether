@@ -1,6 +1,7 @@
 "use client";
 
 import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltogether/types";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -14,6 +15,7 @@ import {
 
 interface Props {
   legId: string;
+  tripId: string;
   initialFares: FareQuotePublic[];
   role: MembershipRole;
   fromCode: string;
@@ -71,6 +73,7 @@ function formatDuration(minutes: number): string {
 
 export default function FaresPanel({
   legId,
+  tripId,
   initialFares,
   role,
   fromCode,
@@ -215,10 +218,15 @@ export default function FaresPanel({
       </div>
 
       {fares.length === 0 ? (
-        <p className="empty">
-          Nenhuma pesquisa registrada para este trajeto.
-          {isOrganizer ? " Bora achar a primeira?" : ""}
-        </p>
+        <div className="fares-empty">
+          <p className="empty">
+            Nenhuma pesquisa registrada para este trajeto.
+            {isOrganizer ? " Adicione a primeira pesquisa abaixo." : ""}
+          </p>
+          <Link href={`/trips/${tripId}`} className="secondary-button btn-sm">
+            ← Voltar à Viagem
+          </Link>
+        </div>
       ) : view === "tickets" ? (
         <ul className="ticket-list">
           {orderedFares.map((fare) => {

@@ -1310,6 +1310,13 @@ textarea.fare-input {
   text-align: center;
 }
 
+.fares-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* trip detail */
 
 .hero-bp {
