@@ -6,8 +6,7 @@ import { getAuthSession } from "@/auth";
 import { getFares } from "@/lib/api/fares";
 import { getLegs, getStops, getTrip, getTripMembers } from "@/lib/api/trips";
 import { updateTripCoverImageAction } from "./actions";
-import LegsPanel from "./legs-panel";
-import StopsPanel from "./stops-panel";
+import TripSequenceView from "./trip-sequence-view";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -171,18 +170,14 @@ export default async function TripDetailPage({ params }: Props) {
         {trip.description && <p className="trip-detail-desc">{trip.description}</p>}
 
         <section className="trip-detail-section">
-          <h2>Paradas</h2>
-          <StopsPanel tripId={id} initialStops={stops} role={membership.role} />
-        </section>
-
-        <section className="trip-detail-section">
-          <h2>Trajetos · passagens</h2>
-          <LegsPanel
+          <h2>Roteiro da Viagem</h2>
+          <TripSequenceView
             tripId={id}
             origin={trip.origin}
+            initialStops={stops}
             initialLegs={legs}
-            stops={stops}
             fareCounts={fareCounts}
+            role={membership.role}
           />
         </section>
 
