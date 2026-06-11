@@ -6,7 +6,17 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # API alcançável pela rede interna do compose
       TRAVELTOGETHER_API_URL: http://api:8000
+      # AUTH_SECRET PRECISA ser idêntico ao da API (ADR-0003). Override via
+      # shell/.env; o default só serve para dev local.
+      AUTH_SECRET: ${AUTH_SECRET:-dev-local-shared-secret-change-me}
+      NEXTAUTH_SECRET: ${AUTH_SECRET:-dev-local-shared-secret-change-me}
+      # URL voltada ao browser (não usar o host interno aqui)
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      AUTH_TRUST_HOST: "true"
+      # E-mails liberados no beta fechado (CSV)
+      AUTH_ALLOWLIST: ${AUTH_ALLOWLIST:-}
     depends_on:
       api:
         condition: service_started
@@ -19,6 +29,9 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://traveltogether:traveltogether@postgres:5432/traveltogether
+      # Mesmo segredo do web — senão toda chamada autenticada falha com 401
+      AUTH_SECRET: ${AUTH_SECRET:-dev-local-shared-secret-change-me}
+      AUTH_ALLOWLIST: ${AUTH_ALLOWLIST:-}
     depends_on:
       postgres:
         condition: service_healthy

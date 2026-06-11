@@ -10,11 +10,17 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from traveltogether.fares.router import router as fares_router
-from traveltogether.fares.router import upvote_router
-from traveltogether.identity.router import router as identity_router
-from traveltogether.platform.db import check_db, create_db_schema
-from traveltogether.trips.router import router as trips_router
+from traveltogether.platform.env import load_env_files
+
+# Carrega .env.local/.env quando o ambiente não foi injetado pelo launcher
+# (ex.: `uv run uvicorn ...` sem --env-file). Não sobrescreve env real.
+load_env_files()
+
+from traveltogether.fares.router import router as fares_router  # noqa: E402
+from traveltogether.fares.router import upvote_router  # noqa: E402
+from traveltogether.identity.router import router as identity_router  # noqa: E402
+from traveltogether.platform.db import check_db, create_db_schema  # noqa: E402
+from traveltogether.trips.router import router as trips_router  # noqa: E402
 
 
 @asynccontextmanager
