@@ -16,6 +16,7 @@ const base: Omit<FareRow, "id" | "value" | "upvote_count" | "is_chosen"> = {
   airline: "LATAM",
   link: "",
   notes: "",
+  user_voted: false,
 };
 
 function fare(id: string, value: string, upvote_count: number, is_chosen = false): FareRow {

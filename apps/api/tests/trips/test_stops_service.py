@@ -1,7 +1,7 @@
 """Testes de domínio para trips.stops_service."""
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 from sqlalchemy.pool import StaticPool
@@ -10,6 +10,7 @@ from sqlmodel import Session, SQLModel, create_engine
 from traveltogether.identity.models import User
 from traveltogether.trips.models import Trip
 from traveltogether.trips.stops_service import (
+    StopDateError,
     create_stop,
     delete_stop,
     list_stops,
@@ -41,6 +42,27 @@ def trip_fixture(session: Session) -> Trip:
     session.add(user)
     session.commit()
     trip, _ = create_trip(session, user.id, "Road Trip", "", "São Paulo")
+    return trip
+
+
+@pytest.fixture(name="trip_with_period")
+def trip_with_period_fixture(session: Session) -> Trip:
+    import uuid
+
+    from traveltogether.trips.service import create_trip
+
+    user = User(id=uuid.uuid4(), email="b@b.com")
+    session.add(user)
+    session.commit()
+    trip, _ = create_trip(
+        session,
+        user.id,
+        "Viagem Teste",
+        "",
+        "SP",
+        start_date=date(2025, 7, 1),
+        end_date=date(2025, 7, 31),
+    )
     return trip
 
 
@@ -83,3 +105,28 @@ def test_create_stop_adds_stop_to_trip(session: Session, trip: Trip) -> None:
     assert stop.arrival_date == arrival.replace(tzinfo=None)
     assert stop.departure_date == departure.replace(tzinfo=None)
     assert stop.order == 1
+
+
+def test_create_stop_with_airport_code(session: Session, trip: Trip) -> None:
+    stop = create_stop(session, trip.id, "Buenos Aires", airport_code="eze")
+    assert stop.airport_code == "EZE"
+
+
+def test_stop_departure_before_arrival_raises(session: Session, trip: Trip) -> None:
+    arr = datetime(2025, 7, 5, tzinfo=UTC)
+    dep = datetime(2025, 7, 3, tzinfo=UTC)
+    with pytest.raises(StopDateError):
+        create_stop(session, trip.id, "BA", arr, dep)
+
+
+def test_stop_dates_outside_trip_period_raises(session: Session, trip_with_period: Trip) -> None:
+    arr = datetime(2025, 6, 30, tzinfo=UTC)  # before trip start
+    with pytest.raises(StopDateError):
+        create_stop(session, trip_with_period.id, "BA", arr)
+
+
+def test_stop_dates_within_trip_period_ok(session: Session, trip_with_period: Trip) -> None:
+    arr = datetime(2025, 7, 10, tzinfo=UTC)
+    dep = datetime(2025, 7, 15, tzinfo=UTC)
+    stop = create_stop(session, trip_with_period.id, "BA", arr, dep)
+    assert stop.city == "BA"

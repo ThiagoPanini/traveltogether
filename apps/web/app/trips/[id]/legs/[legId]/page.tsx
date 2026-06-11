@@ -11,16 +11,24 @@ interface Props {
   params: Promise<{ id: string; legId: string }>;
 }
 
-function stopLabel(
+import type { StopPublic } from "@traveltogether/types";
+
+function stopData(
   stopId: string | null,
-  stops: { id: string; city: string }[],
+  stops: StopPublic[],
   origin: string,
-): string {
-  if (stopId === null) return origin;
-  return stops.find((stop) => stop.id === stopId)?.city ?? "Parada";
+  originAirportCode: string | null,
+): { city: string; code: string } {
+  if (stopId === null) {
+    const code = originAirportCode ?? derivedCode(origin);
+    return { city: origin, code };
+  }
+  const stop = stops.find((s) => s.id === stopId);
+  if (!stop) return { city: "Parada", code: "PAR" };
+  return { city: stop.city, code: stop.airport_code ?? derivedCode(stop.city) };
 }
 
-function displayCode(value: string): string {
+function derivedCode(value: string): string {
   const match = value.match(/\(([A-Za-z]{3})\)/);
   if (match) return match[1].toUpperCase();
   const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -45,8 +53,8 @@ export default async function LegFaresPage({ params }: Props) {
   const leg = legs.find((item) => item.id === legId);
   if (!leg) notFound();
 
-  const originLabel = stopLabel(leg.origin_stop_id, stops, trip.origin);
-  const destinationLabel = stopLabel(leg.destination_stop_id, stops, trip.origin);
+  const from = stopData(leg.origin_stop_id, stops, trip.origin, trip.airport_code);
+  const to = stopData(leg.destination_stop_id, stops, trip.origin, trip.airport_code);
 
   return (
     <div className="app-shell">
@@ -55,25 +63,16 @@ export default async function LegFaresPage({ params }: Props) {
         <Link className="crumb" href={`/trips/${id}`}>
           ← {trip.name}
         </Link>
-        <header className="trips-header">
-          <div>
-            <h1>Pesquisas de Passagem</h1>
-          </div>
-          {fares.length > 0 && (
-            <Link href={`/trips/${id}/legs/${legId}/compare`} className="secondary-button">
-              Comparar
-            </Link>
-          )}
-        </header>
 
         <FaresPanel
           legId={legId}
+          tripId={id}
           initialFares={fares}
           role={membership.role}
-          fromCode={displayCode(originLabel)}
-          toCode={displayCode(destinationLabel)}
-          fromCity={originLabel}
-          toCity={destinationLabel}
+          fromCode={from.code}
+          toCode={to.code}
+          fromCity={from.city}
+          toCity={to.city}
         />
       </main>
     </div>

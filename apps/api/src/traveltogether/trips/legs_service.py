@@ -5,11 +5,15 @@ from datetime import datetime
 
 from sqlmodel import Session, col, func, select
 
-from traveltogether.trips.models import Leg, Stop
+from traveltogether.trips.models import Leg, Stop, Trip
 
 
 class StopAnchoredError(Exception):
     """Raised when trying to delete a Stop that is referenced by a Leg."""
+
+
+class LegHasFareError(Exception):
+    """Raised when sync would delete a Leg that already has FareQuotes."""
 
 
 def _next_order(session: Session, trip_id: uuid.UUID) -> int:
@@ -26,6 +30,16 @@ def create_leg(
     destination_stop_id: uuid.UUID | None = None,
     target_date: datetime | None = None,
 ) -> Leg:
+    existing = session.exec(
+        select(Leg).where(
+            col(Leg.trip_id) == trip_id,
+            col(Leg.origin_stop_id) == origin_stop_id,
+            col(Leg.destination_stop_id) == destination_stop_id,
+        )
+    ).first()
+    if existing is not None:
+        return existing
+
     leg = Leg(
         trip_id=trip_id,
         origin_stop_id=origin_stop_id,
@@ -70,7 +84,6 @@ def delete_leg(session: Session, leg: Leg) -> None:
 
 
 def check_stop_not_anchored(session: Session, stop: Stop) -> None:
-    """Raise StopAnchoredError if any Leg references this stop."""
     anchored = session.exec(
         select(Leg).where(
             (col(Leg.origin_stop_id) == stop.id) | (col(Leg.destination_stop_id) == stop.id)
@@ -80,3 +93,68 @@ def check_stop_not_anchored(session: Session, stop: Stop) -> None:
         raise StopAnchoredError(
             f"stop {stop.id} is anchored by leg {anchored.id} and cannot be deleted"
         )
+
+
+def sync_legs_from_stops(
+    session: Session, trip: Trip, stops: list[Stop] | None = None, *, commit: bool = True
+) -> None:
+    """Rebuild Legs from the current ordered Stop list.
+
+    Derives N+1 legs for N stops: (None→s1), (s1→s2), ..., (sN→None).
+    Raises LegHasFareError if a leg that would be removed has FareQuotes.
+    """
+    from traveltogether.fares.service import leg_has_fare_quotes
+    from traveltogether.trips.stops_service import list_stops
+
+    if stops is None:
+        stops = list_stops(session, trip.id)
+    existing_legs = list_legs(session, trip.id)
+
+    # Build desired (origin_id, destination_id) pairs
+    if not stops:
+        desired: list[tuple[uuid.UUID | None, uuid.UUID | None]] = []
+    else:
+        desired = [(None, stops[0].id)]
+        for i in range(len(stops) - 1):
+            desired.append((stops[i].id, stops[i + 1].id))
+        desired.append((stops[-1].id, None))
+
+    desired_set = set(desired)
+    existing_map = {(leg.origin_stop_id, leg.destination_stop_id): leg for leg in existing_legs}
+
+    # Check legs to remove don't have fares
+    to_remove = [leg for key, leg in existing_map.items() if key not in desired_set]
+    for leg in to_remove:
+        if leg_has_fare_quotes(session, leg.id):
+            raise LegHasFareError(f"leg {leg.id} has fares and cannot be removed during sync")
+
+    # Remove obsolete legs
+    for leg in to_remove:
+        session.delete(leg)
+    session.flush()
+
+    # Add missing legs
+    to_add = [pair for pair in desired if pair not in existing_map]
+    for i, (origin_id, dest_id) in enumerate(desired):
+        if (origin_id, dest_id) in to_add:
+            leg = Leg(
+                trip_id=trip.id,
+                origin_stop_id=origin_id,
+                destination_stop_id=dest_id,
+                order=i + 1,
+            )
+            session.add(leg)
+
+    # Re-number all legs to match desired order
+    session.flush()
+    current = list_legs(session, trip.id)
+    for leg in current:
+        pair = (leg.origin_stop_id, leg.destination_stop_id)
+        if pair in desired_set:
+            leg.order = desired.index(pair) + 1
+            session.add(leg)
+
+    if commit:
+        session.commit()
+    else:
+        session.flush()

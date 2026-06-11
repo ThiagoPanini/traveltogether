@@ -62,7 +62,7 @@ def _create_stop(
     return res.json()
 
 
-def test_post_leg_creates_leg_and_returns_201(
+def test_post_leg_reuses_existing_derived_leg(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
@@ -78,7 +78,7 @@ def test_post_leg_creates_leg_and_returns_201(
     body = res.json()
     assert body["origin_stop_id"] == s1["id"]
     assert body["destination_stop_id"] == s2["id"]
-    assert body["order"] == 1
+    assert body["order"] == 2
 
 
 def test_post_leg_with_null_home(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -111,7 +111,7 @@ def test_get_legs_returns_ordered_list(client: TestClient, monkeypatch: pytest.M
     )
     res = client.get(f"/trips/{trip['id']}/legs", headers=headers)
     assert res.status_code == 200
-    assert [leg["order"] for leg in res.json()] == [1, 2]
+    assert [leg["order"] for leg in res.json()] == [1, 2, 3]
 
 
 def test_post_leg_by_non_organizer_returns_403(
@@ -128,7 +128,7 @@ def test_post_leg_by_non_organizer_returns_403(
     assert res.status_code == 403
 
 
-def test_delete_stop_returns_409_when_anchored(
+def test_delete_stop_succeeds_when_derived_leg_has_no_fare(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
@@ -141,7 +141,7 @@ def test_delete_stop_returns_409_when_anchored(
         headers=headers,
     )
     res = client.delete(f"/trips/{trip['id']}/stops/{s1['id']}", headers=headers)
-    assert res.status_code == 409
+    assert res.status_code == 204
 
 
 def test_delete_stop_succeeds_when_not_anchored(

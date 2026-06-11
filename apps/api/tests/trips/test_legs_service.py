@@ -2,6 +2,7 @@
 
 import uuid
 from collections.abc import Iterator
+from decimal import Decimal
 
 import pytest
 from sqlalchemy.pool import StaticPool
@@ -9,11 +10,13 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from traveltogether.identity.models import User
 from traveltogether.trips.legs_service import (
+    LegHasFareError,
     StopAnchoredError,
     check_stop_not_anchored,
     create_leg,
     delete_leg,
     list_legs,
+    sync_legs_from_stops,
     update_leg,
 )
 from traveltogether.trips.models import Stop, Trip
@@ -107,6 +110,95 @@ def test_check_stop_anchored_raises_when_referenced(
     create_leg(session, trip.id, origin_stop_id=s1.id, destination_stop_id=s2.id)
     with pytest.raises(StopAnchoredError):
         check_stop_not_anchored(session, s1)
+
+
+def test_sync_legs_zero_stops_generates_no_legs(session: Session, trip: Trip) -> None:
+    sync_legs_from_stops(session, trip)
+    assert list_legs(session, trip.id) == []
+
+
+def test_sync_legs_one_stop_generates_two_legs(session: Session, trip: Trip) -> None:
+    from traveltogether.trips.stops_service import create_stop
+
+    s1 = create_stop(session, trip.id, "Buenos Aires")
+    sync_legs_from_stops(session, trip)
+    legs = list_legs(session, trip.id)
+    assert len(legs) == 2
+    assert legs[0].origin_stop_id is None
+    assert legs[0].destination_stop_id == s1.id
+    assert legs[1].origin_stop_id == s1.id
+    assert legs[1].destination_stop_id is None
+
+
+def test_sync_legs_two_stops_generates_three_legs(session: Session, trip: Trip) -> None:
+    from traveltogether.trips.stops_service import create_stop
+
+    s1 = create_stop(session, trip.id, "Buenos Aires")
+    s2 = create_stop(session, trip.id, "Montevideo")
+    sync_legs_from_stops(session, trip)
+    legs = list_legs(session, trip.id)
+    assert len(legs) == 3
+    pairs = [(leg.origin_stop_id, leg.destination_stop_id) for leg in legs]
+    assert pairs == [(None, s1.id), (s1.id, s2.id), (s2.id, None)]
+
+
+def test_sync_legs_idempotent(session: Session, trip: Trip) -> None:
+    from traveltogether.trips.stops_service import create_stop
+
+    create_stop(session, trip.id, "A")
+    sync_legs_from_stops(session, trip)
+    sync_legs_from_stops(session, trip)
+    assert len(list_legs(session, trip.id)) == 2
+
+
+def test_sync_legs_removes_leg_when_stop_removed(session: Session, trip: Trip) -> None:
+    from traveltogether.trips.stops_service import create_stop, delete_stop
+
+    s1 = create_stop(session, trip.id, "A")
+    s2 = create_stop(session, trip.id, "B")
+    sync_legs_from_stops(session, trip)
+    assert len(list_legs(session, trip.id)) == 3
+
+    delete_stop(session, s2)
+    sync_legs_from_stops(session, trip)
+    legs = list_legs(session, trip.id)
+    assert len(legs) == 2
+    assert legs[0].destination_stop_id == s1.id
+    assert legs[1].origin_stop_id == s1.id
+
+
+def test_sync_legs_raises_when_leg_has_fares(session: Session, trip: Trip) -> None:
+    from traveltogether.fares.models import FareQuote
+    from traveltogether.trips.stops_service import create_stop
+
+    s1 = create_stop(session, trip.id, "A")
+    s2 = create_stop(session, trip.id, "B")
+    sync_legs_from_stops(session, trip)
+    legs = list_legs(session, trip.id)
+    # Add a fare to the middle leg (s1 → s2)
+    mid_leg = next(
+        leg for leg in legs if leg.origin_stop_id == s1.id and leg.destination_stop_id == s2.id
+    )
+    fare = FareQuote(
+        leg_id=mid_leg.id,
+        registered_by=uuid.uuid4(),
+        value=Decimal("500"),
+        currency="BRL",
+        flight_date=mid_leg.target_date or __import__("datetime").datetime.now(),
+        duration_minutes=90,
+        origin_airport="GRU",
+        destination_airport="MVD",
+        airline="GOL",
+    )
+    session.add(fare)
+    session.commit()
+
+    # Removing s2 would remove the s1→s2 leg which has fares
+    delete_s2 = next(s for s in [s2])
+    session.delete(delete_s2)
+    session.commit()
+    with pytest.raises(LegHasFareError):
+        sync_legs_from_stops(session, trip)
 
 
 def test_check_stop_not_anchored_ok_when_no_leg(

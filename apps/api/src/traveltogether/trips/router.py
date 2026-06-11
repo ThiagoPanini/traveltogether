@@ -3,19 +3,32 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from pydantic import BaseModel
 from sqlmodel import Session
 
 from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
 from traveltogether.platform.db import get_session
+from traveltogether.platform.object_storage import ObjectStorageConfigError, ObjectStorageError
+from traveltogether.trips.cover_images import (
+    CoverImageValidationError,
+    update_stop_cover_image,
+    update_trip_cover_image,
+)
+from traveltogether.trips.itinerary_service import (
+    create_itinerary_item,
+    delete_itinerary_item,
+    list_itinerary_items,
+    reorder_itinerary_items,
+    update_itinerary_item,
+)
 from traveltogether.trips.legs_service import (
-    StopAnchoredError,
-    check_stop_not_anchored,
+    LegHasFareError,
     create_leg,
     delete_leg,
     list_legs,
+    sync_legs_from_stops,
     update_leg,
 )
 from traveltogether.trips.members_service import (
@@ -27,6 +40,10 @@ from traveltogether.trips.members_service import (
     remove_member_from_trip,
 )
 from traveltogether.trips.models import (
+    ItineraryItem,
+    ItineraryItemCreate,
+    ItineraryItemPublic,
+    ItineraryItemUpdate,
     Leg,
     LegCreate,
     LegPublic,
@@ -35,6 +52,7 @@ from traveltogether.trips.models import (
     MembershipPublic,
     MembershipRole,
     PendingMembershipPublic,
+    ReorderItineraryItemsRequest,
     Stop,
     StopCreate,
     StopPublic,
@@ -45,12 +63,14 @@ from traveltogether.trips.models import (
     TripUpdate,
 )
 from traveltogether.trips.service import (
+    TripPeriodError,
     create_trip,
     get_trip_membership,
-    list_user_trips,
+    list_user_trip_summaries,
     update_trip,
 )
 from traveltogether.trips.stops_service import (
+    StopDateError,
     create_stop,
     delete_stop,
     list_stops,
@@ -64,6 +84,13 @@ router = APIRouter(prefix="/trips", tags=["trips"])
 class TripWithMembershipResponse(BaseModel):
     trip: TripPublic
     membership: MembershipPublic
+
+
+class TripSummaryResponse(BaseModel):
+    trip: TripPublic
+    membership: MembershipPublic
+    stops: list[StopPublic]
+    cover_image_url: str | None = None
 
 
 def _get_trip_or_404(session: Session, trip_id: uuid.UUID) -> Trip:
@@ -86,31 +113,41 @@ def post_trip(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> TripWithMembershipResponse:
-    trip, membership = create_trip(
-        session,
-        creator_id=current_user.id,
-        name=body.name,
-        description=body.description,
-        origin=body.origin,
-    )
+    try:
+        trip, membership = create_trip(
+            session,
+            creator_id=current_user.id,
+            name=body.name,
+            description=body.description,
+            origin=body.origin,
+            airport_code=body.airport_code,
+            start_date=body.start_date,
+            end_date=body.end_date,
+        )
+    except TripPeriodError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
     return TripWithMembershipResponse(
         trip=TripPublic.model_validate(trip),
         membership=MembershipPublic.model_validate(membership),
     )
 
 
-@router.get("", response_model=list[TripWithMembershipResponse])
+@router.get("", response_model=list[TripSummaryResponse])
 def get_trips(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
-) -> list[TripWithMembershipResponse]:
-    rows = list_user_trips(session, current_user.id)
+) -> list[TripSummaryResponse]:
+    rows = list_user_trip_summaries(session, current_user.id)
     return [
-        TripWithMembershipResponse(
+        TripSummaryResponse(
             trip=TripPublic.model_validate(trip),
             membership=MembershipPublic.model_validate(membership),
+            stops=[StopPublic.model_validate(stop) for stop in stops],
+            cover_image_url=trip.cover_image_url,
         )
-        for trip, membership in rows
+        for trip, membership, stops in rows
     ]
 
 
@@ -144,7 +181,57 @@ def patch_trip(
             detail="only organizers can edit trip metadata",
         )
 
-    updated = update_trip(session, trip, body.name, body.description, body.origin)
+    try:
+        updated = update_trip(
+            session,
+            trip,
+            body.name,
+            body.description,
+            body.origin,
+            airport_code=body.airport_code,
+            start_date=body.start_date,
+            end_date=body.end_date,
+        )
+    except TripPeriodError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    return TripPublic.model_validate(updated)
+
+
+@router.post("/{trip_id}/cover-image", response_model=TripPublic)
+def post_trip_cover_image(
+    trip_id: uuid.UUID,
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> TripPublic:
+    trip = _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit trip cover image",
+        )
+
+    content = file.file.read()
+    try:
+        updated = update_trip_cover_image(session, trip, content, file.content_type or "")
+    except CoverImageValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except ObjectStorageConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="cover image storage is not configured",
+        ) from exc
+    except ObjectStorageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="cover image storage upload failed",
+        ) from exc
+
     return TripPublic.model_validate(updated)
 
 
@@ -315,14 +402,33 @@ def post_stop(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> StopPublic:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="only organizers can manage stops",
         )
-    stop = create_stop(session, trip_id, body.city, body.arrival_date, body.departure_date)
+    try:
+        stop = create_stop(
+            session,
+            trip_id,
+            body.city,
+            body.arrival_date,
+            body.departure_date,
+            airport_code=body.airport_code,
+            commit=False,
+        )
+        sync_legs_from_stops(session, trip, commit=False)
+        session.commit()
+        session.refresh(stop)
+    except StopDateError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except LegHasFareError as exc:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return StopPublic.model_validate(stop)
 
 
@@ -344,14 +450,20 @@ def patch_stops_reorder(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[StopPublic]:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="only organizers can reorder stops",
         )
-    reorder_stops(session, trip_id, body.stop_ids)
+    reorder_stops(session, trip_id, body.stop_ids, commit=False)
+    try:
+        sync_legs_from_stops(session, trip, commit=False)
+        session.commit()
+    except LegHasFareError as exc:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return [StopPublic.model_validate(s) for s in list_stops(session, trip_id)]
 
 
@@ -371,7 +483,51 @@ def patch_stop(
             detail="only organizers can edit stops",
         )
     stop = _get_stop_or_404(session, trip_id, stop_id)
-    updated = update_stop(session, stop, body.city, body.arrival_date, body.departure_date)
+    try:
+        updated = update_stop(
+            session,
+            stop,
+            body.city,
+            airport_code=body.airport_code,
+            arrival_date=body.arrival_date,
+            departure_date=body.departure_date,
+        )
+    except StopDateError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    return StopPublic.model_validate(updated)
+
+
+@router.post("/{trip_id}/stops/{stop_id}/cover-image", response_model=StopPublic)
+def post_stop_cover_image(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> StopPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit stop cover images",
+        )
+    stop = _get_stop_or_404(session, trip_id, stop_id)
+    content = file.file.read()
+    try:
+        updated = update_stop_cover_image(session, stop, content, file.content_type or "")
+    except CoverImageValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except ObjectStorageConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+    except ObjectStorageError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     return StopPublic.model_validate(updated)
 
 
@@ -382,7 +538,7 @@ def delete_stop_route(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> Response:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     if membership.role != MembershipRole.organizer:
         raise HTTPException(
@@ -390,11 +546,14 @@ def delete_stop_route(
             detail="only organizers can delete stops",
         )
     stop = _get_stop_or_404(session, trip_id, stop_id)
+    remaining_stops = [s for s in list_stops(session, trip_id) if s.id != stop.id]
     try:
-        check_stop_not_anchored(session, stop)
-    except StopAnchoredError as exc:
+        sync_legs_from_stops(session, trip, stops=remaining_stops, commit=False)
+        delete_stop(session, stop, commit=False)
+        session.commit()
+    except LegHasFareError as exc:
+        session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    delete_stop(session, stop)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -490,3 +649,133 @@ def delete_leg_route(
     leg = _get_leg_or_404(session, trip_id, leg_id)
     delete_leg(session, leg)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# --- Itinerary (Roteiro) ---
+
+
+def _get_itinerary_item_or_404(
+    session: Session, stop_id: uuid.UUID, item_id: uuid.UUID
+) -> ItineraryItem:
+    item = session.get(ItineraryItem, item_id)
+    if item is None or item.stop_id != stop_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="itinerary item not found"
+        )
+    return item
+
+
+@router.get(
+    "/{trip_id}/stops/{stop_id}/itinerary",
+    response_model=list[ItineraryItemPublic],
+)
+def get_itinerary(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[ItineraryItemPublic]:
+    _get_trip_or_404(session, trip_id)
+    _require_membership(session, trip_id, current_user.id)
+    _get_stop_or_404(session, trip_id, stop_id)
+    return [ItineraryItemPublic.model_validate(i) for i in list_itinerary_items(session, stop_id)]
+
+
+@router.post(
+    "/{trip_id}/stops/{stop_id}/itinerary",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ItineraryItemPublic,
+)
+def post_itinerary_item(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    body: ItineraryItemCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> ItineraryItemPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can add itinerary items",
+        )
+    _get_stop_or_404(session, trip_id, stop_id)
+    item = create_itinerary_item(
+        session, stop_id, body.title, body.notes, body.link, body.day, body.time
+    )
+    return ItineraryItemPublic.model_validate(item)
+
+
+@router.patch(
+    "/{trip_id}/stops/{stop_id}/itinerary/{item_id}",
+    response_model=ItineraryItemPublic,
+)
+def patch_itinerary_item(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    item_id: uuid.UUID,
+    body: ItineraryItemUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> ItineraryItemPublic:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can edit itinerary items",
+        )
+    _get_stop_or_404(session, trip_id, stop_id)
+    item = _get_itinerary_item_or_404(session, stop_id, item_id)
+    updated = update_itinerary_item(
+        session, item, body.title, body.notes, body.link, body.day, body.time
+    )
+    return ItineraryItemPublic.model_validate(updated)
+
+
+@router.delete(
+    "/{trip_id}/stops/{stop_id}/itinerary/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_itinerary_item_route(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    item_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> Response:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can delete itinerary items",
+        )
+    _get_stop_or_404(session, trip_id, stop_id)
+    item = _get_itinerary_item_or_404(session, stop_id, item_id)
+    delete_itinerary_item(session, item)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{trip_id}/stops/{stop_id}/itinerary/reorder",
+    response_model=list[ItineraryItemPublic],
+)
+def post_itinerary_reorder(
+    trip_id: uuid.UUID,
+    stop_id: uuid.UUID,
+    body: ReorderItineraryItemsRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[ItineraryItemPublic]:
+    _get_trip_or_404(session, trip_id)
+    membership = _require_membership(session, trip_id, current_user.id)
+    if membership.role != MembershipRole.organizer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="only organizers can reorder itinerary items",
+        )
+    _get_stop_or_404(session, trip_id, stop_id)
+    reorder_itinerary_items(session, stop_id, body.item_ids)
+    return [ItineraryItemPublic.model_validate(i) for i in list_itinerary_items(session, stop_id)]

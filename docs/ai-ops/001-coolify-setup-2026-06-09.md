@@ -26,6 +26,12 @@ Substituídas pelo domínio final em `docs/ai-ops/002-dns-setup.md` (issue #3).
 **traveltogether-api:**
 - `DATABASE_URL` — URL interna do Postgres 17 (provisional, rotacionar)
 - `SENTRY_DSN` — vazio, preencher após criar projeto no Sentry
+- `R2_ENDPOINT_URL` — endpoint S3-compatible do Cloudflare R2, ex.: `https://<account-id>.r2.cloudflarestorage.com`
+- `R2_BUCKET` — bucket das imagens de capa, ex.: `traveltogether-covers`
+- `R2_ACCESS_KEY_ID` — access key com permissão de escrita no bucket de capas
+- `R2_SECRET_ACCESS_KEY` — secret key da access key do R2
+- `R2_PUBLIC_BASE_URL` — base pública/CDN usada para servir os objetos persistidos
+- `COVER_IMAGE_MAX_BYTES` — opcional; limite de upload de capa em bytes (default: `5242880`)
 
 **traveltogether-web:**
 - `TRAVELTOGETHER_API_URL` — URL sslip.io da API (provisional, atualizar após DNS)

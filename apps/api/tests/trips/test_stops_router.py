@@ -16,6 +16,20 @@ TEST_SECRET = "public-test-auth-secret-not-for-production"
 ALICE_EMAIL = "alice@example.com"
 BOB_EMAIL = "bob@example.com"
 
+FARE_PAYLOAD = {
+    "value": "1500.00",
+    "currency": "BRL",
+    "flight_date": "2025-09-01T10:00:00",
+    "duration_minutes": 180,
+    "stops": 0,
+    "checked_baggage": True,
+    "origin_airport": "GRU",
+    "destination_airport": "EZE",
+    "airline": "LATAM",
+    "link": "",
+    "notes": "",
+}
+
 
 @pytest.fixture(name="session")
 def session_fixture() -> Iterator[Session]:
@@ -71,6 +85,33 @@ def test_post_stop_creates_stop_and_returns_201(
     assert body["trip_id"] == trip["id"]
 
 
+def test_post_stop_updates_derived_legs(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip = _create_trip(client, headers)
+    first = client.post(
+        f"/trips/{trip['id']}/stops",
+        json={"city": "Buenos Aires"},
+        headers=headers,
+    ).json()
+    second = client.post(
+        f"/trips/{trip['id']}/stops",
+        json={"city": "Montevideo"},
+        headers=headers,
+    ).json()
+
+    res = client.get(f"/trips/{trip['id']}/legs", headers=headers)
+
+    assert res.status_code == 200
+    pairs = [(leg["origin_stop_id"], leg["destination_stop_id"]) for leg in res.json()]
+    assert pairs == [
+        (None, first["id"]),
+        (first["id"], second["id"]),
+        (second["id"], None),
+    ]
+
+
 def test_get_stops_returns_ordered_list(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -121,6 +162,49 @@ def test_delete_stop_returns_204(client: TestClient, monkeypatch: pytest.MonkeyP
     assert res.status_code == 204
 
 
+def test_delete_stop_returns_409_when_derived_leg_has_fare(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip = _create_trip(client, headers)
+    first = client.post(f"/trips/{trip['id']}/stops", json={"city": "Lima"}, headers=headers).json()
+    second = client.post(
+        f"/trips/{trip['id']}/stops", json={"city": "Quito"}, headers=headers
+    ).json()
+    legs = client.get(f"/trips/{trip['id']}/legs", headers=headers).json()
+    anchored_leg = next(
+        leg
+        for leg in legs
+        if leg["origin_stop_id"] == first["id"] and leg["destination_stop_id"] == second["id"]
+    )
+    fare_res = client.post(f"/legs/{anchored_leg['id']}/fares", json=FARE_PAYLOAD, headers=headers)
+    assert fare_res.status_code == 201
+
+    res = client.delete(f"/trips/{trip['id']}/stops/{second['id']}", headers=headers)
+
+    assert res.status_code == 409
+    stops = client.get(f"/trips/{trip['id']}/stops", headers=headers).json()
+    assert [stop["id"] for stop in stops] == [first["id"], second["id"]]
+
+
+def test_post_stop_returns_409_when_existing_derived_leg_has_fare(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip = _create_trip(client, headers)
+    first = client.post(f"/trips/{trip['id']}/stops", json={"city": "Lima"}, headers=headers).json()
+    legs = client.get(f"/trips/{trip['id']}/legs", headers=headers).json()
+    return_leg = next(leg for leg in legs if leg["origin_stop_id"] == first["id"])
+    fare_res = client.post(f"/legs/{return_leg['id']}/fares", json=FARE_PAYLOAD, headers=headers)
+    assert fare_res.status_code == 201
+
+    res = client.post(f"/trips/{trip['id']}/stops", json={"city": "Quito"}, headers=headers)
+
+    assert res.status_code == 409
+    stops = client.get(f"/trips/{trip['id']}/stops", headers=headers).json()
+    assert [stop["id"] for stop in stops] == [first["id"]]
+
+
 def test_patch_stops_reorder(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
     trip = _create_trip(client, headers)
@@ -135,6 +219,60 @@ def test_patch_stops_reorder(client: TestClient, monkeypatch: pytest.MonkeyPatch
     assert res.status_code == 200
     cities = [s["city"] for s in res.json()]
     assert cities == ["Z", "X", "Y"]
+
+
+def test_patch_stops_reorder_updates_derived_legs(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip = _create_trip(client, headers)
+    s1 = client.post(f"/trips/{trip['id']}/stops", json={"city": "X"}, headers=headers).json()
+    s2 = client.post(f"/trips/{trip['id']}/stops", json={"city": "Y"}, headers=headers).json()
+    s3 = client.post(f"/trips/{trip['id']}/stops", json={"city": "Z"}, headers=headers).json()
+
+    res = client.patch(
+        f"/trips/{trip['id']}/stops",
+        json={"stop_ids": [s3["id"], s1["id"], s2["id"]]},
+        headers=headers,
+    )
+    legs_res = client.get(f"/trips/{trip['id']}/legs", headers=headers)
+
+    assert res.status_code == 200
+    pairs = [(leg["origin_stop_id"], leg["destination_stop_id"]) for leg in legs_res.json()]
+    assert pairs == [
+        (None, s3["id"]),
+        (s3["id"], s1["id"]),
+        (s1["id"], s2["id"]),
+        (s2["id"], None),
+    ]
+
+
+def test_patch_stops_reorder_returns_409_when_derived_leg_has_fare(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip = _create_trip(client, headers)
+    s1 = client.post(f"/trips/{trip['id']}/stops", json={"city": "A"}, headers=headers).json()
+    s2 = client.post(f"/trips/{trip['id']}/stops", json={"city": "B"}, headers=headers).json()
+    s3 = client.post(f"/trips/{trip['id']}/stops", json={"city": "C"}, headers=headers).json()
+    legs = client.get(f"/trips/{trip['id']}/legs", headers=headers).json()
+    anchored_leg = next(
+        leg
+        for leg in legs
+        if leg["origin_stop_id"] == s1["id"] and leg["destination_stop_id"] == s2["id"]
+    )
+    fare_res = client.post(f"/legs/{anchored_leg['id']}/fares", json=FARE_PAYLOAD, headers=headers)
+    assert fare_res.status_code == 201
+
+    res = client.patch(
+        f"/trips/{trip['id']}/stops",
+        json={"stop_ids": [s2["id"], s1["id"], s3["id"]]},
+        headers=headers,
+    )
+
+    assert res.status_code == 409
+    stops = client.get(f"/trips/{trip['id']}/stops", headers=headers).json()
+    assert [stop["id"] for stop in stops] == [s1["id"], s2["id"], s3["id"]]
 
 
 def test_get_stops_by_non_member_returns_403(

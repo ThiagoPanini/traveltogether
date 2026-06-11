@@ -7,6 +7,11 @@ export interface TripPublic {
   name: string;
   description: string;
   origin: string;
+  airport_code: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  cover_image_key: string | null;
+  cover_image_url: string | null;
   created_by: string;
   created_at: string;
 }
@@ -22,6 +27,11 @@ export interface MembershipPublic {
 export interface TripWithMembership {
   trip: TripPublic;
   membership: MembershipPublic;
+}
+
+export interface TripSummary extends TripWithMembership {
+  stops: StopPublic[];
+  cover_image_url: string | null;
 }
 
 export interface PendingMembershipPublic {
@@ -52,19 +62,24 @@ export interface StopPublic {
   id: string;
   trip_id: string;
   city: string;
+  airport_code: string | null;
   arrival_date: string | null;
   departure_date: string | null;
+  cover_image_key: string | null;
+  cover_image_url: string | null;
   order: number;
 }
 
 export interface StopCreate {
   city: string;
+  airport_code?: string | null | undefined;
   arrival_date?: string | null;
   departure_date?: string | null;
 }
 
 export interface StopUpdate {
   city?: string | null;
+  airport_code?: string | null;
   arrival_date?: string | null;
   departure_date?: string | null;
 }
@@ -94,6 +109,37 @@ export interface LegUpdate {
   target_date?: string | null;
 }
 
+export interface ItineraryItemPublic {
+  id: string;
+  stop_id: string;
+  title: string;
+  notes: string;
+  link: string;
+  day: string | null;
+  time: string | null;
+  order: number;
+}
+
+export interface ItineraryItemCreate {
+  title: string;
+  notes?: string;
+  link?: string;
+  day?: string | null;
+  time?: string | null;
+}
+
+export interface ItineraryItemUpdate {
+  title?: string | null;
+  notes?: string | null;
+  link?: string | null;
+  day?: string | null;
+  time?: string | null;
+}
+
+export interface ReorderItineraryItemsRequest {
+  item_ids: string[];
+}
+
 export interface FareQuotePublic {
   id: string;
   leg_id: string;
@@ -111,6 +157,8 @@ export interface FareQuotePublic {
   link: string;
   notes: string;
   is_chosen: boolean;
+  upvote_count: number;
+  user_voted: boolean;
 }
 
 export interface FareQuoteCreate {
