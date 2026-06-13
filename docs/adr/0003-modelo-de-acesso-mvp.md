@@ -1,6 +1,6 @@
 # ADR 0003 — Modelo de acesso do MVP: gate por e-mail sem verificação
 
-- **Status:** Accepted
+- **Status:** **Superseded by [ADR-0013](0013-acesso-aberto-contas-proprias.md)** (acesso aberto; allowlist aposentada) — vigorou no beta fechado
 - **Data:** 2026-06-08
 - **Decisores:** Thiago Panini (solo)
 - **Relacionado:** [docs/CONTEXT.md](../CONTEXT.md) (boundary `identity`, invariante 10)

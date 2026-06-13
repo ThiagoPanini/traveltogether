@@ -23,10 +23,13 @@ O **termo canônico do glossário é em pt-BR** (o domínio é naturalmente pt-B
 | **Upvote** (`Vote`) | Voto positivo persistido de um `Usuário` da Viagem numa `Pesquisa de Passagem`. Toggle (votar/desfazer). Único por par (`Usuário`, `Pesquisa`). Sinal social/orgânico que informa a `Escolhida`. |
 | **Organizador** (`Organizer`) | Papel de um `Usuário` dentro de uma `Viagem` com poder de **escrita**: gerir metadados, `Parada`s, `Trajeto`s, membros (adicionar/remover, promover/rebaixar), registrar `Pesquisa de Passagem`s e marcar a `Escolhida`. O criador da Viagem é o primeiro organizador. |
 | **Membro** (`Member`) | Papel de um `Usuário` dentro de uma `Viagem` com acesso de **leitura + Upvote**. Não registra itens via formulário. Dormente no MVP (onde todos viram organizadores); existe para a fase aberta. |
-| **Usuário** (`User`) | Pessoa autenticada na plataforma, identificada por e-mail. No MVP só entra se o e-mail estiver na **allowlist**. Participa de várias `Viagem`s, com papéis distintos em cada. |
+| **Usuário** (`User`) | Pessoa autenticada na plataforma, com **conta própria** criada por ela (cadastro por Google ou por e-mail com código de acesso). Tem `nome de exibição` e `avatar`, e é identificada unicamente por e-mail. Participa de várias `Viagem`s, com papéis distintos em cada. O acesso à **plataforma** é aberto; o acesso a uma **`Viagem`** é dado por `Membership`. |
 | **Roteiro** (`Itinerary`) | Plano compartilhado do que o grupo pretende fazer durante uma `Parada` ("o que fazer nos 5 dias em NY"). Pertence a exatamente uma `Parada` e organiza os planos daquela estadia. |
 | **Item de Roteiro** (`ItineraryItem`) | Registro individual dentro de um `Roteiro`, representando uma atividade, lugar, reserva, link ou observação planejada para a `Parada`. Tem título e pode ter notas, link, dia/horário e ordem dentro da estadia. |
 | **Imagem de Capa** (`CoverImage`) | Imagem visual que representa uma `Viagem` ou uma `Parada` na interface. Não muda o significado da viagem nem da parada; é um recurso editorial para reconhecimento e contexto visual. |
+| **Comentário** (`Comment`) | Mensagem de **texto** que um `Usuário` com `Membership` (qualquer papel) escreve para discutir, de forma **assíncrona**, dentro de uma `Viagem`. Mira polimorficamente **um** alvo: uma `Pesquisa de Passagem`, um `Item de Roteiro` ou a própria `Viagem` (alvo Viagem = **mural** geral do grupo). É o **primeiro write disponível a um `Membro`**. Não é um sinal de decisão — `Upvote`/`Escolhida` continuam separados. |
+| **Tarefa** (`Task`) | Unidade de trabalho que um `Organizador` cria e atribui a um ou mais `Responsável`(eis) dentro de uma `Viagem`, para coordenar o que o grupo precisa fazer (ex.: "pesquisar passagem deste `Trajeto`", "reservar hotel"). Tem `título`, descrição e prazo opcionais, `status` (`a fazer`/`fazendo`/`feito`) e uma **âncora opcional** a um alvo (`Trajeto`, `Parada`, `Pesquisa de Passagem` ou `Item de Roteiro`). Visualizada como board. Várias por `Viagem`. |
+| **Responsável** (`assignee`) | `Usuário` com `Membership` na `Viagem` designado a uma `Tarefa`. Uma `Tarefa` pode ter vários. Pode mover o `status` da `Tarefa` em que está designado — mesmo sendo `Membro`. |
 
 ## Invariantes de domínio
 
@@ -44,18 +47,21 @@ O **termo canônico do glossário é em pt-BR** (o domínio é naturalmente pt-B
 10. Uma `Pesquisa de Passagem` pertence a **exatamente um** `Trajeto` (MVP). *(Evolução documentada em "Decisões abertas": poderá cobrir vários Trajetos. Ver [ADR-0004](adr/0004-modelo-de-itinerario-e-ancoragem-da-pesquisa.md).)*
 11. No máximo **uma** `Pesquisa de Passagem` por `Trajeto` está marcada como `Escolhida`.
 12. Um `Upvote` é único por par (`Usuário`, `Pesquisa de Passagem`).
-13. Só `Organizador`es registram/editam `Parada`s, `Item de Roteiro`s e `Pesquisa de Passagem`s via formulário; `Membro`s têm leitura + `Upvote`.
+13. Só `Organizador`es registram/editam `Parada`s, `Item de Roteiro`s e `Pesquisa de Passagem`s via formulário; `Membro`s têm leitura + `Upvote` + `Comentário`.
 14. Um `Organizador` pode editar/apagar **qualquer** `Pesquisa de Passagem` da Viagem; a autoria (`registrado_por`) é preservada para histórico.
 15. `moeda` é registrada por `Pesquisa de Passagem`; **não há conversão de câmbio** — comparação é visual.
-16. Acesso à plataforma exige e-mail na **allowlist** (MVP). Ver [ADR-0003](adr/0003-modelo-de-acesso-mvp.md).
+16. Acesso à **plataforma** é aberto: qualquer pessoa cria a própria conta (Google ou e-mail com código). Acesso a uma **`Viagem`** exige `Membership` nela — sem membership, a `Viagem` é invisível para o `Usuário`. *(Supersede o gate por allowlist do [ADR-0003](adr/0003-modelo-de-acesso-mvp.md); novo ADR a registrar.)*
+17. Qualquer `Usuário` com `Membership` numa `Viagem` pode escrever `Comentário`s nela. O autor edita/apaga os próprios; um `Organizador` pode apagar qualquer `Comentário` da Viagem (moderação). Um `Comentário` não altera a estrutura do itinerário nem sinais de decisão.
+18. Só `Organizador`es criam, atribuem, editam e apagam `Tarefa`s; qualquer `Responsável` (mesmo `Membro`) pode mover o `status` da `Tarefa` em que está designado. Todo `Responsável` precisa ter `Membership` na `Viagem`.
 
 ## Boundaries de domínio
 
 Cada boundary é dono dos seus modelos, regras e dados. Comunicação entre boundaries é via interface explícita, nunca import direto de modelos.
 
-- **`identity`** — `Usuário`, autenticação, allowlist, sessão. Delegado a provedor externo; expõe `CurrentUser` aos outros boundaries.
+- **`identity`** — `Usuário`, autenticação (Google OAuth + e-mail com código), conta/perfil, sessão. Delegado a provedor externo; expõe `CurrentUser` aos outros boundaries.
 - **`trips`** — `Viagem`, `Parada`, `Trajeto`, `Roteiro`, `Membership` (papéis `Organizador`/`Membro` por Viagem), gestão de membros. Estrutura do itinerário.
 - **`fares`** — `Pesquisa de Passagem`, `Upvote`, `Escolhida`. A feature de comparação/convergência de passagens. Referencia `Trajeto` por `LegId`.
+- **`collaboration`** — `Comentário` e `Tarefa`: primitivos de coordenação do grupo, ancorados polimorficamente a alvos de outros boundaries (referencia `Pesquisa de Passagem`, `Item de Roteiro`, `Trajeto`, `Parada` ou `Viagem` por id), nunca importando seus modelos.
 - **`shared`** — value objects e tipos base (ex.: `UserId`, `TripId`, `LegId`, `Money`, `AirportCode`, `DateRange`).
 - **`platform`** — adapters de DB, observabilidade, e-mail/auth.
 
@@ -72,6 +78,10 @@ Cada boundary é dono dos seus modelos, regras e dados. Comunicação entre boun
 | "Plano" / "Programação" (soltos) | `Roteiro` ou `Item de Roteiro` |
 | "Foto do destino" | `Imagem de Capa` da `Viagem` ou `Imagem de Capa` da `Parada` |
 | "Convidado" | `Membro` (papel) ou `Usuário` |
+| "Chat" / "Mensagem" / "Post" / "Discussão" (entidade) | `Comentário` |
+| "Reação" / "Emoji" (em item) | `Upvote` (na `Pesquisa`) ou `Comentário` (texto) |
+| "To-do" / "Card" / "Ticket" / "Atribuição" | `Tarefa` |
+| "Atribuído" / "Dono da tarefa" | `Responsável` |
 | "Admin" (no nível da Viagem) | `Organizador` |
 
 ## Decisões abertas

@@ -25,6 +25,20 @@
 - **Membros:** *board* de pessoas com avatar, e-mail em mono, chip de papel (`Organizador` verde / `Membro` outline) e ações Promover/Rebaixar/Remover, respeitando o invariante do último organizador.
 - **Roteiro da Parada:** dias numerados (`dia 01`…), itens com horário em mono e acento, notas e link; dia sem itens mostra "Dia livre". Itens sem dia definido vão para uma seção própria.
 
+## Superfícies da evolução (plataforma aberta)
+
+> Adicionadas na sessão de grilling de 2026-06-13. Mesma direção **Atlas**; ver `docs/CONTEXT.md` (termos `Comentário`, `Tarefa`, `Responsável`) e ADR-0013/0014.
+
+- **Login / Cadastro:** deixa de ser só e-mail. Dois caminhos — **continuar com Google** (botão sólido floresta) e **e-mail com código** (informa e-mail → tela de **código de 6 dígitos** em células split-flap mono, reusando o motivo do `Aeroporto de Referência`). Kicker "embarque". O e-mail transacional (código e convite) leva a marca: papel marfim, tinta floresta, código em Plex Mono grande, acento laranja no CTA.
+- **Painel (home logada):** substitui a lista crua. Espinha = **Minhas Viagens** (cards Atlas de hoje). Em volta: **Próxima viagem em destaque** (hero com contagem regressiva em mono até a `data de ida` e `RouteLine` resumida), **O que precisa de mim** (board de pendências derivadas: `Trajeto`s sem `Pesquisa`, `Pesquisa`s sem `Escolhida`, `Parada`s sem `Roteiro`, `Tarefa`s atribuídas a mim, convites a aceitar), **Atividade recente** (filete de novidades do grupo) e acesso a **Perfil & conta**.
+- **Perfil & conta:** editar `nome de exibição` e `avatar` (Google entrega; e-mail gera avatar topográfico a partir do id, coerente com as capas), ver logins conectados. Avatar e nome passam a aparecer no lugar do e-mail cru em todo lugar (Membros, autoria de `Pesquisa`, `Comentário`s).
+- **Adicionar Membro:** campo de e-mail único; ao casar um `Usuário`, mostra **nome + avatar como confirmação** ("é esta pessoa?"). Autocomplete sutil da sua rede (quem você já divide Viagem). Sem diretório, sem handle.
+- **Comentários:** bloco de discussão assíncrona ancorado a `Pesquisa de Passagem`, `Item de Roteiro` e à `Viagem` (mural). Avatar + `nome` + timestamp mono; texto em Archivo; ação Responder (um nível). Lê-se como margem de caderno, não como rede social. `Membro` comenta.
+- **Tarefas (board):** board kanban de 3 colunas — **a fazer · fazendo · feito** — cards com `título`, pílula de âncora opcional (ex.: `LIS→GRU`), pilha de avatares dos `Responsáveis` e prazo em mono. Cantos quase retos, arrastar com `prefers-reduced-motion` respeitado. Sensação de prancheta de expedição.
+- **Mapa da rota (salto):** a `RouteLine` ganha um modo **mapa geográfico real** usando coordenadas do autocomplete de aeroporto — `Parada`s plotadas, `Trajeto`s desenhados como arco pontilhado, paleta floresta/laranja sobre relevo de papel. Convive com a `RouteLine` esquemática.
+- **Orçamento do grupo (salto):** painel que soma a `Pesquisa de Passagem` `Escolhida` de cada `Trajeto` → **custo estimado por pessoa**, valores em Plex Mono grande, sem conversão de câmbio (nota mono). Lacunas (Trajeto sem Escolhida) aparecem como "a decidir".
+- **Cronograma unificado (salto):** timeline vertical única da `Viagem` — `Trajeto`s, estadias de `Parada` e `Item de Roteiro` com horário num eixo só. Datas/horas em mono, faixas de estadia em marfim, trajetos como marcos de acento.
+
 ## Limites de linguagem
 
 - "Embarque", "split-flap", "board" e "atlas" são **copy/visual**, não termos de domínio.

@@ -6,7 +6,7 @@ Decisões arquiteturais relevantes (difíceis de reverter, surpreendentes sem co
 |---|---|---|
 | [0001](0001-stack-e-arquitetura-espelha-epistemix.md) | Stack e arquitetura: espelhar o epistemix (monorepo Next.js + FastAPI + Postgres, hexagonal pragmática) | Accepted |
 | [0002](0002-infra-panini-vps.md) | Infra: deploy no panini-vps (Coolify + Cloudflare), Postgres dedicado, CI com portão | Accepted |
-| [0003](0003-modelo-de-acesso-mvp.md) | Modelo de acesso do MVP: gate por e-mail sem verificação + allowlist em env var | Accepted |
+| [0003](0003-modelo-de-acesso-mvp.md) | Modelo de acesso do MVP: gate por e-mail sem verificação + allowlist em env var | Superseded by 0013 |
 | [0004](0004-modelo-de-itinerario-e-ancoragem-da-pesquisa.md) | Modelo de itinerário (Parada/Trajeto) e ancoragem da Pesquisa de Passagem | Accepted |
 | [0005](0005-substrato-de-planejamento-github-issues.md) | Substrato de planejamento: GitHub Issues (Matt Pocock), divergindo do epistemix | Accepted |
 | [0006](0006-autonomia-de-ops-afk-total.md) | Autonomia de ops: AFK total nas bordas 🔴 (DNS + secrets), com rotação pós-setup | Accepted |
@@ -16,5 +16,7 @@ Decisões arquiteturais relevantes (difíceis de reverter, surpreendentes sem co
 | [0010](0010-trajetos-derivados-das-paradas.md) | Trajetos derivados automaticamente da sequência de Paradas | Accepted |
 | [0011](0011-periodo-da-viagem-como-dado-proprio.md) | Período da Viagem como dado próprio informado na criação | Accepted |
 | [0012](0012-summary-de-viagem-para-lista.md) | Summary de Viagem para renderizar lista sem N+1 | Accepted |
+| [0013](0013-acesso-aberto-contas-proprias.md) | Acesso aberto: contas próprias (Google + e-mail com código), allowlist aposentada | Accepted (supersedes 0003) |
+| [0014](0014-boundary-collaboration-alvo-polimorfico.md) | Boundary `collaboration`: Comentário e Tarefa com alvo polimórfico | Accepted |
 
 > A linguagem de domínio vive em [docs/CONTEXT.md](../CONTEXT.md). A direção visual provisória vive em [DESIGN.md](../../DESIGN.md).
