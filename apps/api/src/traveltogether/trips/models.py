@@ -21,6 +21,8 @@ class Trip(SQLModel, table=True):  # type: ignore[call-arg]
     description: str = ""
     origin: str
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     start_date: date | None = None
     end_date: date | None = None
     cover_image_key: str | None = None
@@ -45,6 +47,8 @@ class TripPublic(SQLModel):
     description: str
     origin: str
     airport_code: str | None
+    latitude: float | None
+    longitude: float | None
     start_date: date | None
     end_date: date | None
     cover_image_key: str | None
@@ -86,6 +90,8 @@ class Stop(SQLModel, table=True):  # type: ignore[call-arg]
     trip_id: uuid.UUID = Field(foreign_key="trips.id")
     city: str
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     arrival_date: datetime | None = None
     departure_date: datetime | None = None
     cover_image_key: str | None = None
@@ -98,6 +104,8 @@ class StopPublic(SQLModel):
     trip_id: uuid.UUID
     city: str
     airport_code: str | None
+    latitude: float | None
+    longitude: float | None
     arrival_date: datetime | None
     departure_date: datetime | None
     cover_image_key: str | None
@@ -108,6 +116,8 @@ class StopPublic(SQLModel):
 class StopCreate(SQLModel):
     city: str
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     arrival_date: datetime | None = None
     departure_date: datetime | None = None
 
@@ -115,6 +125,8 @@ class StopCreate(SQLModel):
 class StopUpdate(SQLModel):
     city: str | None = None
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     arrival_date: datetime | None = None
     departure_date: datetime | None = None
 
@@ -156,6 +168,8 @@ class TripCreate(SQLModel):
     description: str = ""
     origin: str
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     start_date: date | None = None
     end_date: date | None = None
 
@@ -165,6 +179,8 @@ class TripUpdate(SQLModel):
     description: str | None = None
     origin: str | None = None
     airport_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     start_date: date | None = None
     end_date: date | None = None
 

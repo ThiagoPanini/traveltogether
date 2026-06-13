@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { AirportAutocomplete, type AirportPatch } from "@/components/airport-autocomplete";
 import { Icon } from "@/components/atlas";
 import { DateField } from "@/components/date-field";
 import { updateTripAction } from "../actions";
@@ -28,8 +29,17 @@ export function EditTripForm({ tripId, initial }: Props) {
   const [description, setDescription] = useState(initial.description);
   const [originCity, setOriginCity] = useState(initial.origin);
   const [originAirport, setOriginAirport] = useState(initial.airport);
+  const [originLat, setOriginLat] = useState<number | null>(null);
+  const [originLon, setOriginLon] = useState<number | null>(null);
   const [start, setStart] = useState(initial.start);
   const [end, setEnd] = useState(initial.end);
+
+  function patchOrigin(patch: AirportPatch) {
+    if (patch.city !== undefined) setOriginCity(patch.city);
+    if (patch.airport_code !== undefined) setOriginAirport(patch.airport_code ?? "");
+    if (patch.latitude !== undefined) setOriginLat(patch.latitude);
+    if (patch.longitude !== undefined) setOriginLon(patch.longitude);
+  }
 
   const valid =
     name.trim() &&
@@ -47,6 +57,8 @@ export function EditTripForm({ tripId, initial }: Props) {
       description: description.trim(),
       origin: originCity.trim(),
       airport_code: originAirport.trim().toUpperCase() || null,
+      latitude: originLat,
+      longitude: originLon,
       start_date: start || null,
       end_date: end || null,
     });
@@ -94,22 +106,14 @@ export function EditTripForm({ tripId, initial }: Props) {
       >
         <legend>02 · origem e período</legend>
         <div className="form-grid">
-          <div className="form-row cols-2">
-            <label className="field">
-              <span>Cidade de origem</span>
-              <input onChange={(e) => setOriginCity(e.target.value)} required value={originCity} />
-            </label>
-            <label className="field">
-              <span>Aeroporto de referência</span>
-              <input
-                maxLength={3}
-                onChange={(e) => setOriginAirport(e.target.value.toUpperCase())}
-                placeholder="GRU"
-                style={{ textTransform: "uppercase", fontFamily: "var(--font-mono)" }}
-                value={originAirport}
-              />
-            </label>
-          </div>
+          <AirportAutocomplete
+            airportLabel="Aeroporto de referência"
+            airportValue={originAirport}
+            cityLabel="Cidade de origem"
+            cityPlaceholder="São Paulo"
+            cityValue={originCity}
+            onChange={patchOrigin}
+          />
           <div className="form-row cols-2">
             <div className="field">
               <span>Data de ida</span>

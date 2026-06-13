@@ -8,34 +8,30 @@ import { createStop, createTrip } from "@/lib/api/trips";
 interface NewStopInput {
   city: string;
   airport_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   arrival_date?: string | null;
   departure_date?: string | null;
 }
 
-export async function createTripAction(data: {
+interface NewTripInput {
   name: string;
   description: string;
   origin: string;
   airport_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   start_date?: string | null;
   end_date?: string | null;
-}) {
+}
+
+export async function createTripAction(data: NewTripInput) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
   return createTrip(session.apiAccessToken, data);
 }
 
-export async function createTripWithStopsAction(
-  data: {
-    name: string;
-    description: string;
-    origin: string;
-    airport_code?: string | null;
-    start_date?: string | null;
-    end_date?: string | null;
-  },
-  stops: NewStopInput[],
-) {
+export async function createTripWithStopsAction(data: NewTripInput, stops: NewStopInput[]) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
 

@@ -56,6 +56,8 @@ export async function createTrip(
     description: string;
     origin: string;
     airport_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     start_date?: string | null;
     end_date?: string | null;
   },
@@ -83,6 +85,8 @@ export async function updateTrip(
     description: string;
     origin: string;
     airport_code: string | null;
+    latitude: number | null;
+    longitude: number | null;
     start_date: string | null;
     end_date: string | null;
   }>,
@@ -194,6 +198,8 @@ export async function createStop(
   data: {
     city: string;
     airport_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     arrival_date?: string | null;
     departure_date?: string | null;
   },
@@ -219,6 +225,8 @@ export async function updateStop(
   data: Partial<{
     city: string;
     airport_code: string | null;
+    latitude: number | null;
+    longitude: number | null;
     arrival_date: string | null;
     departure_date: string | null;
   }>,

@@ -61,6 +61,9 @@ def update_stop(
     airport_code: str | None = None,
     arrival_date: datetime | None = None,
     departure_date: datetime | None = None,
+    *,
+    latitude: float | None = None,
+    longitude: float | None = None,
 ) -> Stop:
     trip = session.get(Trip, stop.trip_id)
     new_arrival = arrival_date if arrival_date is not None else stop.arrival_date
@@ -72,6 +75,10 @@ def update_stop(
         stop.city = city
     if airport_code is not None:
         stop.airport_code = airport_code.upper()
+    if latitude is not None:
+        stop.latitude = latitude
+    if longitude is not None:
+        stop.longitude = longitude
     if arrival_date is not None:
         stop.arrival_date = arrival_date
     if departure_date is not None:
@@ -90,6 +97,8 @@ def create_stop(
     departure_date: datetime | None = None,
     *,
     airport_code: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
     commit: bool = True,
 ) -> Stop:
     trip = session.get(Trip, trip_id)
@@ -103,6 +112,8 @@ def create_stop(
         trip_id=trip_id,
         city=city,
         airport_code=airport_code.upper() if airport_code else None,
+        latitude=latitude,
+        longitude=longitude,
         arrival_date=arrival_date,
         departure_date=departure_date,
         order=current_count + 1,

@@ -942,3 +942,38 @@ fieldset.card legend {
     grid-template-columns: 1fr;
   }
 }
+
+/* autocomplete (aeroporto/cidade) */
+.autocomplete-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface, #faf8f1);
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 10px 30px rgba(31, 58, 46, 0.14);
+  max-height: 264px;
+  overflow-y: auto;
+}
+.autocomplete-menu li button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+}
+.autocomplete-menu li button:hover,
+.autocomplete-menu li button:focus-visible {
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+}

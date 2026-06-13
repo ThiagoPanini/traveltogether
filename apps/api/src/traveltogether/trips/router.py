@@ -115,6 +115,8 @@ def post_trip(
             description=body.description,
             origin=body.origin,
             airport_code=body.airport_code,
+            latitude=body.latitude,
+            longitude=body.longitude,
             start_date=body.start_date,
             end_date=body.end_date,
         )
@@ -183,6 +185,8 @@ def patch_trip(
             body.description,
             body.origin,
             airport_code=body.airport_code,
+            latitude=body.latitude,
+            longitude=body.longitude,
             start_date=body.start_date,
             end_date=body.end_date,
         )
@@ -379,6 +383,8 @@ def post_stop(
             body.arrival_date,
             body.departure_date,
             airport_code=body.airport_code,
+            latitude=body.latitude,
+            longitude=body.longitude,
             commit=False,
         )
         sync_legs_from_stops(session, trip, commit=False)
@@ -453,6 +459,8 @@ def patch_stop(
             airport_code=body.airport_code,
             arrival_date=body.arrival_date,
             departure_date=body.departure_date,
+            latitude=body.latitude,
+            longitude=body.longitude,
         )
     except StopDateError as exc:
         raise HTTPException(

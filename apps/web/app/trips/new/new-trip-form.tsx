@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { AirportAutocomplete, type AirportPatch } from "@/components/airport-autocomplete";
 import { Icon } from "@/components/atlas";
 import { DateField } from "@/components/date-field";
 import { createTripWithStopsAction } from "./actions";
@@ -13,6 +14,8 @@ interface StopRow {
   key: string;
   city: string;
   airport: string;
+  lat: number | null;
+  lon: number | null;
   arrive: string;
   depart: string;
 }
@@ -27,6 +30,8 @@ export function NewTripForm() {
   const [description, setDescription] = useState("");
   const [originCity, setOriginCity] = useState("São Paulo");
   const [originAirport, setOriginAirport] = useState("GRU");
+  const [originLat, setOriginLat] = useState<number | null>(-23.4356);
+  const [originLon, setOriginLon] = useState<number | null>(-46.4731);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [hasStops, setHasStops] = useState<boolean | null>(null);
@@ -37,11 +42,32 @@ export function NewTripForm() {
     const arrive = last ? last.depart : start || "";
     setStops((prev) => [
       ...prev,
-      { key: nextKey(), city: "", airport: "", arrive, depart: end || "" },
+      { key: nextKey(), city: "", airport: "", lat: null, lon: null, arrive, depart: end || "" },
     ]);
   }
-  function updStop(key: string, field: keyof StopRow, val: string) {
+  function updStop(key: string, field: "arrive" | "depart", val: string) {
     setStops((prev) => prev.map((s) => (s.key === key ? { ...s, [field]: val } : s)));
+  }
+  function patchStop(key: string, patch: AirportPatch) {
+    setStops((prev) =>
+      prev.map((s) =>
+        s.key === key
+          ? {
+              ...s,
+              ...(patch.city !== undefined ? { city: patch.city } : {}),
+              ...(patch.airport_code !== undefined ? { airport: patch.airport_code ?? "" } : {}),
+              ...(patch.latitude !== undefined ? { lat: patch.latitude } : {}),
+              ...(patch.longitude !== undefined ? { lon: patch.longitude } : {}),
+            }
+          : s,
+      ),
+    );
+  }
+  function patchOrigin(patch: AirportPatch) {
+    if (patch.city !== undefined) setOriginCity(patch.city);
+    if (patch.airport_code !== undefined) setOriginAirport(patch.airport_code ?? "");
+    if (patch.latitude !== undefined) setOriginLat(patch.latitude);
+    if (patch.longitude !== undefined) setOriginLon(patch.longitude);
   }
   function rmStop(key: string) {
     setStops((prev) => prev.filter((s) => s.key !== key));
@@ -68,6 +94,8 @@ export function NewTripForm() {
         description: description.trim(),
         origin: originCity.trim(),
         airport_code: originAirport.trim().toUpperCase() || null,
+        latitude: originLat,
+        longitude: originLon,
         start_date: start || null,
         end_date: end || null,
       },
@@ -75,6 +103,8 @@ export function NewTripForm() {
         ? stops.map((s) => ({
             city: s.city.trim(),
             airport_code: s.airport.trim().toUpperCase() || null,
+            latitude: s.lat,
+            longitude: s.lon,
             arrival_date: s.arrive || null,
             departure_date: s.depart || null,
           }))
@@ -124,22 +154,14 @@ export function NewTripForm() {
       >
         <legend>02 · origem e período</legend>
         <div className="form-grid">
-          <div className="form-row cols-2">
-            <label className="field">
-              <span>Cidade de origem</span>
-              <input onChange={(e) => setOriginCity(e.target.value)} required value={originCity} />
-            </label>
-            <label className="field">
-              <span>Aeroporto de referência</span>
-              <input
-                maxLength={3}
-                onChange={(e) => setOriginAirport(e.target.value.toUpperCase())}
-                placeholder="GRU"
-                style={{ textTransform: "uppercase", fontFamily: "var(--font-mono)" }}
-                value={originAirport}
-              />
-            </label>
-          </div>
+          <AirportAutocomplete
+            airportLabel="Aeroporto de referência"
+            airportValue={originAirport}
+            cityLabel="Cidade de origem"
+            cityPlaceholder="São Paulo"
+            cityValue={originCity}
+            onChange={patchOrigin}
+          />
           <div className="form-row cols-2">
             <div className="field">
               <span>Data de ida</span>
@@ -210,25 +232,12 @@ export function NewTripForm() {
                     <Icon name="trash" size={14} />
                   </button>
                 </div>
-                <div className="form-row cols-4">
-                  <label className="field">
-                    <span>Cidade</span>
-                    <input
-                      onChange={(e) => updStop(s.key, "city", e.target.value)}
-                      placeholder="Lisboa"
-                      value={s.city}
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Aeroporto</span>
-                    <input
-                      maxLength={3}
-                      onChange={(e) => updStop(s.key, "airport", e.target.value)}
-                      placeholder="LIS"
-                      style={{ textTransform: "uppercase", fontFamily: "var(--font-mono)" }}
-                      value={s.airport}
-                    />
-                  </label>
+                <AirportAutocomplete
+                  airportValue={s.airport}
+                  cityValue={s.city}
+                  onChange={(patch) => patchStop(s.key, patch)}
+                />
+                <div className="form-row cols-2" style={{ marginTop: 12 }}>
                   <div className="field">
                     <span>Chegada</span>
                     <DateField

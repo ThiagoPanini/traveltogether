@@ -14,12 +14,23 @@ export interface UserUpdate {
   avatar_url?: string | null;
 }
 
+export interface AirportPublic {
+  iata: string;
+  city: string;
+  country: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface TripPublic {
   id: string;
   name: string;
   description: string;
   origin: string;
   airport_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
   start_date: string | null;
   end_date: string | null;
   cover_image_key: string | null;
@@ -77,6 +88,8 @@ export interface StopPublic {
   trip_id: string;
   city: string;
   airport_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
   arrival_date: string | null;
   departure_date: string | null;
   cover_image_key: string | null;
@@ -87,6 +100,8 @@ export interface StopPublic {
 export interface StopCreate {
   city: string;
   airport_code?: string | null | undefined;
+  latitude?: number | null;
+  longitude?: number | null;
   arrival_date?: string | null;
   departure_date?: string | null;
 }
@@ -94,6 +109,8 @@ export interface StopCreate {
 export interface StopUpdate {
   city?: string | null;
   airport_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   arrival_date?: string | null;
   departure_date?: string | null;
 }

@@ -15,6 +15,8 @@ export async function updateTripAction(
     description: string;
     origin: string;
     airport_code: string | null;
+    latitude: number | null;
+    longitude: number | null;
     start_date: string | null;
     end_date: string | null;
   }>,
@@ -36,6 +38,8 @@ export async function createStopAction(
   data: {
     city: string;
     airport_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     arrival_date?: string | null;
     departure_date?: string | null;
   },
@@ -57,6 +61,8 @@ export async function updateStopAction(
   data: Partial<{
     city: string;
     airport_code: string | null;
+    latitude: number | null;
+    longitude: number | null;
     arrival_date: string | null;
     departure_date: string | null;
   }>,

@@ -25,6 +25,8 @@ def create_trip(
     origin: str,
     *,
     airport_code: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> tuple[Trip, Membership]:
@@ -36,6 +38,8 @@ def create_trip(
         origin=origin,
         created_by=creator_id,
         airport_code=airport_code.upper() if airport_code else None,
+        latitude=latitude,
+        longitude=longitude,
         start_date=start_date,
         end_date=end_date,
     )
@@ -98,6 +102,8 @@ def update_trip(
     origin: str | None,
     *,
     airport_code: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> Trip:
@@ -114,6 +120,10 @@ def update_trip(
         trip.origin = origin
     if airport_code is not None:
         trip.airport_code = airport_code.upper()
+    if latitude is not None:
+        trip.latitude = latitude
+    if longitude is not None:
+        trip.longitude = longitude
     if start_date is not None:
         trip.start_date = start_date
     if end_date is not None:
