@@ -28,6 +28,7 @@ from traveltogether.fares.upvotes_service import (
 )
 from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
+from traveltogether.identity.service import get_users_by_ids
 from traveltogether.platform.db import get_session
 from traveltogether.trips.models import Leg
 from traveltogether.trips.service import get_trip_membership
@@ -103,11 +104,18 @@ def get_fares(
     leg = _get_leg_or_404(session, leg_id)
     _require_trip_membership(session, leg, current_user.id)
     fares = list_fare_quotes(session, leg_id)
+    authors = get_users_by_ids(session, [f.registered_by for f in fares])
     return [
         FareQuoteWithVote(
             **FareQuotePublic.model_validate(f).model_dump(),
             upvote_count=get_upvote_count(session, f.id),
             user_voted=user_has_upvoted(session, f.id, current_user.id),
+            registered_by_display_name=(
+                author.display_name if (author := authors.get(f.registered_by)) else None
+            ),
+            registered_by_avatar_url=(
+                authors[f.registered_by].avatar_url if f.registered_by in authors else None
+            ),
         )
         for f in fares
     ]

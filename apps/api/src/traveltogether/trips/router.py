@@ -209,6 +209,8 @@ class AddMemberResponse(BaseModel):
 class MemberWithUser(BaseModel):
     membership: MembershipPublic
     email: str
+    display_name: str | None = None
+    avatar_url: str | None = None
 
 
 class MembersListResponse(BaseModel):
@@ -285,6 +287,8 @@ def get_members(
             MemberWithUser(
                 membership=MembershipPublic.model_validate(m),
                 email=user.email,
+                display_name=user.display_name,
+                avatar_url=user.avatar_url,
             )
             for m, user in active
         ],

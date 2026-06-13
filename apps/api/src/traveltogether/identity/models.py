@@ -12,9 +12,18 @@ class User(SQLModel, table=True):  # type: ignore[call-arg]
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     email: str = Field(unique=True, index=True)
+    display_name: str | None = Field(default=None)
+    avatar_url: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class UserPublic(SQLModel):
     id: uuid.UUID
     email: str
+    display_name: str | None = None
+    avatar_url: str | None = None
+
+
+class UserUpdate(SQLModel):
+    display_name: str | None = None
+    avatar_url: str | None = None

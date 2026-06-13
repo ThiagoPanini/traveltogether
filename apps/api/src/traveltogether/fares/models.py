@@ -60,6 +60,8 @@ class Upvote(SQLModel, table=True):  # type: ignore[call-arg]
 class FareQuoteWithVote(FareQuotePublic):
     upvote_count: int
     user_voted: bool
+    registered_by_display_name: str | None = None
+    registered_by_avatar_url: str | None = None
 
 
 class FareQuoteCreate(SQLModel):

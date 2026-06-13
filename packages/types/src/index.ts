@@ -2,6 +2,18 @@
 
 export type MembershipRole = "organizer" | "member";
 
+export interface UserPublic {
+  id: string;
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface UserUpdate {
+  display_name?: string | null;
+  avatar_url?: string | null;
+}
+
 export interface TripPublic {
   id: string;
   name: string;
@@ -45,6 +57,8 @@ export interface PendingMembershipPublic {
 export interface MemberWithUser {
   membership: MembershipPublic;
   email: string;
+  display_name: string | null;
+  avatar_url: string | null;
 }
 
 export interface MembersListResponse {
@@ -159,6 +173,8 @@ export interface FareQuotePublic {
   is_chosen: boolean;
   upvote_count: number;
   user_voted: boolean;
+  registered_by_display_name: string | null;
+  registered_by_avatar_url: string | null;
 }
 
 export interface FareQuoteCreate {

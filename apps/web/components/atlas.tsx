@@ -1,5 +1,8 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+import { topographicAvatar } from "@/lib/identity/avatar";
+import { initials } from "@/lib/identity/user-display";
 
 // ---------- Icon ----------
 const ICON_PATHS: Record<string, ReactNode> = {
@@ -244,6 +247,35 @@ export function RouteLine({ points, edges }: { points: RoutePoint[]; edges: Rout
         </span>
       ))}
     </div>
+  );
+}
+
+// ---------- user avatar ----------
+// Foto quando há; senão, grafismo topográfico determinístico do id + iniciais.
+export function UserAvatar({
+  seed,
+  label,
+  avatarUrl,
+  size = 34,
+}: {
+  seed: string;
+  label: string;
+  avatarUrl?: string | null;
+  size?: number;
+}) {
+  const hasPhoto = Boolean(avatarUrl);
+  const style: CSSProperties = {
+    width: size,
+    height: size,
+    backgroundImage: `url(${avatarUrl || topographicAvatar(seed)})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    ...(hasPhoto ? {} : { color: "var(--ink)" }),
+  };
+  return (
+    <span aria-label={label} className="avatar" role="img" style={style} title={label}>
+      {hasPhoto ? "" : initials(label)}
+    </span>
   );
 }
 

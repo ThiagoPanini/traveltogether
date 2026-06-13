@@ -3,7 +3,7 @@
 import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltogether/types";
 import { useMemo, useState } from "react";
 
-import { Code, Icon } from "@/components/atlas";
+import { Code, Icon, UserAvatar } from "@/components/atlas";
 import {
   chooseFareAction,
   createFareAction,
@@ -513,23 +513,36 @@ export default function FaresPanel({
                       </div>
                     )}
                     <div
-                      className="mono"
-                      style={{ fontSize: 9.5, color: "var(--muted)", marginTop: 4 }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginTop: 6,
+                      }}
                     >
-                      registrada em {new Date(fare.created_at).toLocaleDateString("pt-BR")}
-                      {fare.link && (
-                        <>
-                          {" · "}
-                          <a
-                            href={fare.link}
-                            rel="noreferrer"
-                            style={{ color: "var(--accent)" }}
-                            target="_blank"
-                          >
-                            link ↗
-                          </a>
-                        </>
-                      )}
+                      <UserAvatar
+                        avatarUrl={fare.registered_by_avatar_url}
+                        label={fare.registered_by_display_name ?? "Membro"}
+                        seed={fare.registered_by}
+                        size={18}
+                      />
+                      <span className="mono" style={{ fontSize: 9.5, color: "var(--muted)" }}>
+                        {fare.registered_by_display_name ?? "Membro"} ·{" "}
+                        {new Date(fare.created_at).toLocaleDateString("pt-BR")}
+                        {fare.link && (
+                          <>
+                            {" · "}
+                            <a
+                              href={fare.link}
+                              rel="noreferrer"
+                              style={{ color: "var(--accent)" }}
+                              target="_blank"
+                            >
+                              link ↗
+                            </a>
+                          </>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div

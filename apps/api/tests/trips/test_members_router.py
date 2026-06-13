@@ -126,6 +126,26 @@ def test_list_members_returns_members(client: TestClient, monkeypatch: pytest.Mo
     assert data["pending"][0]["email"] == "ghost@example.com"
 
 
+def test_list_members_carries_display_name_and_avatar(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alice_h = _headers(ALICE_EMAIL, monkeypatch)
+    bob_h = _headers(BOB_EMAIL, monkeypatch)
+    client.get("/identity/me", headers=bob_h)
+    client.patch(
+        "/identity/me",
+        headers=bob_h,
+        json={"display_name": "Bob Builder", "avatar_url": "https://cdn/bob.png"},
+    )
+    trip_id = _create_trip(client, alice_h)
+    client.post(f"/trips/{trip_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+
+    data = client.get(f"/trips/{trip_id}/members", headers=alice_h).json()
+    bob = next(m for m in data["members"] if m["email"] == BOB_EMAIL)
+    assert bob["display_name"] == "Bob Builder"
+    assert bob["avatar_url"] == "https://cdn/bob.png"
+
+
 # ── PATCH /trips/{id}/members/{membership_id} ────────────────────────────────
 
 

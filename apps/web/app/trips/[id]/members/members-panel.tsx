@@ -4,7 +4,8 @@ import type { MemberWithUser, PendingMembershipPublic } from "@traveltogether/ty
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import { Icon } from "@/components/atlas";
+import { Icon, UserAvatar } from "@/components/atlas";
+import { displayLabel } from "@/lib/identity/user-display";
 import { addMemberAction, removeMemberAction, updateMemberRoleAction } from "./actions";
 
 interface Props {
@@ -12,11 +13,6 @@ interface Props {
   members: MemberWithUser[];
   pending: PendingMembershipPublic[];
   isOrganizer: boolean;
-}
-
-function initials(email: string): string {
-  const [name = "tt", domain = ""] = email.split("@");
-  return `${name[0] ?? "t"}${domain[0] ?? name[1] ?? "t"}`.toUpperCase();
 }
 
 export function MembersPanel({ tripId, members, pending, isOrganizer }: Props) {
@@ -62,26 +58,19 @@ export function MembersPanel({ tripId, members, pending, isOrganizer }: Props) {
     <div>
       <div className="card" style={{ marginBottom: 22 }}>
         <div className="board">
-          {members.map(({ membership, email: memberEmail }) => {
+          {members.map(({ membership, email: memberEmail, display_name, avatar_url }) => {
             const lastOrganizer = membership.role === "organizer" && organizerCount === 1;
+            const label = displayLabel({ display_name, email: memberEmail });
             return (
               <div
                 key={membership.id}
                 className="board-row"
                 style={{ gridTemplateColumns: "auto 1fr auto auto" }}
               >
-                <span
-                  className="avatar"
-                  style={
-                    membership.role === "organizer"
-                      ? {}
-                      : { background: "var(--chip-bg)", color: "var(--ink-soft)" }
-                  }
-                >
-                  {initials(memberEmail)}
-                </span>
+                <UserAvatar avatarUrl={avatar_url} label={label} seed={membership.user_id} />
                 <div>
-                  <div className="mono-num" style={{ fontSize: 13, color: "var(--ink)" }}>
+                  <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 600 }}>{label}</div>
+                  <div className="mono-num" style={{ fontSize: 11, color: "var(--ink-soft)" }}>
                     {memberEmail}
                   </div>
                 </div>

@@ -185,3 +185,21 @@ def test_get_fares_includes_upvote_count_and_user_voted(
     bob_fares = client.get(f"/legs/{leg['id']}/fares", headers=bob_headers).json()
     assert bob_fares[0]["upvote_count"] == 1
     assert bob_fares[0]["user_voted"] is False
+
+
+def test_get_fares_carries_author_display_name_and_avatar(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    client.get("/identity/me", headers=headers)  # cria alice (JIT)
+    client.patch(
+        "/identity/me",
+        headers=headers,
+        json={"display_name": "Alice Atlas", "avatar_url": "https://cdn/alice.png"},
+    )
+    leg = _create_leg(client, headers)
+    client.post(f"/legs/{leg['id']}/fares", json=FARE_PAYLOAD, headers=headers)
+
+    fares = client.get(f"/legs/{leg['id']}/fares", headers=headers).json()
+    assert fares[0]["registered_by_display_name"] == "Alice Atlas"
+    assert fares[0]["registered_by_avatar_url"] == "https://cdn/alice.png"

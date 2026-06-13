@@ -17,6 +17,8 @@ const base: Omit<FareRow, "id" | "value" | "upvote_count" | "is_chosen"> = {
   link: "",
   notes: "",
   user_voted: false,
+  registered_by_display_name: null,
+  registered_by_avatar_url: null,
 };
 
 function fare(id: string, value: string, upvote_count: number, is_chosen = false): FareRow {

@@ -80,3 +80,31 @@ def test_get_me_returns_401_without_token(client: TestClient) -> None:
 def test_get_me_returns_401_with_invalid_token(client: TestClient) -> None:
     response = client.get("/identity/me", headers={"Authorization": "Bearer invalid.token.here"})
     assert response.status_code == 401
+
+
+def test_get_me_includes_profile_fields_null_by_default(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AUTH_SECRET", TEST_SECRET)
+    data = client.get("/identity/me", headers=_auth_headers()).json()
+    assert data["display_name"] is None
+    assert data["avatar_url"] is None
+
+
+def test_patch_me_updates_profile(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AUTH_SECRET", TEST_SECRET)
+    client.get("/identity/me", headers=_auth_headers())  # cria o usuário JIT
+    response = client.patch(
+        "/identity/me",
+        headers=_auth_headers(),
+        json={"display_name": "Alice", "avatar_url": "https://cdn/a.png"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["display_name"] == "Alice"
+    assert data["avatar_url"] == "https://cdn/a.png"
+
+
+def test_patch_me_requires_token(client: TestClient) -> None:
+    response = client.patch("/identity/me", json={"display_name": "Alice"})
+    assert response.status_code == 401
