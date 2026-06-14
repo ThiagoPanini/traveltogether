@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
 import { Code, CoverGraphic, Icon } from "@/components/atlas";
+import { getRecentActivity } from "@/lib/api/activity";
 import { getFares } from "@/lib/api/fares";
 import { getPendingActions } from "@/lib/api/pending";
 import { getLegs, getTrips } from "@/lib/api/trips";
@@ -26,9 +27,10 @@ export default async function TripsPage() {
   if (!session?.apiAccessToken) redirect("/login");
 
   const accessToken = session.apiAccessToken;
-  const [items, pendingActions] = await Promise.all([
+  const [items, pendingActions, activity] = await Promise.all([
     getTrips(accessToken),
     getPendingActions(accessToken),
+    getRecentActivity(accessToken),
   ]);
   const pending = pendingActions.map(toPendingItem);
 
@@ -204,6 +206,68 @@ export default async function TripsPage() {
                       {p.tripName}
                     </span>
                     <Icon name="arrowRight" size={14} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activity.length > 0 && (
+            <div className="card flat" style={{ padding: "22px 24px", marginBottom: 26 }}>
+              <div className="section-head" style={{ marginBottom: 14 }}>
+                <span className="kicker">atividade recente</span>
+              </div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {activity.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/trips/${item.trip_id}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 10,
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <span
+                      className="chip outline"
+                      style={{
+                        fontSize: 10,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {item.kind === "member_joined"
+                        ? "entrou"
+                        : item.kind === "comment"
+                          ? "comentou"
+                          : "pesquisa"}
+                    </span>
+                    {item.actor_name && (
+                      <span style={{ fontWeight: 600, fontSize: 13.5, flexShrink: 0 }}>
+                        {item.actor_name}
+                      </span>
+                    )}
+                    <span
+                      className="soft"
+                      style={{
+                        fontSize: 13,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.body}
+                    </span>
+                    <span className="spacer" style={{ flex: 1 }} />
+                    <span
+                      className="mono"
+                      style={{ fontSize: 11, color: "var(--muted)", flexShrink: 0 }}
+                    >
+                      {item.trip_name}
+                    </span>
                   </Link>
                 ))}
               </div>

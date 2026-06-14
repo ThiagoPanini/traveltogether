@@ -186,6 +186,18 @@ export interface ReorderItineraryItemsRequest {
   item_ids: string[];
 }
 
+export type ActivityKind = "comment" | "fare_registered" | "member_joined";
+
+export interface ActivityItemPublic {
+  id: string;
+  kind: ActivityKind;
+  trip_id: string;
+  trip_name: string;
+  actor_name: string | null;
+  body: string;
+  occurred_at: string;
+}
+
 export type PendingActionKind =
   | "leg_without_fare"
   | "fare_without_chosen"

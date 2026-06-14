@@ -10,6 +10,7 @@ from sqlmodel import Session
 from traveltogether.identity.deps import get_current_user
 from traveltogether.identity.models import User
 from traveltogether.platform.db import get_session
+from traveltogether.trips.activity_service import list_recent_activity
 from traveltogether.trips.itinerary_service import (
     create_itinerary_item,
     delete_itinerary_item,
@@ -34,6 +35,7 @@ from traveltogether.trips.members_service import (
     remove_member_from_trip,
 )
 from traveltogether.trips.models import (
+    ActivityItemPublic,
     ItineraryItem,
     ItineraryItemCreate,
     ItineraryItemPublic,
@@ -76,6 +78,16 @@ from traveltogether.trips.stops_service import (
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 me_router = APIRouter(tags=["trips"])
+
+
+@me_router.get("/me/activity", response_model=list[ActivityItemPublic])
+def get_my_activity(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+    limit: int = 20,
+) -> list[ActivityItemPublic]:
+    """Atividade recente do grupo — alimenta o painel (#71)."""
+    return list_recent_activity(session, current_user.id, limit=limit)
 
 
 @me_router.get("/me/pending-actions", response_model=list[PendingActionPublic])
