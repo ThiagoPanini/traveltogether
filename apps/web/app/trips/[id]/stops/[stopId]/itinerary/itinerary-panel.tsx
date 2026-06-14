@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/atlas";
+import CommentThread from "@/components/comment-thread";
 import { PlaceAutocomplete } from "@/components/place-autocomplete";
 import { placeToItemFields } from "@/lib/itinerary/place-fill";
 import {
@@ -20,6 +21,7 @@ import {
 interface Props {
   tripId: string;
   stopId: string;
+  currentUserId: string;
   initialItems: ItineraryItemPublic[];
   role: MembershipRole;
   arrivalDate: string | null;
@@ -118,6 +120,7 @@ function AddItemForm({
 export default function ItineraryPanel({
   tripId,
   stopId,
+  currentUserId,
   initialItems,
   role,
   arrivalDate,
@@ -132,6 +135,7 @@ export default function ItineraryPanel({
   const [editNotes, setEditNotes] = useState("");
   const [editLink, setEditLink] = useState("");
   const [editTime, setEditTime] = useState("");
+  const [openThread, setOpenThread] = useState<string | null>(null);
   const isOrganizer = role === "organizer";
 
   const hasWindow = Boolean(arrivalDate && departureDate);
@@ -250,57 +254,80 @@ export default function ItineraryPanel({
         </div>
       );
     }
+    const threadOpen = openThread === item.id;
     return (
-      <div
-        key={item.id}
-        className="board-row"
-        style={{ gridTemplateColumns: "64px 1fr auto", padding: "13px 20px" }}
-      >
-        <span
-          className="mono-num"
-          style={{
-            fontSize: 13,
-            color: item.time ? "var(--accent)" : "var(--muted)",
-            fontWeight: 600,
-          }}
+      <div key={item.id}>
+        <div
+          className="board-row"
+          style={{ gridTemplateColumns: "64px 1fr auto", padding: "13px 20px" }}
         >
-          {item.time || "—"}
-        </span>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 15 }}>
-            {item.title}
-            {item.link && (
-              <a
-                className="link-btn"
-                href={item.link}
-                rel="noreferrer"
-                style={{ fontSize: 12, marginLeft: 10, fontWeight: 500 }}
-                target="_blank"
-              >
-                link ↗
-              </a>
+          <span
+            className="mono-num"
+            style={{
+              fontSize: 13,
+              color: item.time ? "var(--accent)" : "var(--muted)",
+              fontWeight: 600,
+            }}
+          >
+            {item.time || "—"}
+          </span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>
+              {item.title}
+              {item.link && (
+                <a
+                  className="link-btn"
+                  href={item.link}
+                  rel="noreferrer"
+                  style={{ fontSize: 12, marginLeft: 10, fontWeight: 500 }}
+                  target="_blank"
+                >
+                  link ↗
+                </a>
+              )}
+            </div>
+            {item.notes && (
+              <div className="soft" style={{ fontSize: 13.5, marginTop: 2, textWrap: "pretty" }}>
+                {item.notes}
+              </div>
             )}
           </div>
-          {item.notes && (
-            <div className="soft" style={{ fontSize: 13.5, marginTop: 2, textWrap: "pretty" }}>
-              {item.notes}
-            </div>
-          )}
-        </div>
-        {isOrganizer && (
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <button className="btn tiny ghost" onClick={() => startEdit(item)} type="button">
-              Editar
-            </button>
             <button
-              className="icon-btn"
-              disabled={loading}
-              onClick={() => handleDelete(item.id)}
-              title="Excluir item"
+              className={`btn tiny ghost ${threadOpen ? "on" : ""}`}
+              onClick={() => setOpenThread(threadOpen ? null : item.id)}
+              title="Comentários"
               type="button"
             >
-              <Icon name="trash" size={13} />
+              <Icon name="message" size={13} />
             </button>
+            {isOrganizer && (
+              <>
+                <button className="btn tiny ghost" onClick={() => startEdit(item)} type="button">
+                  Editar
+                </button>
+                <button
+                  className="icon-btn"
+                  disabled={loading}
+                  onClick={() => handleDelete(item.id)}
+                  title="Excluir item"
+                  type="button"
+                >
+                  <Icon name="trash" size={13} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        {threadOpen && (
+          <div style={{ padding: "0 20px 14px" }}>
+            <CommentThread
+              tripId={tripId}
+              targetType="itinerary_item"
+              targetId={item.id}
+              currentUserId={currentUserId}
+              role={role}
+            />
           </div>
         )}
       </div>
