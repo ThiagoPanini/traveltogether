@@ -16,6 +16,7 @@ from traveltogether.platform.env import load_env_files
 # (ex.: `uv run uvicorn ...` sem --env-file). Não sobrescreve env real.
 load_env_files()
 
+from traveltogether.collaboration.router import router as collaboration_router  # noqa: E402
 from traveltogether.fares.router import router as fares_router  # noqa: E402
 from traveltogether.fares.router import upvote_router  # noqa: E402
 from traveltogether.identity.router import router as identity_router  # noqa: E402
@@ -36,6 +37,7 @@ app.include_router(trips_router)
 app.include_router(fares_router)
 app.include_router(upvote_router)
 app.include_router(airports_router)
+app.include_router(collaboration_router)
 
 
 @app.get("/health")

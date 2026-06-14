@@ -10,9 +10,12 @@ import {
   deleteFareAction,
   toggleUpvoteAction,
 } from "./actions";
+import CommentThread from "./comment-thread";
 
 interface Props {
   legId: string;
+  tripId: string;
+  currentUserId: string;
   initialFares: FareQuotePublic[];
   role: MembershipRole;
   fromCode: string;
@@ -70,6 +73,8 @@ function formatDuration(minutes: number): string {
 
 export default function FaresPanel({
   legId,
+  tripId,
+  currentUserId,
   initialFares,
   role,
   fromCode,
@@ -82,6 +87,7 @@ export default function FaresPanel({
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<"tickets" | "compare">("tickets");
+  const [openThread, setOpenThread] = useState<string | null>(null);
   const [upvotes, setUpvotes] = useState<Record<string, UpvoteResponse>>(() =>
     Object.fromEntries(
       initialFares.map((f) => [f.id, { count: f.upvote_count, voted: f.user_voted }]),
@@ -443,149 +449,170 @@ export default function FaresPanel({
               const cheapest = fare.id === cheapestId;
               const chosen = fare.is_chosen;
               const vote = voteFor(fare.id);
+              const threadOpen = openThread === fare.id;
               return (
-                <div
-                  key={fare.id}
-                  className="board-row"
-                  style={{
-                    gridTemplateColumns:
-                      "minmax(150px, 1.3fr) minmax(110px, 1fr) minmax(150px, 1.3fr) auto auto auto",
-                    background: chosen
-                      ? "color-mix(in oklab, var(--accent) 7%, transparent)"
-                      : undefined,
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 650,
-                        fontSize: 15,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {fare.airline}
-                      {chosen && <span className="stamp">escolhida</span>}
-                      {!chosen && cheapest && <span className="chip outline">menor preço</span>}
+                <div key={fare.id}>
+                  <div
+                    className="board-row"
+                    style={{
+                      gridTemplateColumns:
+                        "minmax(150px, 1.3fr) minmax(110px, 1fr) minmax(150px, 1.3fr) auto auto auto",
+                      background: chosen
+                        ? "color-mix(in oklab, var(--accent) 7%, transparent)"
+                        : undefined,
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontWeight: 650,
+                          fontSize: 15,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {fare.airline}
+                        {chosen && <span className="stamp">escolhida</span>}
+                        {!chosen && cheapest && <span className="chip outline">menor preço</span>}
+                      </div>
+                      <div
+                        className="mono-num"
+                        style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}
+                      >
+                        {formatDate(fare.flight_date)} · {fare.origin_airport} →{" "}
+                        {fare.destination_airport}
+                      </div>
                     </div>
                     <div
                       className="mono-num"
-                      style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 3 }}
-                    >
-                      {formatDate(fare.flight_date)} · {fare.origin_airport} →{" "}
-                      {fare.destination_airport}
-                    </div>
-                  </div>
-                  <div
-                    className="mono-num"
-                    style={{
-                      fontSize: 12.5,
-                      color: "var(--ink-soft)",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 3,
-                    }}
-                  >
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                      <Icon name="clock" size={11} /> {formatDuration(fare.duration_minutes)}
-                    </span>
-                    <span>
-                      {fare.stops === 0
-                        ? "direto"
-                        : `${fare.stops} escala${fare.stops > 1 ? "s" : ""}`}{" "}
-                      · {fare.checked_baggage ? "c/ bagagem" : "s/ bagagem"}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 13, color: "var(--ink-soft)", overflow: "hidden" }}>
-                    {fare.notes && (
-                      <div
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textWrap: "pretty",
-                        }}
-                      >
-                        {fare.notes}
-                      </div>
-                    )}
-                    <div
                       style={{
+                        fontSize: 12.5,
+                        color: "var(--ink-soft)",
                         display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        marginTop: 6,
+                        flexDirection: "column",
+                        gap: 3,
                       }}
                     >
-                      <UserAvatar
-                        avatarUrl={fare.registered_by_avatar_url}
-                        label={fare.registered_by_display_name ?? "Membro"}
-                        seed={fare.registered_by}
-                        size={18}
-                      />
-                      <span className="mono" style={{ fontSize: 9.5, color: "var(--muted)" }}>
-                        {fare.registered_by_display_name ?? "Membro"} ·{" "}
-                        {new Date(fare.created_at).toLocaleDateString("pt-BR")}
-                        {fare.link && (
-                          <>
-                            {" · "}
-                            <a
-                              href={fare.link}
-                              rel="noreferrer"
-                              style={{ color: "var(--accent)" }}
-                              target="_blank"
-                            >
-                              link ↗
-                            </a>
-                          </>
-                        )}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Icon name="clock" size={11} /> {formatDuration(fare.duration_minutes)}
+                      </span>
+                      <span>
+                        {fare.stops === 0
+                          ? "direto"
+                          : `${fare.stops} escala${fare.stops > 1 ? "s" : ""}`}{" "}
+                        · {fare.checked_baggage ? "c/ bagagem" : "s/ bagagem"}
                       </span>
                     </div>
-                  </div>
-                  <div
-                    className="mono-num"
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 19,
-                      textAlign: "right",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {formatMoney(fare)}
-                  </div>
-                  <button
-                    className={`upvote ${vote.voted ? "on" : ""}`}
-                    onClick={() => handleUpvote(fare.id)}
-                    type="button"
-                  >
-                    <Icon name="up" size={12} /> {vote.count}
-                  </button>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {isOrganizer && (
+                    <div style={{ fontSize: 13, color: "var(--ink-soft)", overflow: "hidden" }}>
+                      {fare.notes && (
+                        <div
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textWrap: "pretty",
+                          }}
+                        >
+                          {fare.notes}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          marginTop: 6,
+                        }}
+                      >
+                        <UserAvatar
+                          avatarUrl={fare.registered_by_avatar_url}
+                          label={fare.registered_by_display_name ?? "Membro"}
+                          seed={fare.registered_by}
+                          size={18}
+                        />
+                        <span className="mono" style={{ fontSize: 9.5, color: "var(--muted)" }}>
+                          {fare.registered_by_display_name ?? "Membro"} ·{" "}
+                          {new Date(fare.created_at).toLocaleDateString("pt-BR")}
+                          {fare.link && (
+                            <>
+                              {" · "}
+                              <a
+                                href={fare.link}
+                                rel="noreferrer"
+                                style={{ color: "var(--accent)" }}
+                                target="_blank"
+                              >
+                                link ↗
+                              </a>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div
+                      className="mono-num"
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 19,
+                        textAlign: "right",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {formatMoney(fare)}
+                    </div>
+                    <button
+                      className={`upvote ${vote.voted ? "on" : ""}`}
+                      onClick={() => handleUpvote(fare.id)}
+                      type="button"
+                    >
+                      <Icon name="up" size={12} /> {vote.count}
+                    </button>
+                    <div style={{ display: "flex", gap: 4 }}>
                       <button
-                        className="btn tiny ghost"
-                        disabled={loading}
-                        onClick={() => handleChoose(fare.id)}
+                        className={`btn tiny ghost ${threadOpen ? "on" : ""}`}
+                        onClick={() => setOpenThread(threadOpen ? null : fare.id)}
+                        title="Comentários"
                         type="button"
                       >
-                        {chosen ? "Desmarcar" : "Escolher"}
+                        <Icon name="message" size={13} />
                       </button>
-                    )}
-                    {isOrganizer && (
-                      <button
-                        className="icon-btn"
-                        disabled={loading}
-                        onClick={() => handleDelete(fare.id)}
-                        title="Excluir pesquisa"
-                        type="button"
-                      >
-                        <Icon name="trash" size={13} />
-                      </button>
-                    )}
+                      {isOrganizer && (
+                        <button
+                          className="btn tiny ghost"
+                          disabled={loading}
+                          onClick={() => handleChoose(fare.id)}
+                          type="button"
+                        >
+                          {chosen ? "Desmarcar" : "Escolher"}
+                        </button>
+                      )}
+                      {isOrganizer && (
+                        <button
+                          className="icon-btn"
+                          disabled={loading}
+                          onClick={() => handleDelete(fare.id)}
+                          title="Excluir pesquisa"
+                          type="button"
+                        >
+                          <Icon name="trash" size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {threadOpen && (
+                    <div style={{ padding: "0 18px 16px" }}>
+                      <CommentThread
+                        tripId={tripId}
+                        targetType="fare_quote"
+                        targetId={fare.id}
+                        currentUserId={currentUserId}
+                        role={role}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppTopbar } from "@/app/app-topbar";
 import { getAuthSession } from "@/auth";
 import { Breadcrumbs } from "@/components/atlas";
+import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
 import { getLegs, getStops, getTrip } from "@/lib/api/trips";
 import { displayCode } from "@/lib/trips/journey";
@@ -31,11 +32,12 @@ export default async function LegFaresPage({ params }: Props) {
   if (!session?.apiAccessToken) redirect("/login");
 
   const { id, legId } = await params;
-  const [data, stops, legs, fares] = await Promise.all([
+  const [data, stops, legs, fares, currentUser] = await Promise.all([
     getTrip(session.apiAccessToken, id),
     getStops(session.apiAccessToken, id),
     getLegs(session.apiAccessToken, id),
     getFares(session.apiAccessToken, legId),
+    getCurrentUser(session.apiAccessToken),
   ]);
   if (!data) notFound();
 
@@ -60,6 +62,8 @@ export default async function LegFaresPage({ params }: Props) {
           />
           <FaresPanel
             legId={legId}
+            tripId={id}
+            currentUserId={currentUser?.id ?? ""}
             initialFares={fares}
             role={membership.role}
             fromCode={from.code}

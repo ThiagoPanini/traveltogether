@@ -226,3 +226,32 @@ export interface UpvoteResponse {
   count: number;
   voted: boolean;
 }
+
+// Boundary collaboration — Comentário com alvo polimórfico (ADR-0014).
+export type CommentTargetType = "fare_quote" | "itinerary_item" | "trip";
+
+export interface CommentPublic {
+  id: string;
+  trip_id: string;
+  target_type: CommentTargetType;
+  target_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommentWithAuthor extends CommentPublic {
+  author_display_name: string | null;
+  author_avatar_url: string | null;
+}
+
+export interface CommentCreate {
+  target_type: CommentTargetType;
+  target_id: string;
+  body: string;
+}
+
+export interface CommentUpdate {
+  body: string;
+}
