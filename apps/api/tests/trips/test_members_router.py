@@ -234,3 +234,91 @@ def test_remove_last_organizer_returns_409(
     r = client.delete(f"/trips/{trip_id}/members/{alice_membership_id}", headers=alice_h)
 
     assert r.status_code == 409
+
+
+# ── POST existing user returns existing_user preview ────────────────────────
+
+
+def test_add_existing_member_returns_existing_user(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alice_h = _headers(ALICE_EMAIL, monkeypatch)
+    bob_h = _headers(BOB_EMAIL, monkeypatch)
+    client.get("/identity/me", headers=bob_h)
+    client.patch("/identity/me", headers=bob_h, json={"display_name": "Bob Test"})
+    trip_id = _create_trip(client, alice_h)
+
+    r = client.post(f"/trips/{trip_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+
+    assert r.status_code == 201
+    data = r.json()
+    assert data["existing_user"] is not None
+    assert data["existing_user"]["email"] == BOB_EMAIL
+    assert data["existing_user"]["display_name"] == "Bob Test"
+
+
+# ── GET /trips/{id}/members/suggestions ─────────────────────────────────────
+
+
+def test_suggestions_returns_network_members(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alice_h = _headers(ALICE_EMAIL, monkeypatch)
+    bob_h = _headers(BOB_EMAIL, monkeypatch)
+    client.get("/identity/me", headers=bob_h)
+
+    # trip1: alice + bob
+    trip1_id = _create_trip(client, alice_h)
+    client.post(f"/trips/{trip1_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+
+    # new trip to invite people into
+    trip2_id = _create_trip(client, alice_h)
+
+    r = client.get(f"/trips/{trip2_id}/members/suggestions", headers=alice_h)
+
+    assert r.status_code == 200
+    suggestions = r.json()["suggestions"]
+    emails = [s["email"] for s in suggestions]
+    assert BOB_EMAIL in emails
+
+
+def test_suggestions_filters_by_query(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    alice_h = _headers(ALICE_EMAIL, monkeypatch)
+    bob_h = _headers(BOB_EMAIL, monkeypatch)
+    carol_h = _headers("carol@example.com", monkeypatch)
+    client.get("/identity/me", headers=bob_h)
+    client.get("/identity/me", headers=carol_h)
+
+    trip1_id = _create_trip(client, alice_h)
+    client.post(f"/trips/{trip1_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+    client.post(f"/trips/{trip1_id}/members", json={"email": "carol@example.com"}, headers=alice_h)
+
+    trip2_id = _create_trip(client, alice_h)
+
+    r = client.get(f"/trips/{trip2_id}/members/suggestions?q=carol", headers=alice_h)
+
+    assert r.status_code == 200
+    suggestions = r.json()["suggestions"]
+    emails = [s["email"] for s in suggestions]
+    assert "carol@example.com" in emails
+    assert BOB_EMAIL not in emails
+
+
+def test_suggestions_excludes_current_members(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    alice_h = _headers(ALICE_EMAIL, monkeypatch)
+    bob_h = _headers(BOB_EMAIL, monkeypatch)
+    client.get("/identity/me", headers=bob_h)
+
+    trip1_id = _create_trip(client, alice_h)
+    client.post(f"/trips/{trip1_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+
+    # bob already in trip2 too
+    trip2_id = _create_trip(client, alice_h)
+    client.post(f"/trips/{trip2_id}/members", json={"email": BOB_EMAIL}, headers=alice_h)
+
+    r = client.get(f"/trips/{trip2_id}/members/suggestions", headers=alice_h)
+
+    emails = [s["email"] for s in r.json()["suggestions"]]
+    assert BOB_EMAIL not in emails

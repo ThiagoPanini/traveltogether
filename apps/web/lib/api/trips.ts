@@ -6,6 +6,7 @@ import type {
   LegPublic,
   MembershipRole,
   MembersListResponse,
+  NetworkSuggestionsResponse,
   StopPublic,
   TripPublic,
   TripSummary,
@@ -176,6 +177,24 @@ export async function removeMember(
     return response.status === 204;
   } catch {
     return false;
+  }
+}
+
+export async function getNetworkSuggestions(
+  accessToken: string,
+  tripId: string,
+  q: string,
+): Promise<NetworkSuggestionsResponse | null> {
+  try {
+    const params = q ? `?q=${encodeURIComponent(q)}` : "";
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/members/suggestions${params}`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as NetworkSuggestionsResponse;
+  } catch {
+    return null;
   }
 }
 

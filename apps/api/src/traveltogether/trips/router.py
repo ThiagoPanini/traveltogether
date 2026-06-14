@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlmodel import Session
 
 from traveltogether.identity.deps import get_current_user
-from traveltogether.identity.models import User
+from traveltogether.identity.models import User, UserPublic
 from traveltogether.platform.db import get_session
 from traveltogether.trips.activity_service import list_recent_activity
 from traveltogether.trips.itinerary_service import (
@@ -30,6 +30,7 @@ from traveltogether.trips.members_service import (
     LastOrganizerError,
     MemberAlreadyExists,
     add_member_by_email,
+    get_network_suggestions,
     list_trip_members,
     promote_or_demote_member,
     remove_member_from_trip,
@@ -232,6 +233,17 @@ class AddMemberResponse(BaseModel):
     pending: bool
     membership: MembershipPublic | None = None
     pending_membership: PendingMembershipPublic | None = None
+    existing_user: UserPublic | None = None
+
+
+class NetworkSuggestionItem(BaseModel):
+    email: str
+    display_name: str | None = None
+    avatar_url: str | None = None
+
+
+class NetworkSuggestionsResponse(BaseModel):
+    suggestions: list[NetworkSuggestionItem]
 
 
 class MemberWithUser(BaseModel):
@@ -278,12 +290,18 @@ def post_member(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> AddMemberResponse:
-    _get_trip_or_404(session, trip_id)
+    trip = _get_trip_or_404(session, trip_id)
     membership = _require_membership(session, trip_id, current_user.id)
     _require_organizer(membership)
 
     try:
-        result = add_member_by_email(session, trip_id, body.email)
+        result = add_member_by_email(
+            session,
+            trip_id,
+            body.email,
+            inviter_name=current_user.display_name,
+            trip_name=trip.name,
+        )
     except MemberAlreadyExists as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -296,6 +314,9 @@ def post_member(
             PendingMembershipPublic.model_validate(result.pending_membership)
             if result.pending_membership
             else None
+        ),
+        existing_user=(
+            UserPublic.model_validate(result.existing_user) if result.existing_user else None
         ),
     )
 
@@ -321,6 +342,29 @@ def get_members(
             for m, user in active
         ],
         pending=[PendingMembershipPublic.model_validate(p) for p in pending],
+    )
+
+
+@router.get("/{trip_id}/members/suggestions", response_model=NetworkSuggestionsResponse)
+def get_member_suggestions(
+    trip_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+    q: str = "",
+) -> NetworkSuggestionsResponse:
+    _get_trip_or_404(session, trip_id)
+    _require_membership(session, trip_id, current_user.id)
+
+    suggestions = get_network_suggestions(session, current_user, trip_id, q=q)
+    return NetworkSuggestionsResponse(
+        suggestions=[
+            NetworkSuggestionItem(
+                email=u.email,
+                display_name=u.display_name,
+                avatar_url=u.avatar_url,
+            )
+            for u in suggestions
+        ]
     )
 
 

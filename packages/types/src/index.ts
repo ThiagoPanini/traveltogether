@@ -96,6 +96,17 @@ export interface AddMemberResponse {
   pending: boolean;
   membership: MembershipPublic | null;
   pending_membership: PendingMembershipPublic | null;
+  existing_user: UserPublic | null;
+}
+
+export interface NetworkSuggestionItem {
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface NetworkSuggestionsResponse {
+  suggestions: NetworkSuggestionItem[];
 }
 
 export interface StopPublic {

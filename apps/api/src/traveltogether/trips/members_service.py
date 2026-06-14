@@ -22,6 +22,7 @@ class AddMemberResult:
     pending: bool
     membership: Membership | None = None
     pending_membership: PendingMembership | None = None
+    existing_user: User | None = None
 
 
 def _count_organizers(session: Session, trip_id: uuid.UUID) -> int:
@@ -34,12 +35,33 @@ def _count_organizers(session: Session, trip_id: uuid.UUID) -> int:
     )
 
 
+def send_invite_email_async(
+    *,
+    to_email: str,
+    trip_name: str,
+    inviter_name: str | None = None,
+    invite_url: str = "",
+) -> None:
+    """Envia convite por e-mail. No-op se RESEND_API_KEY ausente."""
+    from traveltogether.platform.email_service import send_invite_email  # noqa: PLC0415
+
+    send_invite_email(
+        to_email=to_email,
+        trip_name=trip_name,
+        inviter_name=inviter_name or "Organizador",
+        invite_url=invite_url,
+    )
+
+
 def add_member_by_email(
     session: Session,
     trip_id: uuid.UUID,
     email: str,
+    *,
+    inviter_name: str | None = None,
+    trip_name: str | None = None,
 ) -> AddMemberResult:
-    """Adiciona membro por e-mail. Cria PendingMembership se o usuário ainda não existe."""
+    """Adiciona membro por e-mail. Cria PendingMembership + envia convite se usuário não existe."""
     normalized = email.strip().lower()
 
     existing_user = session.exec(select(User).where(User.email == normalized)).first()
@@ -59,7 +81,7 @@ def add_member_by_email(
         session.add(membership)
         session.commit()
         session.refresh(membership)
-        return AddMemberResult(pending=False, membership=membership)
+        return AddMemberResult(pending=False, membership=membership, existing_user=existing_user)
 
     existing_pending = session.exec(
         select(PendingMembership)
@@ -73,6 +95,13 @@ def add_member_by_email(
     session.add(pending)
     session.commit()
     session.refresh(pending)
+
+    send_invite_email_async(
+        to_email=normalized,
+        trip_name=trip_name or "",
+        inviter_name=inviter_name,
+    )
+
     return AddMemberResult(pending=True, pending_membership=pending)
 
 
@@ -146,3 +175,52 @@ def list_trip_members(
     ).all()
 
     return list(active), list(pending)
+
+
+def get_network_suggestions(
+    session: Session,
+    user: User,
+    trip_id: uuid.UUID,
+    q: str,
+    limit: int = 10,
+) -> list[User]:
+    """Autocomplete: usuários da rede do organizador (Viagens compartilhadas) não nesta trip."""
+    # All trip_ids where user is a member
+    user_trip_ids = session.exec(
+        select(Membership.trip_id).where(Membership.user_id == user.id)
+    ).all()
+
+    if not user_trip_ids:
+        return []
+
+    # All user_ids in those trips (excludes self)
+    network_user_ids = session.exec(
+        select(Membership.user_id)
+        .where(Membership.trip_id.in_(user_trip_ids))  # type: ignore[attr-defined]
+        .where(Membership.user_id != user.id)
+    ).all()
+
+    if not network_user_ids:
+        return []
+
+    # Exclude users already in target trip
+    already_member_ids = session.exec(
+        select(Membership.user_id).where(Membership.trip_id == trip_id)
+    ).all()
+
+    candidate_ids = [uid for uid in set(network_user_ids) if uid not in set(already_member_ids)]
+
+    if not candidate_ids:
+        return []
+
+    stmt = select(User).where(User.id.in_(candidate_ids))  # type: ignore[attr-defined]
+
+    q_lower = q.strip().lower()
+    if q_lower:
+        stmt = stmt.where(
+            (User.email.contains(q_lower))  # type: ignore[union-attr]
+            | (User.display_name.contains(q_lower))  # type: ignore[union-attr]
+        )
+
+    stmt = stmt.limit(limit)
+    return list(session.exec(stmt).all())

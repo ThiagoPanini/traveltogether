@@ -3,7 +3,7 @@
 import type { MembershipRole } from "@traveltogether/types";
 import { redirect } from "next/navigation";
 import { getAuthSession } from "@/auth";
-import { addMember, removeMember, updateMemberRole } from "@/lib/api/trips";
+import { addMember, getNetworkSuggestions, removeMember, updateMemberRole } from "@/lib/api/trips";
 
 export async function addMemberAction(tripId: string, email: string) {
   const session = await getAuthSession();
@@ -25,4 +25,10 @@ export async function removeMemberAction(tripId: string, membershipId: string) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
   return removeMember(session.apiAccessToken, tripId, membershipId);
+}
+
+export async function suggestMembersAction(tripId: string, q: string) {
+  const session = await getAuthSession();
+  if (!session?.apiAccessToken) return null;
+  return getNetworkSuggestions(session.apiAccessToken, tripId, q);
 }
