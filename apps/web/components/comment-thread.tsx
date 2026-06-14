@@ -3,14 +3,14 @@
 import type { CommentTargetType, CommentWithAuthor, MembershipRole } from "@traveltogether/types";
 import { useEffect, useState } from "react";
 
-import { Icon, UserAvatar } from "@/components/atlas";
-import { canDeleteComment, canEditComment, isBlankBody } from "@/lib/comments/policy";
 import {
   createCommentAction,
   deleteCommentAction,
   getCommentsAction,
   updateCommentAction,
-} from "./actions";
+} from "@/app/actions/comments";
+import { Icon, UserAvatar } from "@/components/atlas";
+import { canDeleteComment, canEditComment, isBlankBody } from "@/lib/comments/policy";
 
 interface Props {
   tripId: string;

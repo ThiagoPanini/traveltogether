@@ -11,12 +11,36 @@ from datetime import UTC, datetime
 from sqlmodel import Session, col, select
 
 from traveltogether.collaboration.models import Comment, CommentTargetType
+from traveltogether.fares.service import fare_quote_trip_id
 from traveltogether.trips.models import MembershipRole
-from traveltogether.trips.service import get_trip_membership
+from traveltogether.trips.service import get_trip_membership, itinerary_item_trip_id
 
 
 class NotMemberError(Exception):
     """Quem não é Membro da Viagem não comenta (invariante 17)."""
+
+
+class TargetNotFoundError(Exception):
+    """Alvo do Comentário não existe ou não pertence à Viagem informada."""
+
+
+def resolve_target_trip_id(
+    session: Session, target_type: CommentTargetType, target_id: uuid.UUID
+) -> uuid.UUID | None:
+    """Resolve a Viagem dona do alvo polimórfico via service do boundary dono.
+
+    - `trip`: o próprio id (mural da Viagem).
+    - `itinerary_item`: via trips.service (Item → Parada → Viagem).
+    - `fare_quote`: via fares.service (Pesquisa → Trajeto → Viagem).
+
+    Retorna None se o alvo não existir. Nunca importa models cross-boundary
+    (ADR-0014) — só chama services.
+    """
+    if target_type == CommentTargetType.trip:
+        return target_id
+    if target_type == CommentTargetType.itinerary_item:
+        return itinerary_item_trip_id(session, target_id)
+    return fare_quote_trip_id(session, target_id)
 
 
 class EmptyCommentError(ValueError):

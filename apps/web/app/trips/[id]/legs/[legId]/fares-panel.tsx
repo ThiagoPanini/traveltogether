@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { AirlineAutocomplete } from "@/components/airline-autocomplete";
 import { Code, Icon, UserAvatar } from "@/components/atlas";
+import CommentThread from "@/components/comment-thread";
 import { IataAutocomplete } from "@/components/iata-autocomplete";
 import {
   chooseFareAction,
@@ -12,7 +13,6 @@ import {
   deleteFareAction,
   toggleUpvoteAction,
 } from "./actions";
-import CommentThread from "./comment-thread";
 
 interface Props {
   legId: string;

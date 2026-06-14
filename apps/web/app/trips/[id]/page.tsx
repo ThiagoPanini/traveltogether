@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { AppTopbar } from "@/app/app-topbar";
 import { getAuthSession } from "@/auth";
 import { Breadcrumbs, CoverGraphic, Icon, RouteLine, type RoutePoint } from "@/components/atlas";
+import CommentThread from "@/components/comment-thread";
+import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
 import { getLegs, getStops, getTrip, getTripMembers } from "@/lib/api/trips";
 import { formatDayMonth as fmtDay, formatDateRange } from "@/lib/format/date";
@@ -19,11 +21,12 @@ export default async function TripDetailPage({ params }: Props) {
   if (!session?.apiAccessToken) redirect("/login");
 
   const { id } = await params;
-  const [data, stops, legs, members] = await Promise.all([
+  const [data, stops, legs, members, currentUser] = await Promise.all([
     getTrip(session.apiAccessToken, id),
     getStops(session.apiAccessToken, id),
     getLegs(session.apiAccessToken, id),
     getTripMembers(session.apiAccessToken, id),
+    getCurrentUser(session.apiAccessToken),
   ]);
   if (!data) notFound();
 
@@ -192,6 +195,25 @@ export default async function TripDetailPage({ params }: Props) {
 
           {/* stops management */}
           <TripSequenceView tripId={id} initialStops={stops} role={membership.role} />
+
+          {/* mural da viagem — comentários com alvo = a própria Viagem */}
+          <div className="section-head" style={{ marginTop: 40 }}>
+            <span className="kicker">mural</span>
+            <h2>Conversa do grupo</h2>
+            <span className="spacer" />
+            <span className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>
+              recados e combinados da viagem
+            </span>
+          </div>
+          <div className="card" style={{ padding: "8px 24px 18px" }}>
+            <CommentThread
+              tripId={id}
+              targetType="trip"
+              targetId={id}
+              currentUserId={currentUser?.id ?? ""}
+              role={membership.role}
+            />
+          </div>
         </div>
       </main>
     </div>

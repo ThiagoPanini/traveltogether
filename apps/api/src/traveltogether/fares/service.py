@@ -7,6 +7,20 @@ from decimal import Decimal
 from sqlmodel import Session, col, select
 
 from traveltogether.fares.models import FareQuote
+from traveltogether.trips.models import Leg
+
+
+def fare_quote_trip_id(session: Session, fare_id: uuid.UUID) -> uuid.UUID | None:
+    """Retorna a Viagem dona da Pesquisa (via Trajeto), ou None se não existir.
+
+    Interface explícita para outros boundaries validarem o alvo sem importar
+    o model FareQuote (ADR-0014).
+    """
+    fare = session.get(FareQuote, fare_id)
+    if fare is None:
+        return None
+    leg = session.get(Leg, fare.leg_id)
+    return leg.trip_id if leg is not None else None
 
 
 def create_fare_quote(

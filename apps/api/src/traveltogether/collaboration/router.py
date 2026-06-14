@@ -20,6 +20,7 @@ from traveltogether.collaboration.service import (
     create_comment,
     delete_comment,
     list_comments,
+    resolve_target_trip_id,
     update_comment,
 )
 from traveltogether.identity.deps import get_current_user
@@ -59,6 +60,13 @@ def post_comment(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> CommentPublic:
+    # Membership primeiro (403 para não-Membro), depois validação do alvo (404):
+    # o alvo precisa existir e pertencer a esta Viagem (ADR-0014), resolvido via
+    # service do boundary dono e comparado com o trip_id da rota.
+    _require_membership(session, trip_id, current_user.id)
+    target_trip_id = resolve_target_trip_id(session, body.target_type, body.target_id)
+    if target_trip_id != trip_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="target not found")
     try:
         comment = create_comment(
             session,

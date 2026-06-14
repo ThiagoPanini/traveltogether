@@ -60,11 +60,12 @@ def test_member_posts_and_lists_comment(
 ) -> None:
     headers = _auth_headers(ALICE_EMAIL, monkeypatch)
     trip_id = _create_trip(client, headers)
-    target_id = str(uuid.uuid4())
+    # Mural da Viagem: alvo = a própria Viagem (target_id == trip_id).
+    target_id = trip_id
 
     post = client.post(
         f"/trips/{trip_id}/comments",
-        json={"target_type": "fare_quote", "target_id": target_id, "body": "ótimo preço"},
+        json={"target_type": "trip", "target_id": target_id, "body": "ótimo preço"},
         headers=headers,
     )
     assert post.status_code == 201
@@ -72,7 +73,7 @@ def test_member_posts_and_lists_comment(
 
     listed = client.get(
         f"/trips/{trip_id}/comments",
-        params={"target_type": "fare_quote", "target_id": target_id},
+        params={"target_type": "trip", "target_id": target_id},
         headers=headers,
     )
     assert listed.status_code == 200
@@ -97,10 +98,9 @@ def test_non_member_cannot_post(client: TestClient, monkeypatch: pytest.MonkeyPa
 def test_only_author_patches(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     alice = _auth_headers(ALICE_EMAIL, monkeypatch)
     trip_id = _create_trip(client, alice)
-    target_id = str(uuid.uuid4())
     created = client.post(
         f"/trips/{trip_id}/comments",
-        json={"target_type": "trip", "target_id": target_id, "body": "original"},
+        json={"target_type": "trip", "target_id": trip_id, "body": "original"},
         headers=alice,
     ).json()
 
@@ -123,12 +123,56 @@ def test_organizer_deletes_member_comment(
     assert invite.status_code in (200, 201)
 
     bob = _auth_headers(BOB_EMAIL, monkeypatch)
-    target_id = str(uuid.uuid4())
     comment = client.post(
         f"/trips/{trip_id}/comments",
-        json={"target_type": "fare_quote", "target_id": target_id, "body": "do bob"},
+        json={"target_type": "trip", "target_id": trip_id, "body": "do bob"},
         headers=bob,
     ).json()
 
     deleted = client.delete(f"/comments/{comment['id']}", headers=alice)
     assert deleted.status_code == 204
+
+
+def test_target_not_found_returns_404(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip_id = _create_trip(client, headers)
+
+    # Alvo inexistente (Pesquisa que não existe) → 404.
+    res = client.post(
+        f"/trips/{trip_id}/comments",
+        json={"target_type": "fare_quote", "target_id": str(uuid.uuid4()), "body": "x"},
+        headers=headers,
+    )
+    assert res.status_code == 404
+
+
+def test_comment_on_itinerary_item(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip_id = _create_trip(client, headers)
+
+    # Cria Parada e Item de Roteiro reais para ancorar o Comentário.
+    stop = client.post(
+        f"/trips/{trip_id}/stops",
+        json={"city": "Lisboa"},
+        headers=headers,
+    ).json()
+    item = client.post(
+        f"/trips/{trip_id}/stops/{stop['id']}/itinerary",
+        json={"title": "Torre de Belém"},
+        headers=headers,
+    ).json()
+
+    post = client.post(
+        f"/trips/{trip_id}/comments",
+        json={"target_type": "itinerary_item", "target_id": item["id"], "body": "levar água"},
+        headers=headers,
+    )
+    assert post.status_code == 201
+
+    listed = client.get(
+        f"/trips/{trip_id}/comments",
+        params={"target_type": "itinerary_item", "target_id": item["id"]},
+        headers=headers,
+    )
+    assert listed.status_code == 200
+    assert len(listed.json()) == 1

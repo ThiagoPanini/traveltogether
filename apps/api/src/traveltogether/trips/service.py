@@ -5,7 +5,7 @@ from datetime import date
 
 from sqlmodel import Session, col, select
 
-from traveltogether.trips.models import Membership, MembershipRole, Stop, Trip
+from traveltogether.trips.models import ItineraryItem, Membership, MembershipRole, Stop, Trip
 
 
 class TripPeriodError(ValueError):
@@ -92,6 +92,19 @@ def get_trip_membership(
     return session.exec(
         select(Membership).where(Membership.trip_id == trip_id).where(Membership.user_id == user_id)
     ).first()
+
+
+def itinerary_item_trip_id(session: Session, item_id: uuid.UUID) -> uuid.UUID | None:
+    """Retorna a Viagem dona do Item de Roteiro (via Parada), ou None se não existir.
+
+    Interface explícita para outros boundaries validarem o alvo sem importar
+    o model ItineraryItem (ADR-0014).
+    """
+    item = session.get(ItineraryItem, item_id)
+    if item is None:
+        return None
+    stop = session.get(Stop, item.stop_id)
+    return stop.trip_id if stop is not None else None
 
 
 def update_trip(

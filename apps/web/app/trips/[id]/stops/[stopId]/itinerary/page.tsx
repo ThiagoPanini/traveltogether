@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppTopbar } from "@/app/app-topbar";
 import { getAuthSession } from "@/auth";
 import { Breadcrumbs, CoverGraphic } from "@/components/atlas";
+import { getCurrentUser } from "@/lib/api/current-user";
 import { getItineraryItems, getStops, getTrip } from "@/lib/api/trips";
 import { formatWeekdayDayMonth as fmtDay, nightsBetween } from "@/lib/format/date";
 import { displayCode } from "@/lib/trips/journey";
@@ -17,10 +18,11 @@ export default async function StopItineraryPage({ params }: Props) {
   if (!session?.apiAccessToken) redirect("/login");
 
   const { id, stopId } = await params;
-  const [data, stops, items] = await Promise.all([
+  const [data, stops, items, currentUser] = await Promise.all([
     getTrip(session.apiAccessToken, id),
     getStops(session.apiAccessToken, id),
     getItineraryItems(session.apiAccessToken, id, stopId),
+    getCurrentUser(session.apiAccessToken),
   ]);
   if (!data) notFound();
 
@@ -81,6 +83,7 @@ export default async function StopItineraryPage({ params }: Props) {
           <ItineraryPanel
             tripId={id}
             stopId={stopId}
+            currentUserId={currentUser?.id ?? ""}
             initialItems={items}
             role={membership.role}
             arrivalDate={stop.arrival_date}
