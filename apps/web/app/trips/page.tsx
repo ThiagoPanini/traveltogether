@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
 import { Code, CoverGraphic, Icon } from "@/components/atlas";
+import { getPendingActions } from "@/lib/api/pending";
 import { getTrips } from "@/lib/api/trips";
+import { toPendingItem } from "@/lib/dashboard/pending";
 import { formatDateRange } from "@/lib/format/date";
 import { displayCode } from "@/lib/trips/journey";
 import { AppTopbar } from "../app-topbar";
@@ -12,7 +14,11 @@ export default async function TripsPage() {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
 
-  const items = await getTrips(session.apiAccessToken);
+  const [items, pendingActions] = await Promise.all([
+    getTrips(session.apiAccessToken),
+    getPendingActions(session.apiAccessToken),
+  ]);
+  const pending = pendingActions.map(toPendingItem);
 
   return (
     <div className="app-shell">
@@ -33,6 +39,48 @@ export default async function TripsPage() {
               <Icon name="plus" size={14} /> Nova viagem
             </Link>
           </div>
+
+          {pending.length > 0 && (
+            <div className="card flat" style={{ padding: "22px 24px", marginBottom: 26 }}>
+              <div className="section-head" style={{ marginBottom: 14 }}>
+                <span className="kicker">o que precisa de mim</span>
+                <span className="spacer" style={{ flex: 1 }} />
+                <span className="mono-num" style={{ fontSize: 12, color: "var(--muted)" }}>
+                  {pending.length} pendência{pending.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div style={{ display: "grid", gap: 8 }}>
+                {pending.map((p) => (
+                  <Link
+                    key={`${p.kind}-${p.href}`}
+                    href={p.href}
+                    className="card"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 16px",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <span style={{ color: "var(--accent)", display: "inline-flex" }}>
+                      <Icon name="compass" size={16} />
+                    </span>
+                    <span style={{ fontWeight: 600, fontSize: 14.5 }}>{p.verb}</span>
+                    <span className="mono" style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
+                      {p.target}
+                    </span>
+                    <span className="spacer" style={{ flex: 1 }} />
+                    <span className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>
+                      {p.tripName}
+                    </span>
+                    <Icon name="arrowRight" size={14} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {items.length === 0 ? (
             <div className="empty">

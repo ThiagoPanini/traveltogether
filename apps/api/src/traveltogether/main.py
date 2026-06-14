@@ -24,6 +24,7 @@ from traveltogether.identity.router import router as identity_router  # noqa: E4
 from traveltogether.platform.db import check_db, create_db_schema  # noqa: E402
 from traveltogether.shared.router import airlines_router, places_router  # noqa: E402
 from traveltogether.shared.router import router as airports_router  # noqa: E402
+from traveltogether.trips.router import me_router as trips_me_router  # noqa: E402
 from traveltogether.trips.router import router as trips_router  # noqa: E402
 
 
@@ -36,6 +37,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 app = FastAPI(title="traveltogether API", version="0.0.0", lifespan=lifespan)
 app.include_router(identity_router)
 app.include_router(trips_router)
+app.include_router(trips_me_router)
 app.include_router(fares_router)
 app.include_router(upvote_router)
 app.include_router(airports_router)

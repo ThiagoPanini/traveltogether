@@ -1,11 +1,22 @@
 """Serviço de Roteiro (ItineraryItem) por Parada."""
 
 import uuid
+from collections.abc import Sequence
 from datetime import date
 
 from sqlmodel import Session, col, func, select
 
 from traveltogether.trips.models import ItineraryItem
+
+
+def stop_ids_with_itinerary(session: Session, stop_ids: Sequence[uuid.UUID]) -> set[uuid.UUID]:
+    """Subconjunto de Paradas que já têm ≥1 Item de Roteiro (painel #58, sem N+1)."""
+    if not stop_ids:
+        return set()
+    rows = session.exec(
+        select(ItineraryItem.stop_id).where(col(ItineraryItem.stop_id).in_(stop_ids)).distinct()
+    )
+    return set(rows)
 
 
 def list_itinerary_items(session: Session, stop_id: uuid.UUID) -> list[ItineraryItem]:

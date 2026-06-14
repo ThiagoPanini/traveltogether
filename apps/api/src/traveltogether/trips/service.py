@@ -10,6 +10,8 @@ from traveltogether.trips.models import (
     Leg,
     Membership,
     MembershipRole,
+    PendingActionKind,
+    PendingActionPublic,
     Stop,
     Trip,
 )
@@ -90,6 +92,93 @@ def list_user_trip_summaries(
             stops_by_trip[stop.trip_id].append(stop)
 
     return [(trip, membership, stops_by_trip[trip.id]) for trip, membership in rows]
+
+
+def _leg_label(leg: Leg, trip: Trip, stop_by_id: dict[uuid.UUID, Stop]) -> str:
+    """Rótulo curto do Trajeto: 'GRU → LIS', caindo p/ origem da Viagem nas pontas."""
+
+    def point(stop_id: uuid.UUID | None) -> str:
+        if stop_id is not None and stop_id in stop_by_id:
+            stop = stop_by_id[stop_id]
+            return stop.airport_code or stop.city
+        return trip.airport_code or trip.origin
+
+    return f"{point(leg.origin_stop_id)} → {point(leg.destination_stop_id)}"
+
+
+def list_pending_actions(session: Session, user_id: uuid.UUID) -> list[PendingActionPublic]:
+    """Pendências derivadas cross-Viagem p/ o painel 'O que precisa de mim' (#58).
+
+    Sem entidade nova: agrega Trajetos sem Pesquisa, Pesquisas sem Escolhida e
+    Paradas sem Roteiro de todas as Viagens do usuário, sem N+1. Cruza o boundary
+    fares apenas via service (`leg_fare_status`), nunca importando FareQuote.
+    """
+    # import local p/ evitar acoplar o módulo trips ao import-time de fares
+    from traveltogether.fares.service import leg_fare_status
+    from traveltogether.trips.itinerary_service import stop_ids_with_itinerary
+
+    summaries = list_user_trip_summaries(session, user_id)
+    if not summaries:
+        return []
+
+    trips_by_id = {trip.id: trip for trip, _, _ in summaries}
+    stops_all = [stop for _, _, stops in summaries for stop in stops]
+    stop_by_id = {stop.id: stop for stop in stops_all}
+
+    legs = list_legs_for_trips(session, list(trips_by_id))
+    fare_status = leg_fare_status(session, [leg.id for leg in legs])
+    with_itinerary = stop_ids_with_itinerary(session, [stop.id for stop in stops_all])
+
+    actions: list[PendingActionPublic] = []
+    for leg in legs:
+        trip = trips_by_id[leg.trip_id]
+        count, has_chosen = fare_status.get(leg.id, (0, False))
+        if count == 0:
+            kind = PendingActionKind.leg_without_fare
+        elif not has_chosen:
+            kind = PendingActionKind.fare_without_chosen
+        else:
+            continue
+        actions.append(
+            PendingActionPublic(
+                kind=kind,
+                trip_id=trip.id,
+                trip_name=trip.name,
+                target_kind="leg",
+                target_id=leg.id,
+                label=_leg_label(leg, trip, stop_by_id),
+            )
+        )
+
+    for stop in stops_all:
+        if stop.id in with_itinerary:
+            continue
+        trip = trips_by_id[stop.trip_id]
+        actions.append(
+            PendingActionPublic(
+                kind=PendingActionKind.stop_without_itinerary,
+                trip_id=trip.id,
+                trip_name=trip.name,
+                target_kind="stop",
+                target_id=stop.id,
+                label=stop.airport_code or stop.city,
+            )
+        )
+
+    return actions
+
+
+def list_legs_for_trips(session: Session, trip_ids: list[uuid.UUID]) -> list[Leg]:
+    """Trajetos de um conjunto de Viagens, ordenados, numa query (sem N+1)."""
+    if not trip_ids:
+        return []
+    return list(
+        session.exec(
+            select(Leg)
+            .where(col(Leg.trip_id).in_(trip_ids))
+            .order_by(col(Leg.trip_id), col(Leg.order))
+        )
+    )
 
 
 def get_trip_membership(

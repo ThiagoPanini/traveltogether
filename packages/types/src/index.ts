@@ -186,6 +186,20 @@ export interface ReorderItineraryItemsRequest {
   item_ids: string[];
 }
 
+export type PendingActionKind =
+  | "leg_without_fare"
+  | "fare_without_chosen"
+  | "stop_without_itinerary";
+
+export interface PendingActionPublic {
+  kind: PendingActionKind;
+  trip_id: string;
+  trip_name: string;
+  target_kind: string;
+  target_id: string;
+  label: string;
+}
+
 export interface FareQuotePublic {
   id: string;
   leg_id: string;

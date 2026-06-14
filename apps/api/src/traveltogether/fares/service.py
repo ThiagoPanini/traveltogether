@@ -1,6 +1,7 @@
 """Serviço de pesquisas de passagem (fare quotes)."""
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 
@@ -68,6 +69,26 @@ def list_fare_quotes(session: Session, leg_id: uuid.UUID) -> list[FareQuote]:
             .order_by(col(FareQuote.created_at))
         )
     )
+
+
+def leg_fare_status(
+    session: Session, leg_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, tuple[int, bool]]:
+    """Para cada Trajeto com ≥1 Pesquisa: (qtd de Pesquisas, tem Escolhida).
+
+    Trajetos sem Pesquisa ficam ausentes do dict. Interface explícita para o
+    painel (#58) agregar pendências cross-Viagem sem N+1 (ADR-0014).
+    """
+    if not leg_ids:
+        return {}
+    status: dict[uuid.UUID, tuple[int, bool]] = {}
+    rows = session.exec(
+        select(FareQuote.leg_id, FareQuote.is_chosen).where(col(FareQuote.leg_id).in_(leg_ids))
+    )
+    for leg_id, is_chosen in rows:
+        count, has_chosen = status.get(leg_id, (0, False))
+        status[leg_id] = (count + 1, has_chosen or is_chosen)
+    return status
 
 
 def leg_has_fare_quotes(session: Session, leg_id: uuid.UUID) -> bool:

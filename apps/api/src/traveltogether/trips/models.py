@@ -227,3 +227,24 @@ class ItineraryItemUpdate(SQLModel):
 
 class ReorderItineraryItemsRequest(SQLModel):
     item_ids: list[uuid.UUID]
+
+
+class PendingActionKind(StrEnum):
+    leg_without_fare = "leg_without_fare"
+    fare_without_chosen = "fare_without_chosen"
+    stop_without_itinerary = "stop_without_itinerary"
+
+
+class PendingActionPublic(SQLModel):
+    """Pendência derivada para o painel 'O que precisa de mim' (#58).
+
+    Não há entidade nova: cada pendência é computada do estado atual das Viagens
+    do usuário. `target_kind` é "leg" ou "stop" para o web montar o link.
+    """
+
+    kind: PendingActionKind
+    trip_id: uuid.UUID
+    trip_name: str
+    target_kind: str
+    target_id: uuid.UUID
+    label: str

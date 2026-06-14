@@ -45,6 +45,7 @@ from traveltogether.trips.models import (
     Membership,
     MembershipPublic,
     MembershipRole,
+    PendingActionPublic,
     PendingMembershipPublic,
     ReorderItineraryItemsRequest,
     Stop,
@@ -60,6 +61,7 @@ from traveltogether.trips.service import (
     TripPeriodError,
     create_trip,
     get_trip_membership,
+    list_pending_actions,
     list_user_trip_summaries,
     update_trip,
 )
@@ -73,6 +75,16 @@ from traveltogether.trips.stops_service import (
 )
 
 router = APIRouter(prefix="/trips", tags=["trips"])
+me_router = APIRouter(tags=["trips"])
+
+
+@me_router.get("/me/pending-actions", response_model=list[PendingActionPublic])
+def get_my_pending_actions(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[PendingActionPublic]:
+    """Pendências derivadas cross-Viagem — alimenta 'O que precisa de mim' (#58)."""
+    return list_pending_actions(session, current_user.id)
 
 
 class TripWithMembershipResponse(BaseModel):
