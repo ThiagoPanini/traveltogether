@@ -108,3 +108,20 @@ def test_patch_me_updates_profile(client: TestClient, monkeypatch: pytest.Monkey
 def test_patch_me_requires_token(client: TestClient) -> None:
     response = client.patch("/identity/me", json={"display_name": "Alice"})
     assert response.status_code == 401
+
+
+def test_jit_user_created_with_profile_from_token(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AUTH_SECRET", TEST_SECRET)
+    token = generate_token(
+        TEST_EMAIL,
+        secret=TEST_SECRET,
+        display_name="Alice Google",
+        avatar_url="https://cdn.google/photo.jpg",
+    )
+    response = client.get("/identity/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["display_name"] == "Alice Google"
+    assert data["avatar_url"] == "https://cdn.google/photo.jpg"
