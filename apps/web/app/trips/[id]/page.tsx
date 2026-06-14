@@ -7,9 +7,11 @@ import { Breadcrumbs, CoverGraphic, Icon, RouteLine, type RoutePoint } from "@/c
 import CommentThread from "@/components/comment-thread";
 import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
+import { getTasks } from "@/lib/api/tasks";
 import { getLegs, getStops, getTrip, getTripMembers } from "@/lib/api/trips";
 import { formatDayMonth as fmtDay, formatDateRange } from "@/lib/format/date";
 import { buildJourneySegments, displayCode } from "@/lib/trips/journey";
+import TaskBoard from "./task-board";
 import TripSequenceView from "./trip-sequence-view";
 
 interface Props {
@@ -21,12 +23,13 @@ export default async function TripDetailPage({ params }: Props) {
   if (!session?.apiAccessToken) redirect("/login");
 
   const { id } = await params;
-  const [data, stops, legs, members, currentUser] = await Promise.all([
+  const [data, stops, legs, members, currentUser, tasks] = await Promise.all([
     getTrip(session.apiAccessToken, id),
     getStops(session.apiAccessToken, id),
     getLegs(session.apiAccessToken, id),
     getTripMembers(session.apiAccessToken, id),
     getCurrentUser(session.apiAccessToken),
+    getTasks(session.apiAccessToken, id),
   ]);
   if (!data) notFound();
 
@@ -214,6 +217,20 @@ export default async function TripDetailPage({ params }: Props) {
               role={membership.role}
             />
           </div>
+
+          {/* board kanban de Tarefas */}
+          <TaskBoard
+            tripId={id}
+            currentUserId={currentUser?.id ?? ""}
+            role={membership.role}
+            initialTasks={tasks}
+            members={activeMembers.map((m) => ({
+              user_id: m.membership.user_id,
+              display_name: m.display_name,
+              avatar_url: m.avatar_url,
+            }))}
+            stops={stops}
+          />
         </div>
       </main>
     </div>

@@ -270,3 +270,50 @@ export interface CommentCreate {
 export interface CommentUpdate {
   body: string;
 }
+
+// Boundary collaboration — Tarefa com board kanban (ADR-0014, invariante 18).
+export type TaskStatus = "todo" | "doing" | "done";
+export type TaskAnchorType = "leg" | "stop" | "fare_quote" | "itinerary_item";
+
+export interface TaskAssigneePublic {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface TaskPublic {
+  id: string;
+  trip_id: string;
+  title: string;
+  description: string;
+  due_date: string | null;
+  status: TaskStatus;
+  anchor_type: TaskAnchorType | null;
+  anchor_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  assignee_ids: string[];
+}
+
+export interface TaskWithAssignees extends TaskPublic {
+  assignees: TaskAssigneePublic[];
+}
+
+export interface TaskCreate {
+  title: string;
+  description?: string;
+  due_date?: string | null;
+  anchor_type?: TaskAnchorType | null;
+  anchor_id?: string | null;
+  assignee_ids?: string[];
+}
+
+export interface TaskUpdate {
+  title?: string | null;
+  description?: string | null;
+  due_date?: string | null;
+  anchor_type?: TaskAnchorType | null;
+  anchor_id?: string | null;
+  assignee_ids?: string[] | null;
+}

@@ -5,7 +5,14 @@ from datetime import date
 
 from sqlmodel import Session, col, select
 
-from traveltogether.trips.models import ItineraryItem, Membership, MembershipRole, Stop, Trip
+from traveltogether.trips.models import (
+    ItineraryItem,
+    Leg,
+    Membership,
+    MembershipRole,
+    Stop,
+    Trip,
+)
 
 
 class TripPeriodError(ValueError):
@@ -105,6 +112,18 @@ def itinerary_item_trip_id(session: Session, item_id: uuid.UUID) -> uuid.UUID | 
         return None
     stop = session.get(Stop, item.stop_id)
     return stop.trip_id if stop is not None else None
+
+
+def stop_trip_id(session: Session, stop_id: uuid.UUID) -> uuid.UUID | None:
+    """Retorna a Viagem dona da Parada, ou None se não existir."""
+    stop = session.get(Stop, stop_id)
+    return stop.trip_id if stop is not None else None
+
+
+def leg_trip_id(session: Session, leg_id: uuid.UUID) -> uuid.UUID | None:
+    """Retorna a Viagem dona do Trajeto, ou None se não existir."""
+    leg = session.get(Leg, leg_id)
+    return leg.trip_id if leg is not None else None
 
 
 def update_trip(

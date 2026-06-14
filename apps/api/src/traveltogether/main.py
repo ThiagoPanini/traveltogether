@@ -17,6 +17,7 @@ from traveltogether.platform.env import load_env_files
 load_env_files()
 
 from traveltogether.collaboration.router import router as collaboration_router  # noqa: E402
+from traveltogether.collaboration.task_router import router as tasks_router  # noqa: E402
 from traveltogether.fares.router import router as fares_router  # noqa: E402
 from traveltogether.fares.router import upvote_router  # noqa: E402
 from traveltogether.identity.router import router as identity_router  # noqa: E402
@@ -41,6 +42,7 @@ app.include_router(airports_router)
 app.include_router(airlines_router)
 app.include_router(places_router)
 app.include_router(collaboration_router)
+app.include_router(tasks_router)
 
 
 @app.get("/health")
