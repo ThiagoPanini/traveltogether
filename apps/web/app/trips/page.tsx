@@ -3,22 +3,60 @@ import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
 import { Code, CoverGraphic, Icon } from "@/components/atlas";
+import { getFares } from "@/lib/api/fares";
 import { getPendingActions } from "@/lib/api/pending";
-import { getTrips } from "@/lib/api/trips";
+import { getLegs, getTrips } from "@/lib/api/trips";
+import { countdownDays, selectNextTrip } from "@/lib/dashboard/next-trip";
 import { toPendingItem } from "@/lib/dashboard/pending";
 import { formatDateRange } from "@/lib/format/date";
 import { displayCode } from "@/lib/trips/journey";
 import { AppTopbar } from "../app-topbar";
 
+function fmtMoney(value: string, currency: string): string {
+  const numeric = Number.parseFloat(value.replace(/\./g, "").replace(",", "."));
+  if (!Number.isFinite(numeric)) return `${currency} ${value}`;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: currency || "BRL",
+  }).format(numeric);
+}
+
 export default async function TripsPage() {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
 
+  const accessToken = session.apiAccessToken;
   const [items, pendingActions] = await Promise.all([
-    getTrips(session.apiAccessToken),
-    getPendingActions(session.apiAccessToken),
+    getTrips(accessToken),
+    getPendingActions(accessToken),
   ]);
   const pending = pendingActions.map(toPendingItem);
+
+  // Próxima viagem em destaque (#67): hero com countdown e preços já Escolhidos.
+  const nextTrip = selectNextTrip(items, new Date().toISOString());
+  const nextStart = nextTrip?.trip.start_date ?? null;
+  const days = nextStart ? countdownDays(nextStart, new Date().toISOString()) : 0;
+  const nextRoute = nextTrip
+    ? [
+        { key: "origin", code: nextTrip.trip.airport_code ?? displayCode(nextTrip.trip.origin) },
+        ...nextTrip.stops.map((s) => ({
+          key: s.id,
+          code: s.airport_code ?? displayCode(s.city),
+        })),
+        { key: "return", code: nextTrip.trip.airport_code ?? displayCode(nextTrip.trip.origin) },
+      ]
+    : [];
+  const chosenFares = nextTrip
+    ? (
+        await Promise.all(
+          (
+            await getLegs(accessToken, nextTrip.trip.id)
+          ).map((leg) => getFares(accessToken, leg.id)),
+        )
+      )
+        .flat()
+        .filter((f) => f.is_chosen)
+    : [];
 
   return (
     <div className="app-shell">
@@ -39,6 +77,96 @@ export default async function TripsPage() {
               <Icon name="plus" size={14} /> Nova viagem
             </Link>
           </div>
+
+          {nextTrip && (
+            <Link
+              href={`/trips/${nextTrip.trip.id}`}
+              className="card"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto",
+                padding: "26px 28px",
+                marginBottom: 24,
+                textDecoration: "none",
+                color: "inherit",
+                gap: 20,
+                borderLeft: "3px solid var(--accent)",
+                alignItems: "start",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <span className="kicker" style={{ color: "var(--accent)" }}>
+                  próxima viagem
+                </span>
+                <h2 className="display" style={{ fontSize: 26, marginBottom: 2 }}>
+                  {nextTrip.trip.name}
+                </h2>
+                {nextRoute.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {nextRoute.map((point, index) => (
+                      <span
+                        key={point.key}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+                      >
+                        {index > 0 && (
+                          <span style={{ color: "var(--muted)", fontSize: 12 }}>→</span>
+                        )}
+                        <Code code={point.code} size="sm" />
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {chosenFares.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      marginTop: 4,
+                    }}
+                  >
+                    {chosenFares.map((f) => (
+                      <span
+                        key={f.id}
+                        className="chip green"
+                        style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}
+                      >
+                        {f.origin_airport} → {f.destination_airport}{" "}
+                        <strong>{fmtMoney(f.value, f.currency)}</strong>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  textAlign: "right",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 4,
+                }}
+              >
+                <span
+                  className="mono-num"
+                  style={{
+                    fontSize: 42,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    color: days === 0 ? "var(--accent)" : "var(--ink)",
+                  }}
+                >
+                  {days === 0 ? "✈" : days}
+                </span>
+                <span
+                  className="mono"
+                  style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}
+                >
+                  {days === 0 ? "é hoje!" : `dia${days !== 1 ? "s" : ""}`}
+                </span>
+              </div>
+            </Link>
+          )}
 
           {pending.length > 0 && (
             <div className="card flat" style={{ padding: "22px 24px", marginBottom: 26 }}>
