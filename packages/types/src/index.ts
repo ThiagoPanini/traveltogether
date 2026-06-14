@@ -30,6 +30,14 @@ export interface AirlinePublic {
   logo_url: string;
 }
 
+export interface PlacePublic {
+  name: string;
+  city: string;
+  country: string;
+  address: string;
+  link: string;
+}
+
 export interface TripPublic {
   id: string;
   name: string;

@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/atlas";
+import { PlaceAutocomplete } from "@/components/place-autocomplete";
+import { placeToItemFields } from "@/lib/itinerary/place-fill";
 import {
   createItineraryItemAction,
   deleteItineraryItemAction,
@@ -68,14 +70,16 @@ function AddItemForm({
               value={time}
             />
           </label>
-          <label className="field">
-            <span>O que fazer</span>
-            <input
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Bate-volta a Sintra"
-              value={title}
-            />
-          </label>
+          <PlaceAutocomplete
+            onChange={setTitle}
+            onSelect={(place) => {
+              const fields = placeToItemFields(place, { notes, link });
+              setTitle(fields.title);
+              setNotes(fields.notes);
+              setLink(fields.link);
+            }}
+            value={title}
+          />
         </div>
         <div className="form-row cols-2">
           <label className="field">
