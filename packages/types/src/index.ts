@@ -23,6 +23,13 @@ export interface AirportPublic {
   longitude: number;
 }
 
+export interface AirlinePublic {
+  iata: string;
+  name: string;
+  country: string;
+  logo_url: string;
+}
+
 export interface TripPublic {
   id: string;
   name: string;

@@ -3,7 +3,9 @@
 import type { FareQuotePublic, MembershipRole, UpvoteResponse } from "@traveltogether/types";
 import { useMemo, useState } from "react";
 
+import { AirlineAutocomplete } from "@/components/airline-autocomplete";
 import { Code, Icon, UserAvatar } from "@/components/atlas";
+import { IataAutocomplete } from "@/components/iata-autocomplete";
 import {
   chooseFareAction,
   createFareAction,
@@ -277,15 +279,10 @@ export default function FaresPanel({
           </div>
           <div className="form-grid">
             <div className="form-row cols-3">
-              <label className="field">
-                <span>Companhia</span>
-                <input
-                  onChange={(e) => setField("airline", e.target.value)}
-                  placeholder="TAP Air Portugal"
-                  required
-                  value={form.airline}
-                />
-              </label>
+              <AirlineAutocomplete
+                onChange={(name) => setField("airline", name)}
+                value={form.airline}
+              />
               <label className="field">
                 <span>Valor</span>
                 <input
@@ -347,36 +344,22 @@ export default function FaresPanel({
               </label>
             </div>
             <div className="form-row cols-2">
-              <label className="field">
+              <div className="field">
                 <span>Aeroportos pesquisados</span>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input
-                    maxLength={3}
-                    onChange={(e) => setField("origin_airport", e.target.value)}
+                  <IataAutocomplete
+                    onChange={(iata) => setField("origin_airport", iata)}
                     placeholder="GRU"
-                    required
-                    style={{
-                      textTransform: "uppercase",
-                      fontFamily: "var(--font-mono)",
-                      width: 80,
-                    }}
                     value={form.origin_airport}
                   />
                   <Icon name="arrowRight" size={13} />
-                  <input
-                    maxLength={3}
-                    onChange={(e) => setField("destination_airport", e.target.value)}
+                  <IataAutocomplete
+                    onChange={(iata) => setField("destination_airport", iata)}
                     placeholder="LIS"
-                    required
-                    style={{
-                      textTransform: "uppercase",
-                      fontFamily: "var(--font-mono)",
-                      width: 80,
-                    }}
                     value={form.destination_airport}
                   />
                 </div>
-              </label>
+              </div>
               <label className="field">
                 <span>Link (opcional)</span>
                 <input

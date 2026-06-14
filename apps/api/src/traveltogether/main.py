@@ -21,6 +21,7 @@ from traveltogether.fares.router import router as fares_router  # noqa: E402
 from traveltogether.fares.router import upvote_router  # noqa: E402
 from traveltogether.identity.router import router as identity_router  # noqa: E402
 from traveltogether.platform.db import check_db, create_db_schema  # noqa: E402
+from traveltogether.shared.router import airlines_router  # noqa: E402
 from traveltogether.shared.router import router as airports_router  # noqa: E402
 from traveltogether.trips.router import router as trips_router  # noqa: E402
 
@@ -37,6 +38,7 @@ app.include_router(trips_router)
 app.include_router(fares_router)
 app.include_router(upvote_router)
 app.include_router(airports_router)
+app.include_router(airlines_router)
 app.include_router(collaboration_router)
 
 
