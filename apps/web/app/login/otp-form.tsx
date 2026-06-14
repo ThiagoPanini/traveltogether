@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { type ClipboardEvent, type KeyboardEvent, useRef, useState } from "react";
 
-import { requestOtp } from "../../lib/api/otp";
+import { requestOtp } from "../../lib/api/otp-actions";
 
 type OtpState = "email" | "code" | "submitting" | "error" | "rate-limited";
 
