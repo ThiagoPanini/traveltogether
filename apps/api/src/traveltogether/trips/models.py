@@ -229,6 +229,24 @@ class ReorderItineraryItemsRequest(SQLModel):
     item_ids: list[uuid.UUID]
 
 
+class ActivityKind(StrEnum):
+    comment = "comment"
+    fare_registered = "fare_registered"
+    member_joined = "member_joined"
+
+
+class ActivityItemPublic(SQLModel):
+    """Item de atividade recente derivado para o painel (#71)."""
+
+    id: uuid.UUID
+    kind: ActivityKind
+    trip_id: uuid.UUID
+    trip_name: str
+    actor_name: str | None
+    body: str
+    occurred_at: datetime
+
+
 class PendingActionKind(StrEnum):
     leg_without_fare = "leg_without_fare"
     fare_without_chosen = "fare_without_chosen"
