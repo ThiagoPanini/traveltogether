@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requestOtp, verifyOtp } from "./otp";
+import { requestOtp } from "./otp-actions";
 
 const API_URL = "http://localhost:8000";
 
@@ -26,23 +26,5 @@ describe("requestOtp", () => {
     vi.mocked(fetch).mockResolvedValue(new Response("{}", { status: 429 }));
     const result = await requestOtp("alice@example.com");
     expect(result).toBe(false);
-  });
-});
-
-describe("verifyOtp", () => {
-  it("retorna email em resposta válida", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response('{"valid":true,"email":"alice@example.com"}', { status: 200 }),
-    );
-    const result = await verifyOtp("alice@example.com", "123456");
-    expect(result).toEqual({ valid: true, email: "alice@example.com" });
-  });
-
-  it("retorna {valid: false} em código errado", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response('{"valid":false,"email":null}', { status: 200 }),
-    );
-    const result = await verifyOtp("alice@example.com", "000000");
-    expect(result).toEqual({ valid: false, email: null });
   });
 });
