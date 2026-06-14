@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
 import { getTasks } from "@/lib/api/tasks";
 import { getItineraryItems, getLegs, getStops, getTrip, getTripMembers } from "@/lib/api/trips";
+import { computeBudget } from "@/lib/dashboard/budget";
 import { formatDayMonth as fmtDay, formatDateRange } from "@/lib/format/date";
 import { buildJourneySegments, displayCode } from "@/lib/trips/journey";
 import { buildSchedule } from "@/lib/trips/schedule";
@@ -48,12 +49,13 @@ export default async function TripDetailPage({ params }: Props) {
   const legFareEntries = await Promise.all(
     legs.map(async (leg) => {
       const fares = await getFares(accessToken, leg.id);
-      const chosen = fares.some((f) => f.is_chosen);
+      const chosenFare = fares.find((f) => f.is_chosen) ?? null;
+      const chosen = chosenFare !== null;
       const best = fares.reduce<{ value: string; currency: string } | null>(
         (acc, f) => (!acc || moneyValue(f.value) < moneyValue(acc.value) ? f : acc),
         null,
       );
-      return [leg.id, { count: fares.length, chosen, best }] as const;
+      return [leg.id, { count: fares.length, chosen, chosenFare, best }] as const;
     }),
   );
   const legInfo = Object.fromEntries(legFareEntries);
@@ -78,6 +80,10 @@ export default async function TripDetailPage({ params }: Props) {
 
   const { trip, membership } = data;
   const activeMembers = members?.members ?? [];
+  const chosenFaresByLeg = Object.fromEntries(
+    legFareEntries.map(([id, info]) => [id, info.chosenFare]),
+  );
+  const budget = computeBudget(legs, chosenFaresByLeg, activeMembers.length);
   const scheduleBlocks = buildSchedule(trip.origin, stops, legs, itemsByStop);
   const pendingMembers = members?.pending ?? [];
   const originCode = trip.airport_code ?? displayCode(trip.origin);
@@ -204,6 +210,119 @@ export default async function TripDetailPage({ params }: Props) {
                 Adicione a primeira cidade para o itinerário (e os trajetos) ganharem forma.
               </div>
             </div>
+          )}
+
+          {/* orçamento do grupo (#62) */}
+          {legs.length > 0 && (
+            <>
+              <div className="section-head" style={{ marginTop: 36 }}>
+                <span className="kicker">orçamento</span>
+                <h2>Custo estimado por pessoa</h2>
+              </div>
+              <div className="card flat" style={{ padding: "22px 26px", marginBottom: 36 }}>
+                <div style={{ display: "grid", gap: 14 }}>
+                  {budget.legs.map((item) => (
+                    <div
+                      key={item.legId}
+                      style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}
+                    >
+                      <span
+                        className="mono"
+                        style={{ fontSize: 11, color: "var(--muted)", minWidth: 60 }}
+                      >
+                        trajeto {item.order + 1}
+                      </span>
+                      {item.chosen ? (
+                        <>
+                          <span
+                            className="mono-num"
+                            style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)" }}
+                          >
+                            {fmtMoney(item.chosen.value, item.chosen.currency)}
+                          </span>
+                          <span className="mono" style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                            {item.chosen.origin_airport} → {item.chosen.destination_airport}
+                          </span>
+                          <span className="chip green" style={{ fontSize: 11 }}>
+                            {item.chosen.airline}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="chip outline" style={{ fontSize: 11 }}>
+                          a decidir
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {Object.keys(budget.totalByCurrency).length > 0 && (
+                  <div
+                    style={{
+                      marginTop: 20,
+                      paddingTop: 16,
+                      borderTop: "1px solid var(--border)",
+                      display: "flex",
+                      gap: 32,
+                      flexWrap: "wrap",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    {Object.entries(budget.perPersonByCurrency).map(([currency, amount]) => (
+                      <div
+                        key={currency}
+                        style={{ display: "flex", flexDirection: "column", gap: 2 }}
+                      >
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: 10,
+                            color: "var(--muted)",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          por pessoa · {currency}
+                        </span>
+                        <span
+                          className="mono-num"
+                          style={{
+                            fontSize: 36,
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            color: "var(--accent)",
+                          }}
+                        >
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency,
+                          }).format(amount)}
+                        </span>
+                        <span className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>
+                          {activeMembers.length} pessoa{activeMembers.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                    {budget.hasMixedCurrencies && (
+                      <span
+                        className="mono"
+                        style={{ fontSize: 11, color: "var(--muted)", alignSelf: "center" }}
+                      >
+                        sem conversão de câmbio
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {budget.hasUndecided && Object.keys(budget.totalByCurrency).length === 0 && (
+                  <div className="empty" style={{ padding: "20px 0 4px" }}>
+                    <Icon name="compass" size={18} />
+                    <span style={{ fontSize: 13.5 }}>
+                      Nenhum trajeto tem passagem escolhida ainda.
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {/* cronograma unificado (#63) */}
