@@ -24,19 +24,35 @@ def get_current_user(
             detail="missing bearer token",
         )
 
-    email = verify_token(credentials.credentials)
-    if email is None:
+    claims = verify_token(credentials.credentials)
+    if claims is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid bearer token",
         )
 
-    normalized_email = email.strip().lower()
+    normalized_email = claims["email"].strip().lower()
     user = session.exec(select(User).where(User.email == normalized_email)).first()
+
     if user is not None:
+        updated = False
+        if claims["display_name"] and user.display_name is None:
+            user.display_name = claims["display_name"]
+            updated = True
+        if claims["avatar_url"] and user.avatar_url is None:
+            user.avatar_url = claims["avatar_url"]
+            updated = True
+        if updated:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
         return user
 
-    user = User(email=normalized_email)
+    user = User(
+        email=normalized_email,
+        display_name=claims["display_name"],
+        avatar_url=claims["avatar_url"],
+    )
     session.add(user)
     session.commit()
     session.refresh(user)

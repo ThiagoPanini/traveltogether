@@ -1,7 +1,6 @@
 import { getServerSession, type NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 
-import { authorizeEmailForAccess } from "@/lib/identity/access-gate";
 import { createApiAccessToken } from "@/lib/identity/api-token";
 
 export const authOptions: NextAuthOptions = {
@@ -14,23 +13,29 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   providers: [
-    CredentialsProvider({
-      name: "Email",
-      credentials: {
-        email: { label: "E-mail", type: "email" },
-      },
-      async authorize(credentials) {
-        const email = typeof credentials?.email === "string" ? credentials.email : "";
-        return authorizeEmailForAccess(email);
-      },
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, profile }) {
       if (user?.email) {
         token.email = user.email;
         token.sub = user.email;
-        token.apiAccessToken = await createApiAccessToken(user.email);
+
+        const displayName = (profile as { name?: string } | undefined)?.name ?? user.name ?? null;
+        const avatarUrl =
+          (profile as { picture?: string } | undefined)?.picture ?? user.image ?? null;
+
+        token.apiAccessToken = await createApiAccessToken(user.email, {
+          displayName: displayName ?? undefined,
+          avatarUrl: avatarUrl ?? undefined,
+        });
       }
       return token;
     },

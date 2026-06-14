@@ -13,4 +13,26 @@ describe("createApiAccessToken", () => {
     expect(payload.sub).toBe("alice@example.com");
     expect(payload.email).toBe("alice@example.com");
   });
+
+  it("inclui display_name e avatar_url quando fornecidos", async () => {
+    const secret = "public-test-auth-secret-not-for-production";
+    const token = await createApiAccessToken("alice@example.com", {
+      secret,
+      displayName: "Alice Google",
+      avatarUrl: "https://cdn.google/photo.jpg",
+    });
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+
+    expect(payload.display_name).toBe("Alice Google");
+    expect(payload.avatar_url).toBe("https://cdn.google/photo.jpg");
+  });
+
+  it("omite display_name e avatar_url quando não fornecidos", async () => {
+    const secret = "public-test-auth-secret-not-for-production";
+    const token = await createApiAccessToken("alice@example.com", { secret });
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+
+    expect(payload.display_name).toBeUndefined();
+    expect(payload.avatar_url).toBeUndefined();
+  });
 });
