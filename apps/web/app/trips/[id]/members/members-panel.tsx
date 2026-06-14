@@ -1,12 +1,22 @@
 "use client";
 
-import type { MemberWithUser, PendingMembershipPublic } from "@traveltogether/types";
+import type {
+  MemberWithUser,
+  NetworkSuggestionItem,
+  PendingMembershipPublic,
+  UserPublic,
+} from "@traveltogether/types";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { Icon, UserAvatar } from "@/components/atlas";
 import { displayLabel } from "@/lib/identity/user-display";
-import { addMemberAction, removeMemberAction, updateMemberRoleAction } from "./actions";
+import {
+  addMemberAction,
+  removeMemberAction,
+  suggestMembersAction,
+  updateMemberRoleAction,
+} from "./actions";
 
 interface Props {
   tripId: string;
@@ -20,18 +30,70 @@ export function MembersPanel({ tripId, members, pending, isOrganizer }: Props) {
   const [email, setEmail] = useState("");
   const [addState, setAddState] = useState<"idle" | "submitting" | "error" | "ok">("idle");
   const [addMsg, setAddMsg] = useState("");
+  const [addedUser, setAddedUser] = useState<UserPublic | null>(null);
+
+  const [suggestions, setSuggestions] = useState<NetworkSuggestionItem[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const organizerCount = members.filter((m) => m.membership.role === "organizer").length;
 
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  function onEmailChange(value: string) {
+    setEmail(value);
+    setAddState("idle");
+    setAddMsg("");
+    setAddedUser(null);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      const res = await suggestMembersAction(tripId, value);
+      if (res && res.suggestions.length > 0) {
+        setSuggestions(res.suggestions);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 250);
+  }
+
+  function selectSuggestion(s: NetworkSuggestionItem) {
+    setEmail(s.email);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  }
+
   async function onAddMember(e: FormEvent) {
     e.preventDefault();
+    setShowSuggestions(false);
     setAddState("submitting");
     const result = await addMemberAction(tripId, email);
     if (result) {
       setEmail("");
       setAddState("ok");
+      setAddedUser(result.existing_user ?? null);
       setAddMsg(
-        result.pending ? `Convite pendente enviado para ${email}.` : `${email} adicionado.`,
+        result.pending
+          ? `Convite enviado para ${email}.`
+          : result.existing_user?.display_name
+            ? `${result.existing_user.display_name} adicionado.`
+            : `${email} adicionado.`,
       );
       router.refresh();
     } else {
@@ -143,17 +205,83 @@ export function MembersPanel({ tripId, members, pending, isOrganizer }: Props) {
           style={{ border: "1.5px dashed var(--line)", padding: "20px 22px" }}
         >
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "end" }}
+            ref={wrapperRef}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: 12,
+              alignItems: "end",
+              position: "relative",
+            }}
           >
             <label className="field">
               <span>Adicionar pessoa por e-mail</span>
               <input
-                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                onChange={(e) => onEmailChange(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 placeholder="amigo@exemplo.com"
                 required
                 type="email"
                 value={email}
               />
+              {showSuggestions && suggestions.length > 0 && (
+                <ul
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "var(--surface)",
+                    border: "1px solid var(--line)",
+                    borderRadius: 8,
+                    listStyle: "none",
+                    margin: 0,
+                    padding: "4px 0",
+                    zIndex: 50,
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  {suggestions.map((s) => (
+                    <li key={s.email}>
+                      <button
+                        onMouseDown={() => selectSuggestion(s)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          width: "100%",
+                          padding: "8px 12px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          color: "var(--ink)",
+                        }}
+                        type="button"
+                      >
+                        <UserAvatar
+                          avatarUrl={s.avatar_url}
+                          label={s.display_name ?? s.email}
+                          seed={s.email}
+                          size={24}
+                        />
+                        <div>
+                          {s.display_name && (
+                            <div style={{ fontSize: 13, fontWeight: 600 }}>{s.display_name}</div>
+                          )}
+                          <div
+                            className="mono-num"
+                            style={{ fontSize: 11, color: "var(--ink-soft)" }}
+                          >
+                            {s.email}
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </label>
             <button
               className="btn accent small"
@@ -170,13 +298,30 @@ export function MembersPanel({ tripId, members, pending, isOrganizer }: Props) {
             upvote.
           </p>
           {addMsg && (
-            <p
-              className="hint"
-              role="status"
-              style={{ marginTop: 8, color: addState === "error" ? "var(--danger)" : "var(--ok)" }}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 8,
+              }}
             >
-              {addMsg}
-            </p>
+              {addedUser && (
+                <UserAvatar
+                  avatarUrl={addedUser.avatar_url}
+                  label={addedUser.display_name ?? addedUser.email}
+                  seed={addedUser.id}
+                  size={24}
+                />
+              )}
+              <p
+                className="hint"
+                role="status"
+                style={{ margin: 0, color: addState === "error" ? "var(--danger)" : "var(--ok)" }}
+              >
+                {addMsg}
+              </p>
+            </div>
           )}
         </form>
       )}
