@@ -10,6 +10,10 @@ import os
 
 logger = logging.getLogger(__name__)
 
+# Remetente. Configurável por env porque precisa bater com o domínio verificado
+# no Resend — que pode divergir do FQDN de deploy (ver ai-ops 005).
+_EMAIL_FROM = os.getenv("EMAIL_FROM", "traveltogether <noreply@traveltogether.paninit.com>")
+
 _OTP_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -72,14 +76,14 @@ def send_otp_email(to_email: str, code: str) -> None:
         logger.info("[email_service] OTP para %s: %s (RESEND_API_KEY ausente)", to_email, code)
         return
 
-    import httpx2 as httpx  # noqa: PLC0415  # type: ignore[import-untyped]
+    import httpx  # noqa: PLC0415
 
     html = _OTP_TEMPLATE.format(code=code)
     response = httpx.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
-            "from": "traveltogether <noreply@traveltogether.paninit.com>",
+            "from": _EMAIL_FROM,
             "to": [to_email],
             "subject": f"{code} é seu código de acesso — traveltogether",
             "html": html,
@@ -105,7 +109,7 @@ def send_invite_email(
         )
         return
 
-    import httpx2 as httpx  # noqa: PLC0415  # type: ignore[import-untyped]
+    import httpx  # noqa: PLC0415
 
     html = _INVITE_TEMPLATE.format(
         trip_name=trip_name,
@@ -116,7 +120,7 @@ def send_invite_email(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
-            "from": "traveltogether <noreply@traveltogether.paninit.com>",
+            "from": _EMAIL_FROM,
             "to": [to_email],
             "subject": f"Você foi convidado para '{trip_name}' — traveltogether",
             "html": html,
