@@ -57,8 +57,6 @@ def get_current_user(
     session.commit()
     session.refresh(user)
 
-    # resolve pending memberships for this new user (lazy import to avoid circular deps)
-    from traveltogether.trips.members_service import resolve_pending_memberships  # noqa: PLC0415
-
-    resolve_pending_memberships(session, user)
+    # ADR-0015: a criação JIT não vincula mais Memberships silenciosamente.
+    # Convites pendentes ficam visíveis para aceite explícito (GET /me/invitations).
     return user

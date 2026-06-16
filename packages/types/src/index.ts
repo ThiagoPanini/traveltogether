@@ -72,12 +72,25 @@ export interface TripSummary extends TripWithMembership {
   cover_image_url: string | null;
 }
 
+// Convite pendente na lista de membros do Organizador (ADR-0015).
 export interface PendingMembershipPublic {
   id: string;
   trip_id: string;
   email: string;
   role: MembershipRole;
   invited_at: string;
+}
+
+export type InvitationStatus = "pending" | "accepted" | "declined";
+
+// Convite pendente apresentado ao convidado (com nome da Viagem).
+export interface InviteForUserPublic {
+  id: string;
+  trip_id: string;
+  trip_name: string;
+  email: string;
+  role: MembershipRole;
+  created_at: string;
 }
 
 export interface MemberWithUser {

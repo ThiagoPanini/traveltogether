@@ -65,10 +65,13 @@ def _add_member(
         headers=organizer,
     )
     assert res.status_code in (200, 201)
-    # O convite cria Membership pendente; o usuário só materializa (JIT) ao
-    # autenticar. Forçamos isso chamando /identity/me com o token dele.
-    me = client.get("/identity/me", headers=_auth(email, monkeypatch))
+    # ADR-0015: convite vira Membership só no aceite explícito. O usuário
+    # materializa (JIT) ao autenticar e então aceita o convite.
+    member_h = _auth(email, monkeypatch)
+    me = client.get("/identity/me", headers=member_h)
     assert me.status_code == 200
+    invites = client.get("/me/invitations", headers=member_h).json()
+    client.post(f"/me/invitations/{invites[0]['id']}/accept", headers=member_h)
     return me.json()["id"]
 
 

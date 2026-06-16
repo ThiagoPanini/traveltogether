@@ -123,6 +123,8 @@ def test_organizer_deletes_member_comment(
     assert invite.status_code in (200, 201)
 
     bob = _auth_headers(BOB_EMAIL, monkeypatch)
+    bob_invites = client.get("/me/invitations", headers=bob).json()
+    client.post(f"/me/invitations/{bob_invites[0]['id']}/accept", headers=bob)
     comment = client.post(
         f"/trips/{trip_id}/comments",
         json={"target_type": "trip", "target_id": trip_id, "body": "do bob"},

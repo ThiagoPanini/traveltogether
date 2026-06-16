@@ -65,22 +65,66 @@ class MembershipPublic(SQLModel):
     joined_at: datetime
 
 
-class PendingMembership(SQLModel, table=True):  # type: ignore[call-arg]
-    __tablename__: ClassVar[str] = "pending_memberships"  # pyright: ignore[reportIncompatibleVariableOverride]
+class InvitationStatus(StrEnum):
+    """Estado de um `Convite` (ADR-0015, invariante 21)."""
+
+    pending = "pending"
+    accepted = "accepted"
+    declined = "declined"
+
+
+class Invitation(SQLModel, table=True):  # type: ignore[call-arg]
+    """`Convite` para uma Viagem. Aceite explícito vira `Membership` (ADR-0015).
+
+    Substitui a resolução JIT silenciosa: adicionar um e-mail cria um Convite
+    `pending`, nunca uma `Membership` direta. Vale tanto para quem já tem conta
+    quanto para quem ainda vai se cadastrar (o Convite aguarda o login).
+    """
+
+    __tablename__: ClassVar[str] = "invitations"  # pyright: ignore[reportIncompatibleVariableOverride]
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     trip_id: uuid.UUID = Field(foreign_key="trips.id")
     email: str = Field(index=True)
     role: MembershipRole = MembershipRole.member
-    invited_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    status: InvitationStatus = InvitationStatus.pending
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    responded_at: datetime | None = None
 
 
-class PendingMembershipPublic(SQLModel):
+class InvitationPublic(SQLModel):
+    id: uuid.UUID
+    trip_id: uuid.UUID
+    email: str
+    role: MembershipRole
+    status: InvitationStatus
+    created_at: datetime
+    responded_at: datetime | None
+
+
+class PendingInvitePublic(SQLModel):
+    """Visão de um Convite pendente na lista de membros do Organizador.
+
+    Espelha o formato antigo de `PendingMembership` (a UI de membros mostra só
+    o e-mail e o estado pendente); o `Convite` completo vai em `InvitationPublic`.
+    """
+
     id: uuid.UUID
     trip_id: uuid.UUID
     email: str
     role: MembershipRole
     invited_at: datetime
+
+
+class InviteForUserPublic(SQLModel):
+    """Convite pendente apresentado ao convidado, com o nome da Viagem."""
+
+    id: uuid.UUID
+    trip_id: uuid.UUID
+    trip_name: str
+    email: str
+    role: MembershipRole
+    created_at: datetime
 
 
 class Stop(SQLModel, table=True):  # type: ignore[call-arg]

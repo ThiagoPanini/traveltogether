@@ -2,11 +2,18 @@
 
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from sqlmodel import Session, select
 
 from traveltogether.identity.models import User
-from traveltogether.trips.models import Membership, MembershipRole, PendingMembership
+from traveltogether.trips.models import (
+    Invitation,
+    InvitationStatus,
+    Membership,
+    MembershipRole,
+    Trip,
+)
 
 
 class LastOrganizerError(Exception):
@@ -14,14 +21,22 @@ class LastOrganizerError(Exception):
 
 
 class MemberAlreadyExists(Exception):
-    """Email já é membro (ativo ou pendente) desta Viagem."""
+    """Email já é membro (ativo) ou tem Convite pendente nesta Viagem."""
+
+
+class InvitationNotForUser(Exception):
+    """O Convite não é endereçado a este Usuário (e-mail diferente)."""
 
 
 @dataclass
 class AddMemberResult:
-    pending: bool
-    membership: Membership | None = None
-    pending_membership: PendingMembership | None = None
+    """Resultado de adicionar por e-mail: sempre cria um `Convite` pendente.
+
+    `existing_user` traz o preview de quem já tem conta (para a UI), mas a
+    `Membership` só nasce quando a pessoa aceita o Convite (ADR-0015).
+    """
+
+    invitation: Invitation
     existing_user: User | None = None
 
 
@@ -61,7 +76,12 @@ def add_member_by_email(
     inviter_name: str | None = None,
     trip_name: str | None = None,
 ) -> AddMemberResult:
-    """Adiciona membro por e-mail. Cria PendingMembership + envia convite se usuário não existe."""
+    """Cria um `Convite` pendente por e-mail (ADR-0015).
+
+    Nunca cria `Membership` direta — nem para quem já tem conta. A pessoa vira
+    `Membro` só ao aceitar. Se o e-mail não tem conta, dispara o convite por
+    e-mail; quem já tem conta verá o Convite na própria inbox.
+    """
     normalized = email.strip().lower()
 
     existing_user = session.exec(select(User).where(User.email == normalized)).first()
@@ -75,55 +95,87 @@ def add_member_by_email(
         if existing_membership is not None:
             raise MemberAlreadyExists(f"{normalized} já é membro desta Viagem")
 
-        membership = Membership(
-            trip_id=trip_id, user_id=existing_user.id, role=MembershipRole.member
-        )
-        session.add(membership)
-        session.commit()
-        session.refresh(membership)
-        return AddMemberResult(pending=False, membership=membership, existing_user=existing_user)
-
     existing_pending = session.exec(
-        select(PendingMembership)
-        .where(PendingMembership.trip_id == trip_id)
-        .where(PendingMembership.email == normalized)
+        select(Invitation)
+        .where(Invitation.trip_id == trip_id)
+        .where(Invitation.email == normalized)
+        .where(Invitation.status == InvitationStatus.pending)
     ).first()
     if existing_pending is not None:
         raise MemberAlreadyExists(f"{normalized} já tem convite pendente nesta Viagem")
 
-    pending = PendingMembership(trip_id=trip_id, email=normalized)
-    session.add(pending)
+    invitation = Invitation(trip_id=trip_id, email=normalized)
+    session.add(invitation)
     session.commit()
-    session.refresh(pending)
+    session.refresh(invitation)
 
-    send_invite_email_async(
-        to_email=normalized,
-        trip_name=trip_name or "",
-        inviter_name=inviter_name,
-    )
+    if existing_user is None:
+        send_invite_email_async(
+            to_email=normalized,
+            trip_name=trip_name or "",
+            inviter_name=inviter_name,
+        )
 
-    return AddMemberResult(pending=True, pending_membership=pending)
+    return AddMemberResult(invitation=invitation, existing_user=existing_user)
 
 
-def resolve_pending_memberships(session: Session, user: User) -> list[Membership]:
-    """Converte PendingMemberships do email em Memberships reais. Chamado no login JIT."""
-    pending_rows = session.exec(
-        select(PendingMembership).where(PendingMembership.email == user.email)
-    ).all()
+def accept_invitation(session: Session, invitation: Invitation, user: User) -> Membership:
+    """Aceita o Convite: cria a `Membership` (papel `Membro`). Idempotente.
 
-    created: list[Membership] = []
-    for pending in pending_rows:
-        membership = Membership(trip_id=pending.trip_id, user_id=user.id, role=pending.role)
-        session.add(membership)
-        session.delete(pending)
-        created.append(membership)
+    Se o Usuário já é membro da Viagem, devolve a Membership existente e só
+    garante o estado `accepted`. O e-mail do Convite tem de bater com o do
+    Usuário (invariante 21).
+    """
+    if invitation.email != user.email:
+        raise InvitationNotForUser(f"convite não endereçado a {user.email}")
 
-    if created:
+    existing = session.exec(
+        select(Membership)
+        .where(Membership.trip_id == invitation.trip_id)
+        .where(Membership.user_id == user.id)
+    ).first()
+
+    if invitation.status != InvitationStatus.accepted:
+        invitation.status = InvitationStatus.accepted
+        invitation.responded_at = datetime.now(UTC)
+        session.add(invitation)
+
+    if existing is not None:
         session.commit()
-        for m in created:
-            session.refresh(m)
+        session.refresh(existing)
+        return existing
 
-    return created
+    membership = Membership(trip_id=invitation.trip_id, user_id=user.id, role=invitation.role)
+    session.add(membership)
+    session.commit()
+    session.refresh(membership)
+    return membership
+
+
+def decline_invitation(session: Session, invitation: Invitation, user: User) -> Invitation:
+    """Recusa o Convite: marca `declined`, sem criar Membership. Idempotente."""
+    if invitation.email != user.email:
+        raise InvitationNotForUser(f"convite não endereçado a {user.email}")
+
+    if invitation.status == InvitationStatus.pending:
+        invitation.status = InvitationStatus.declined
+        invitation.responded_at = datetime.now(UTC)
+        session.add(invitation)
+        session.commit()
+        session.refresh(invitation)
+
+    return invitation
+
+
+def list_pending_invitations_for_user(session: Session, user: User) -> list[tuple[Invitation, str]]:
+    """Convites pendentes endereçados ao Usuário, com o nome da Viagem."""
+    rows = session.exec(
+        select(Invitation, Trip.name)
+        .join(Trip, Trip.id == Invitation.trip_id)  # type: ignore[arg-type]
+        .where(Invitation.email == user.email)
+        .where(Invitation.status == InvitationStatus.pending)
+    ).all()
+    return [(inv, name) for inv, name in rows]
 
 
 def promote_or_demote_member(
@@ -162,8 +214,8 @@ def remove_member_from_trip(session: Session, membership: Membership) -> None:
 
 def list_trip_members(
     session: Session, trip_id: uuid.UUID
-) -> tuple[list[tuple[Membership, User]], list[PendingMembership]]:
-    """Retorna membros ativos (com User) e pendentes da Viagem."""
+) -> tuple[list[tuple[Membership, User]], list[Invitation]]:
+    """Retorna membros ativos (com User) e Convites pendentes da Viagem."""
     active = session.exec(
         select(Membership, User)
         .join(User, User.id == Membership.user_id)  # type: ignore[arg-type]
@@ -171,7 +223,9 @@ def list_trip_members(
     ).all()
 
     pending = session.exec(
-        select(PendingMembership).where(PendingMembership.trip_id == trip_id)
+        select(Invitation)
+        .where(Invitation.trip_id == trip_id)
+        .where(Invitation.status == InvitationStatus.pending)
     ).all()
 
     return list(active), list(pending)

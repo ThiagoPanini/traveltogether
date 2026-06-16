@@ -27,16 +27,22 @@ from traveltogether.trips.legs_service import (
     update_leg,
 )
 from traveltogether.trips.members_service import (
+    InvitationNotForUser,
     LastOrganizerError,
     MemberAlreadyExists,
+    accept_invitation,
     add_member_by_email,
+    decline_invitation,
     get_network_suggestions,
+    list_pending_invitations_for_user,
     list_trip_members,
     promote_or_demote_member,
     remove_member_from_trip,
 )
 from traveltogether.trips.models import (
     ActivityItemPublic,
+    Invitation,
+    InviteForUserPublic,
     ItineraryItem,
     ItineraryItemCreate,
     ItineraryItemPublic,
@@ -49,7 +55,7 @@ from traveltogether.trips.models import (
     MembershipPublic,
     MembershipRole,
     PendingActionPublic,
-    PendingMembershipPublic,
+    PendingInvitePublic,
     ReorderItineraryItemsRequest,
     Stop,
     StopCreate,
@@ -98,6 +104,66 @@ def get_my_pending_actions(
 ) -> list[PendingActionPublic]:
     """Pendências derivadas cross-Viagem — alimenta 'O que precisa de mim' (#58)."""
     return list_pending_actions(session, current_user.id)
+
+
+# ── convites do usuário (aceite explícito — ADR-0015) ───────────────────────
+
+
+def _get_invitation_for_user_or_404(
+    session: Session, invitation_id: uuid.UUID, user: User
+) -> Invitation:
+    inv = session.get(Invitation, invitation_id)
+    if inv is None or inv.email != user.email:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="invitation not found")
+    return inv
+
+
+@me_router.get("/me/invitations", response_model=list[InviteForUserPublic])
+def get_my_invitations(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[InviteForUserPublic]:
+    """Convites pendentes endereçados ao Usuário (ADR-0015)."""
+    return [
+        InviteForUserPublic(
+            id=inv.id,
+            trip_id=inv.trip_id,
+            trip_name=trip_name,
+            email=inv.email,
+            role=inv.role,
+            created_at=inv.created_at,
+        )
+        for inv, trip_name in list_pending_invitations_for_user(session, current_user)
+    ]
+
+
+@me_router.post("/me/invitations/{invitation_id}/accept", response_model=MembershipPublic)
+def post_accept_invitation(
+    invitation_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> MembershipPublic:
+    """Aceita o Convite e materializa a `Membership` (idempotente)."""
+    invitation = _get_invitation_for_user_or_404(session, invitation_id, current_user)
+    try:
+        membership = accept_invitation(session, invitation, current_user)
+    except InvitationNotForUser as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    return MembershipPublic.model_validate(membership)
+
+
+@me_router.post("/me/invitations/{invitation_id}/decline", status_code=status.HTTP_204_NO_CONTENT)
+def post_decline_invitation(
+    invitation_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    """Recusa o Convite (idempotente); não cria Membership."""
+    invitation = _get_invitation_for_user_or_404(session, invitation_id, current_user)
+    try:
+        decline_invitation(session, invitation, current_user)
+    except InvitationNotForUser as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
 
 
 class TripWithMembershipResponse(BaseModel):
@@ -230,9 +296,12 @@ class AddMemberRequest(BaseModel):
 
 
 class AddMemberResponse(BaseModel):
+    # ADR-0015: adicionar por e-mail sempre cria um Convite pendente; `pending`
+    # fica True e `membership` nulo até a pessoa aceitar. `existing_user` traz o
+    # preview de quem já tem conta.
     pending: bool
     membership: MembershipPublic | None = None
-    pending_membership: PendingMembershipPublic | None = None
+    pending_membership: PendingInvitePublic | None = None
     existing_user: UserPublic | None = None
 
 
@@ -255,7 +324,17 @@ class MemberWithUser(BaseModel):
 
 class MembersListResponse(BaseModel):
     members: list[MemberWithUser]
-    pending: list[PendingMembershipPublic]
+    pending: list[PendingInvitePublic]
+
+
+def _invitation_to_pending(inv: Invitation) -> PendingInvitePublic:
+    return PendingInvitePublic(
+        id=inv.id,
+        trip_id=inv.trip_id,
+        email=inv.email,
+        role=inv.role,
+        invited_at=inv.created_at,
+    )
 
 
 class UpdateMemberRequest(BaseModel):
@@ -306,15 +385,9 @@ def post_member(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
     return AddMemberResponse(
-        pending=result.pending,
-        membership=(
-            MembershipPublic.model_validate(result.membership) if result.membership else None
-        ),
-        pending_membership=(
-            PendingMembershipPublic.model_validate(result.pending_membership)
-            if result.pending_membership
-            else None
-        ),
+        pending=True,
+        membership=None,
+        pending_membership=_invitation_to_pending(result.invitation),
         existing_user=(
             UserPublic.model_validate(result.existing_user) if result.existing_user else None
         ),
@@ -341,7 +414,7 @@ def get_members(
             )
             for m, user in active
         ],
-        pending=[PendingMembershipPublic.model_validate(p) for p in pending],
+        pending=[_invitation_to_pending(p) for p in pending],
     )
 
 

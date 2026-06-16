@@ -1,4 +1,4 @@
-"""Testes para add_member_by_email com retorno de preview e get_network_suggestions."""
+"""Testes para add_member_by_email com preview de convite e get_network_suggestions."""
 
 from collections.abc import Iterator
 from unittest.mock import patch
@@ -9,9 +9,11 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from traveltogether.identity.models import User
 from traveltogether.trips.members_service import (
+    accept_invitation,
     add_member_by_email,
     get_network_suggestions,
 )
+from traveltogether.trips.models import InvitationStatus, Membership
 from traveltogether.trips.service import create_trip
 
 
@@ -55,6 +57,12 @@ def carol_fixture(session: Session) -> User:
     return user
 
 
+def _join(session: Session, trip_id: object, user: User) -> Membership:
+    """Convida + aceita: membership ativa para montar a rede (ADR-0015)."""
+    result = add_member_by_email(session, trip_id, user.email)  # type: ignore[arg-type]
+    return accept_invitation(session, result.invitation, user)
+
+
 # ── add_member: existing user preview ───────────────────────────────────────
 
 
@@ -63,7 +71,8 @@ def test_add_member_existing_user_returns_preview(session: Session, alice: User,
 
     result = add_member_by_email(session, trip.id, bob.email)
 
-    assert result.pending is False
+    # Convite pendente, mas com preview de quem já tem conta (ADR-0015).
+    assert result.invitation.status == InvitationStatus.pending
     assert result.existing_user is not None
     assert result.existing_user.email == bob.email
     assert result.existing_user.display_name == "Bob"
@@ -75,11 +84,11 @@ def test_add_member_pending_has_no_preview(session: Session, alice: User) -> Non
     with patch("traveltogether.trips.members_service.send_invite_email_async", return_value=None):
         result = add_member_by_email(session, trip.id, "unknown@example.com")
 
-    assert result.pending is True
+    assert result.invitation.status == InvitationStatus.pending
     assert result.existing_user is None
 
 
-def test_add_member_pending_sends_invite_email(session: Session, alice: User) -> None:
+def test_add_member_unknown_sends_invite_email(session: Session, alice: User) -> None:
     trip, _ = create_trip(session, alice.id, "Trip Incrível", "", "SP")
 
     with patch("traveltogether.trips.members_service.send_invite_email_async") as mock_send:
@@ -114,7 +123,7 @@ def test_network_suggestions_returns_shared_trip_members(
 ) -> None:
     # alice e bob em trip1
     trip1, _ = create_trip(session, alice.id, "Trip1", "", "SP")
-    add_member_by_email(session, trip1.id, bob.email)
+    _join(session, trip1.id, bob)
 
     # carol em trip separada (sem alice)
     _, _ = create_trip(session, carol.id, "Trip2", "", "RJ")
@@ -133,8 +142,8 @@ def test_network_suggestions_filters_by_query(
     session: Session, alice: User, bob: User, carol: User
 ) -> None:
     trip1, _ = create_trip(session, alice.id, "Trip1", "", "SP")
-    add_member_by_email(session, trip1.id, bob.email)
-    add_member_by_email(session, trip1.id, carol.email)
+    _join(session, trip1.id, bob)
+    _join(session, trip1.id, carol)
 
     invite_trip, _ = create_trip(session, alice.id, "Nova", "", "MG")
 
@@ -149,11 +158,11 @@ def test_network_suggestions_excludes_current_members(
     session: Session, alice: User, bob: User
 ) -> None:
     trip1, _ = create_trip(session, alice.id, "Trip1", "", "SP")
-    add_member_by_email(session, trip1.id, bob.email)
+    _join(session, trip1.id, bob)
 
-    # invite_trip where bob is already member
+    # invite_trip onde bob já é membro
     invite_trip, _ = create_trip(session, alice.id, "Nova", "", "MG")
-    add_member_by_email(session, invite_trip.id, bob.email)
+    _join(session, invite_trip.id, bob)
 
     suggestions = get_network_suggestions(session, alice, invite_trip.id, q="")
 

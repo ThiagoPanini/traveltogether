@@ -174,12 +174,14 @@ def test_get_fares_includes_upvote_count_and_user_voted(
     assert alice_fares[0]["upvote_count"] == 1
     assert alice_fares[0]["user_voted"] is True
 
-    # add bob as member
+    # add bob as member: convite + aceite (ADR-0015)
     client.post(
         f"/trips/{leg['trip_id']}/members",
         json={"email": BOB_EMAIL, "role": "member"},
         headers=alice_headers,
     )
+    invites = client.get("/me/invitations", headers=bob_headers).json()
+    client.post(f"/me/invitations/{invites[0]['id']}/accept", headers=bob_headers)
     client.get(f"/legs/{leg['id']}/fares", headers=bob_headers)
 
     bob_fares = client.get(f"/legs/{leg['id']}/fares", headers=bob_headers).json()
