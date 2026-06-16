@@ -1357,3 +1357,69 @@ fieldset.card legend {
   gap: 4px;
   color: var(--muted);
 }
+
+/* ---------- login em passos (#134) ---------- */
+.btn.google {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-weight: 600;
+}
+.btn.google:hover {
+  border-color: var(--ink-soft);
+}
+
+.divider-or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+  margin: 18px 0;
+}
+.divider-or hr {
+  flex: 1;
+  border: none;
+  border-top: 1px solid var(--line-soft);
+}
+.divider-or span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+.otp-cells.shake {
+  animation: shake 0.4s ease;
+}
+.otp-cell.err {
+  border-color: var(--danger);
+}

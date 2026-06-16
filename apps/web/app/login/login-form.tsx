@@ -5,13 +5,18 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-import { OtpForm } from "./otp-form";
-
-type Tab = "otp" | "google";
+import { Icon } from "@/components/atlas";
+import { isValidEmail, type LoginStep, loginStep } from "@/lib/identity/login-flow";
+import { requestOtp } from "../../lib/api/otp-actions";
+import { CodeStep } from "./code-step";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>("otp");
+  const [step, setStep] = useState<LoginStep>("choose");
+  const [email, setEmail] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const errorParam = searchParams.get("error");
   const globalError =
@@ -21,61 +26,153 @@ export function LoginForm() {
         ? "Não foi possível entrar agora."
         : null;
 
+  const canSend = isValidEmail(email);
+
+  function onGoogle() {
+    setGoogleLoading(true);
+    signIn("google", { callbackUrl: "/trips" });
+  }
+
+  async function onSendCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSend || emailLoading) return;
+    setEmailLoading(true);
+    setEmailError(null);
+    const ok = await requestOtp(email.trim().toLowerCase());
+    setEmailLoading(false);
+    if (ok) {
+      setStep((s) => loginStep(s, { type: "codeSent" }));
+    } else {
+      setEmailError("Muitas tentativas. Aguarde alguns minutos.");
+    }
+  }
+
   return (
-    <div style={{ width: "min(420px, 92vw)" }}>
-      <div className="card" style={{ padding: "36px 34px" }}>
+    <div style={{ width: "min(440px, 92vw)" }}>
+      <div className="card" style={{ padding: "34px 32px" }}>
         <div className="kicker" style={{ marginBottom: 14 }}>
           acesso
         </div>
-        <h1 className="display" style={{ fontSize: 30, marginBottom: 8 }}>
-          Entre ou crie sua conta
-        </h1>
-        <p className="soft" style={{ fontSize: 14, marginBottom: 24 }}>
-          Qualquer e-mail vale — a conta nasce na hora, sem espera por convite.
-        </p>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-          <button
-            className={tab === "otp" ? "btn accent" : "btn ghost"}
-            onClick={() => setTab("otp")}
-            style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
-            type="button"
-          >
-            E-mail com código
-          </button>
-          <button
-            className={tab === "google" ? "btn accent" : "btn ghost"}
-            onClick={() => setTab("google")}
-            style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
-            type="button"
-          >
-            Google
-          </button>
-        </div>
-
-        {tab === "otp" && <OtpForm />}
-
-        {tab === "google" && (
-          <div className="form-grid">
+        {step === "choose" && (
+          <>
+            <h1 className="display" style={{ fontSize: 28, marginBottom: 8 }}>
+              Entre ou crie sua conta
+            </h1>
+            <p className="soft" style={{ fontSize: 14.5, marginBottom: 26 }}>
+              Qualquer e-mail vale — a conta nasce na hora.{" "}
+              <strong style={{ fontWeight: 600 }}>Nunca pedimos senha.</strong>
+            </p>
             <button
-              className="btn"
-              onClick={() => signIn("google", { callbackUrl: "/trips" })}
-              style={{ justifyContent: "center", gap: 8 }}
+              className="btn google"
+              disabled={googleLoading}
+              onClick={onGoogle}
+              style={{ height: 46, justifyContent: "center", width: "100%" }}
               type="button"
             >
-              <GoogleIcon />
-              Continuar com Google
+              {googleLoading ? (
+                <>
+                  <span className="spinner" /> Conectando…
+                </>
+              ) : (
+                <>
+                  <GoogleIcon /> Continuar com Google
+                </>
+              )}
             </button>
-          </div>
+            <div className="divider-or">
+              <hr />
+              <span>ou</span>
+              <hr />
+            </div>
+            <button
+              className="btn ghost"
+              disabled={googleLoading}
+              onClick={() => setStep((s) => loginStep(s, { type: "chooseEmail" }))}
+              style={{ height: 46, justifyContent: "center", width: "100%" }}
+              type="button"
+            >
+              <Icon name="message" size={15} /> Entrar com e-mail
+            </button>
+          </>
+        )}
+
+        {step === "email" && (
+          <>
+            <button
+              className="link-btn"
+              onClick={() => setStep((s) => loginStep(s, { type: "backToChoose" }))}
+              style={{
+                alignItems: "center",
+                color: "var(--muted)",
+                display: "inline-flex",
+                fontSize: 13,
+                gap: 5,
+                marginBottom: 14,
+              }}
+              type="button"
+            >
+              <Icon name="arrowLeft" size={13} /> outras formas de entrar
+            </button>
+            <h1 className="display" style={{ fontSize: 26, marginBottom: 8 }}>
+              Entrar com e-mail
+            </h1>
+            <p className="soft" style={{ fontSize: 14, marginBottom: 22 }}>
+              Enviamos um código de 6 dígitos. Sem senha, sem link pra caçar na caixa de entrada.
+            </p>
+            <form className="form-grid" onSubmit={onSendCode}>
+              <label className="field">
+                <span>Seu e-mail</span>
+                <input
+                  // biome-ignore lint/a11y/noAutofocus: foco direto no único campo do passo
+                  autoFocus
+                  autoComplete="email"
+                  name="email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="voce@exemplo.com"
+                  type="email"
+                  value={email}
+                />
+              </label>
+              <button
+                className="btn accent"
+                disabled={!canSend || emailLoading}
+                style={{ height: 46, justifyContent: "center" }}
+                type="submit"
+              >
+                {emailLoading ? (
+                  <>
+                    <span className="spinner" /> Enviando código…
+                  </>
+                ) : (
+                  <>
+                    Enviar código <Icon name="arrowRight" size={14} />
+                  </>
+                )}
+              </button>
+              {emailError && (
+                <p role="alert" style={{ color: "var(--danger)", fontSize: 13, marginTop: 4 }}>
+                  {emailError}
+                </p>
+              )}
+            </form>
+          </>
+        )}
+
+        {step === "code" && (
+          <CodeStep
+            email={email}
+            onChangeEmail={() => setStep((s) => loginStep(s, { type: "changeEmail" }))}
+          />
         )}
 
         {globalError && (
-          <p className="hint" role="alert" style={{ marginTop: 16, color: "var(--danger)" }}>
+          <p className="hint" role="alert" style={{ color: "var(--danger)", marginTop: 16 }}>
             {globalError}
           </p>
         )}
       </div>
-      <div style={{ textAlign: "center", marginTop: 18 }}>
+      <div style={{ marginTop: 18, textAlign: "center" }}>
         <Link className="link-btn" href="/" style={{ fontSize: 13 }}>
           ← Voltar à página inicial
         </Link>
@@ -86,7 +183,7 @@ export function LoginForm() {
 
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 24 24" width="18">
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"
