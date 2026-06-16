@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/auth";
 import { AppShell } from "@/components/app-shell";
 import { Code, CoverGraphic, Icon } from "@/components/atlas";
+import { InvitationsInbox } from "@/components/invitations-inbox";
 import { activityHref, activityKindLabel } from "@/lib/activity/activity-item";
 import { getRecentActivity } from "@/lib/api/activity";
 import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
+import { getMyInvitations } from "@/lib/api/invitations";
 import { getPendingActions } from "@/lib/api/pending";
 import { getLegs, getTrips } from "@/lib/api/trips";
 import { countdownDays, selectNextTrip } from "@/lib/dashboard/next-trip";
@@ -28,11 +30,12 @@ export default async function TripsPage() {
   if (!session?.apiAccessToken) redirect("/login");
 
   const accessToken = session.apiAccessToken;
-  const [user, items, pendingActions, activity] = await Promise.all([
+  const [user, items, pendingActions, activity, invitations] = await Promise.all([
     getCurrentUser(accessToken),
     getTrips(accessToken),
     getPendingActions(accessToken),
     getRecentActivity(accessToken),
+    getMyInvitations(accessToken),
   ]);
   if (!user) redirect("/login");
   const pending = pendingActions.map(toPendingItem);
@@ -81,6 +84,8 @@ export default async function TripsPage() {
               <Icon name="plus" size={14} /> Nova viagem
             </Link>
           </div>
+
+          <InvitationsInbox invitations={invitations} />
 
           {nextTrip && (
             <Link
