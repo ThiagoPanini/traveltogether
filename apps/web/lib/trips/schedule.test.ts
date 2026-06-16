@@ -120,6 +120,23 @@ describe("buildSchedule", () => {
     expect(stays[1].stop.id).toBe("b");
   });
 
+  it("marca cada leg com o estado de Escolhida (a decidir quando não há)", () => {
+    const stopA = makeStop("a", 0, "2026-09-02", "2026-09-05");
+    const legOut = makeLeg("leg-1", 0, null, "a");
+    const legBack = makeLeg("leg-2", 1, "a", null);
+
+    const blocks = buildSchedule("Origem", [stopA], [legOut, legBack], {}, { "leg-1": true });
+    const legBlocks = blocks.filter((b) => b.kind === "leg");
+    if (legBlocks[0]?.kind !== "leg" || legBlocks[1]?.kind !== "leg") {
+      throw new Error("expected legs");
+    }
+
+    expect(legBlocks[0].legId).toBe("leg-1");
+    expect(legBlocks[0].chosen).toBe(true);
+    expect(legBlocks[1].legId).toBe("leg-2");
+    expect(legBlocks[1].chosen).toBe(false);
+  });
+
   it("legs sem parada vinculada ficam como leg genérico", () => {
     const stop = makeStop("a", 0, null, null);
     const leg = makeLeg("leg-1", 0, null, "a");
