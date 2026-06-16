@@ -6,25 +6,12 @@ import { useState } from "react";
 import { Code, Icon } from "@/components/atlas";
 import type { FareRow, SortKey } from "@/lib/compare-fares";
 import { sortFares } from "@/lib/compare-fares";
+import { formatDate, formatDuration } from "@/lib/fares/format";
 
 interface Props {
   legId: string;
   initialRows: FareRow[];
   role: MembershipRole;
-}
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${h}h`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
 }
 
 export default function ComparePanel({ initialRows }: Props) {
@@ -119,6 +106,10 @@ export default function ComparePanel({ initialRows }: Props) {
           ))}
         </div>
       </div>
+
+      <p className="mono" style={{ fontSize: 11, color: "var(--muted)", marginTop: 12 }}>
+        valores na moeda de cada pesquisa · sem conversão de câmbio — comparação visual
+      </p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { AirlineAutocomplete } from "@/components/airline-autocomplete";
 import { Code, Icon, UserAvatar } from "@/components/atlas";
 import CommentThread from "@/components/comment-thread";
 import { IataAutocomplete } from "@/components/iata-autocomplete";
+import { formatDate, formatDuration, formatMoney, moneyValue } from "@/lib/fares/format";
 import {
   chooseFareAction,
   createFareAction,
@@ -39,39 +40,6 @@ const EMPTY_FORM = {
   link: "",
   notes: "",
 };
-
-function moneyValue(fare: FareQuotePublic): number {
-  const raw = String(fare.value).trim();
-  const normalized =
-    raw.includes(",") && raw.includes(".")
-      ? raw.replace(/\./g, "").replace(",", ".")
-      : raw.replace(",", ".");
-  const parsed = Number.parseFloat(normalized);
-  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
-}
-
-function formatMoney(fare: FareQuotePublic): string {
-  const numeric = moneyValue(fare);
-  if (!Number.isFinite(numeric)) return `${fare.currency} ${fare.value}`;
-  return new Intl.NumberFormat("pt-BR", {
-    currency: fare.currency || "BRL",
-    style: "currency",
-  }).format(numeric);
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
-}
-
-function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins ? `${hours}h${String(mins).padStart(2, "0")}` : `${hours}h`;
-}
 
 export default function FaresPanel({
   legId,
@@ -120,7 +88,7 @@ export default function FaresPanel({
     () =>
       fares.reduce<FareQuotePublic | null>(
         (cheapest, fare) =>
-          !cheapest || moneyValue(fare) < moneyValue(cheapest) ? fare : cheapest,
+          !cheapest || moneyValue(fare.value) < moneyValue(cheapest.value) ? fare : cheapest,
         null,
       )?.id ?? null,
     [fares],
@@ -138,7 +106,7 @@ export default function FaresPanel({
   );
 
   const sortedFares = useMemo(
-    () => [...fares].sort((a, b) => moneyValue(a) - moneyValue(b)),
+    () => [...fares].sort((a, b) => moneyValue(a.value) - moneyValue(b.value)),
     [fares],
   );
 
@@ -181,7 +149,7 @@ export default function FaresPanel({
     setLoading(false);
   }
 
-  const minPrice = Math.min(...fares.map(moneyValue));
+  const minPrice = Math.min(...fares.map((f) => moneyValue(f.value)));
   const minDur = Math.min(...fares.map((f) => f.duration_minutes));
   const compareRows: {
     label: string;
@@ -192,10 +160,10 @@ export default function FaresPanel({
       label: "Preço",
       render: (f) => (
         <strong className="mono-num" style={{ fontSize: 16 }}>
-          {formatMoney(f)}
+          {formatMoney(f.value, f.currency)}
         </strong>
       ),
-      best: (f) => moneyValue(f) === minPrice,
+      best: (f) => moneyValue(f.value) === minPrice,
     },
     { label: "Data do voo", render: (f) => formatDate(f.flight_date) },
     {
@@ -544,7 +512,7 @@ export default function FaresPanel({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {formatMoney(fare)}
+                      {formatMoney(fare.value, fare.currency)}
                     </div>
                     <button
                       className={`upvote ${vote.voted ? "on" : ""}`}
