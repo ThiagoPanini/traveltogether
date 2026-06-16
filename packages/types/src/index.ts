@@ -434,3 +434,36 @@ export interface BudgetSummary {
   member_count: number;
   subtotals: CurrencySubtotal[];
 }
+
+// notifications (Notificação — ADR-0017)
+export type NotificationKind = "invite" | "decision" | "task" | "mention";
+
+export interface NotificationPublic {
+  id: string;
+  kind: NotificationKind;
+  trip_id: string;
+  target_type: string | null;
+  target_id: string | null;
+  text: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationInbox {
+  unread_count: number;
+  items: NotificationPublic[];
+}
+
+export interface NotificationPrefsPublic {
+  decision: boolean;
+  task: boolean;
+  mention: boolean;
+  digest: boolean;
+}
+
+export interface NotificationPrefsUpdate {
+  decision?: boolean | null;
+  task?: boolean | null;
+  mention?: boolean | null;
+  digest?: boolean | null;
+}

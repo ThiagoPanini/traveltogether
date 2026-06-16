@@ -17,6 +17,7 @@ import traveltogether.budget.models  # noqa: F401, E402
 import traveltogether.collaboration.models  # noqa: F401, E402
 import traveltogether.fares.models  # noqa: F401, E402
 import traveltogether.identity.models  # noqa: F401, E402
+import traveltogether.notifications.models  # noqa: F401, E402
 import traveltogether.trips.models  # noqa: F401, E402
 
 target_metadata = SQLModel.metadata

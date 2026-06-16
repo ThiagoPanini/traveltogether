@@ -22,6 +22,7 @@ from traveltogether.collaboration.task_router import router as tasks_router  # n
 from traveltogether.fares.router import router as fares_router  # noqa: E402
 from traveltogether.fares.router import upvote_router  # noqa: E402
 from traveltogether.identity.router import router as identity_router  # noqa: E402
+from traveltogether.notifications.router import router as notifications_router  # noqa: E402
 from traveltogether.platform.db import check_db, create_db_schema  # noqa: E402
 from traveltogether.shared.router import airlines_router, places_router  # noqa: E402
 from traveltogether.shared.router import router as airports_router  # noqa: E402
@@ -47,6 +48,7 @@ app.include_router(places_router)
 app.include_router(collaboration_router)
 app.include_router(tasks_router)
 app.include_router(budget_router)
+app.include_router(notifications_router)
 
 
 @app.get("/health")
