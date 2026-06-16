@@ -6,6 +6,8 @@ export interface LegBlock {
   fromCity: string;
   toCity: string;
   date: string | null;
+  /** Trajeto tem Pesquisa de Passagem Escolhida; `false` = "a decidir". */
+  chosen: boolean;
 }
 
 export interface StayBlock {
@@ -28,6 +30,7 @@ export function buildSchedule(
   stops: StopPublic[],
   legs: LegPublic[],
   itemsByStop: Record<string, ItineraryItemPublic[]>,
+  chosenByLeg: Record<string, boolean> = {},
 ): ScheduleBlock[] {
   if (stops.length === 0) return [];
 
@@ -57,6 +60,7 @@ export function buildSchedule(
       fromCity,
       toCity: stop.city,
       date: legIn?.target_date ?? stop.arrival_date ?? null,
+      chosen: legIn ? (chosenByLeg[legIn.id] ?? false) : false,
     });
 
     // stay
@@ -78,6 +82,7 @@ export function buildSchedule(
     fromCity: lastStop.city,
     toCity: originCity,
     date: legBack?.target_date ?? lastStop.departure_date ?? null,
+    chosen: legBack ? (chosenByLeg[legBack.id] ?? false) : false,
   });
 
   return blocks;

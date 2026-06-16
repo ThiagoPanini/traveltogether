@@ -300,7 +300,7 @@ export default async function TripDetail({ id, activeTab }: Props) {
         ),
       ),
     );
-    const scheduleBlocks = buildSchedule(trip.origin, stops, legs, itemsByStop);
+    const scheduleBlocks = buildSchedule(trip.origin, stops, legs, itemsByStop, chosenByLeg);
     if (scheduleBlocks.length === 0) {
       return (
         <div className="empty">
@@ -363,16 +363,35 @@ export default async function TripDetail({ id, activeTab }: Props) {
                     >
                       <Icon name="plane" size={11} />
                     </span>
-                    <span
-                      className="mono"
-                      style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}
-                    >
-                      {block.fromCity} → {block.toCity}
-                    </span>
+                    {block.legId ? (
+                      <Link
+                        href={`/trips/${id}/legs/${block.legId}`}
+                        className="mono"
+                        style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}
+                      >
+                        {block.fromCity} → {block.toCity}
+                      </Link>
+                    ) : (
+                      <span
+                        className="mono"
+                        style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}
+                      >
+                        {block.fromCity} → {block.toCity}
+                      </span>
+                    )}
                     {block.date && (
                       <span className="mono-num" style={{ fontSize: 11, color: "var(--muted)" }}>
                         {fmtDay(block.date)}
                       </span>
+                    )}
+                    {block.legId && !block.chosen && (
+                      <Link
+                        href={`/trips/${id}/legs/${block.legId}`}
+                        className="chip outline"
+                        style={{ fontSize: 11 }}
+                      >
+                        a decidir
+                      </Link>
                     )}
                   </div>
                 );
