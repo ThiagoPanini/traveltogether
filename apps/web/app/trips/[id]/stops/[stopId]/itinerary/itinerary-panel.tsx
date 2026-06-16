@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Icon } from "@/components/atlas";
 import CommentThread from "@/components/comment-thread";
 import { PlaceAutocomplete } from "@/components/place-autocomplete";
+import { buildItineraryDays } from "@/lib/itinerary/days";
 import { placeToItemFields } from "@/lib/itinerary/place-fill";
 import {
   createItineraryItemAction,
@@ -26,18 +27,6 @@ interface Props {
   role: MembershipRole;
   arrivalDate: string | null;
   departureDate: string | null;
-}
-
-function addDays(iso: string, n: number): string {
-  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  const date = new Date(y, m - 1, d + n);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function nightsBetween(arrival: string, departure: string): number {
-  const a = new Date(`${arrival.slice(0, 10)}T00:00:00`).getTime();
-  const b = new Date(`${departure.slice(0, 10)}T00:00:00`).getTime();
-  return Math.max(0, Math.round((b - a) / 86_400_000));
 }
 
 function fmtDate(iso: string): string {
@@ -138,26 +127,7 @@ export default function ItineraryPanel({
   const [openThread, setOpenThread] = useState<string | null>(null);
   const isOrganizer = role === "organizer";
 
-  const hasWindow = Boolean(arrivalDate && departureDate);
-  const dayCount = hasWindow
-    ? nightsBetween(arrivalDate as string, departureDate as string) + 1
-    : 0;
-
-  const days = hasWindow
-    ? Array.from({ length: dayCount }, (_, i) => {
-        const date = addDays(arrivalDate as string, i);
-        return {
-          n: i + 1,
-          date,
-          items: items
-            .filter((it) => it.day?.slice(0, 10) === date)
-            .sort((a, b) => (a.time || "99").localeCompare(b.time || "99")),
-        };
-      })
-    : [];
-
-  const dayDates = new Set(days.map((d) => d.date));
-  const unscheduled = items.filter((it) => !it.day || !dayDates.has(it.day.slice(0, 10)));
+  const { days, unscheduled, hasWindow } = buildItineraryDays(arrivalDate, departureDate, items);
 
   async function handleAdd(payload: ItineraryItemCreate) {
     setLoading(true);
