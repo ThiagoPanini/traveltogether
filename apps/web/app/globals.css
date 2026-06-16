@@ -540,6 +540,36 @@ textarea {
   font-family: var(--font-sans);
 }
 
+/* Split-flap do código OTP — ecoa o motivo mono do Aeroporto de Referência. */
+.otp-cells {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+.otp-cell {
+  width: 44px;
+  height: 56px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  caret-color: var(--accent);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.otp-cell:focus {
+  border-color: var(--accent);
+}
+.otp-cell:disabled {
+  opacity: 0.6;
+}
+
 .form-grid {
   display: grid;
   gap: 18px;

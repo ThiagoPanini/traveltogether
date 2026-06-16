@@ -14,8 +14,8 @@ describe("public auth copy", () => {
     expect(source).not.toContain("beta fechado");
     expect(source).not.toContain("allowlist");
 
-    // identidade do produto presente
-    expect(source).toContain("Identifique-se");
+    // identidade do produto + acesso aberto explícito no headline
+    expect(source).toContain("Entre ou crie sua conta");
     expect(source).toContain("Google");
   });
 });

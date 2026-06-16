@@ -25,15 +25,18 @@ export function LoginForm() {
     <div style={{ width: "min(420px, 92vw)" }}>
       <div className="card" style={{ padding: "36px 34px" }}>
         <div className="kicker" style={{ marginBottom: 14 }}>
-          embarque
+          acesso
         </div>
-        <h1 className="display" style={{ fontSize: 30, marginBottom: 24 }}>
-          Identifique-se
+        <h1 className="display" style={{ fontSize: 30, marginBottom: 8 }}>
+          Entre ou crie sua conta
         </h1>
+        <p className="soft" style={{ fontSize: 14, marginBottom: 24 }}>
+          Qualquer e-mail vale — a conta nasce na hora, sem espera por convite.
+        </p>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
           <button
-            className={tab === "otp" ? "btn accent" : "btn"}
+            className={tab === "otp" ? "btn accent" : "btn ghost"}
             onClick={() => setTab("otp")}
             style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
             type="button"
@@ -41,7 +44,7 @@ export function LoginForm() {
             E-mail com código
           </button>
           <button
-            className={tab === "google" ? "btn accent" : "btn"}
+            className={tab === "google" ? "btn accent" : "btn ghost"}
             onClick={() => setTab("google")}
             style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
             type="button"
@@ -55,7 +58,7 @@ export function LoginForm() {
         {tab === "google" && (
           <div className="form-grid">
             <button
-              className="btn accent"
+              className="btn"
               onClick={() => signIn("google", { callbackUrl: "/trips" })}
               style={{ justifyContent: "center", gap: 8 }}
               type="button"

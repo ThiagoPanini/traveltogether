@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { type ClipboardEvent, type KeyboardEvent, useRef, useState } from "react";
 
+import { otpDigit, otpFromPaste, otpIsComplete } from "@/lib/identity/otp-code";
 import { requestOtp } from "../../lib/api/otp-actions";
 
 type OtpState = "email" | "code" | "submitting" | "error" | "rate-limited";
@@ -52,14 +53,14 @@ export function OtpForm() {
   }
 
   function onDigitChange(index: number, value: string) {
-    const digit = value.replace(/\D/g, "").slice(-1);
+    const digit = otpDigit(value);
     const next = [...code];
     next[index] = digit;
     setCode(next);
     if (digit && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
-    if (next.every((d) => d !== "")) {
+    if (otpIsComplete(next)) {
       // auto-submit when all 6 digits filled
       const form = inputRefs.current[0]?.closest("form");
       form?.requestSubmit();
@@ -73,10 +74,10 @@ export function OtpForm() {
   }
 
   function onPaste(e: ClipboardEvent<HTMLInputElement>) {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
+    const pasted = otpFromPaste(e.clipboardData.getData("text"));
+    if (pasted) {
       e.preventDefault();
-      setCode(pasted.split(""));
+      setCode(pasted);
       inputRefs.current[5]?.focus();
     }
   }
@@ -119,14 +120,7 @@ export function OtpForm() {
       <p className="soft" style={{ fontSize: 13, marginBottom: 8 }}>
         Código enviado para <strong>{email}</strong>. Expira em 10 minutos.
       </p>
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          justifyContent: "center",
-          margin: "8px 0 16px",
-        }}
-      >
+      <div className="otp-cells">
         {code.map((digit, i) => (
           <input
             // biome-ignore lint/suspicious/noArrayIndexKey: OTP cells are positional by design
@@ -136,6 +130,7 @@ export function OtpForm() {
             }}
             aria-label={`Dígito ${i + 1} do código`}
             autoComplete="one-time-code"
+            className="otp-cell"
             disabled={state === "submitting"}
             inputMode="numeric"
             maxLength={1}
@@ -143,19 +138,6 @@ export function OtpForm() {
             onKeyDown={(e) => onDigitKeyDown(i, e)}
             onPaste={i === 0 ? onPaste : undefined}
             pattern="[0-9]"
-            style={{
-              width: 44,
-              height: 56,
-              textAlign: "center",
-              fontSize: 24,
-              fontFamily: "var(--font-mono, monospace)",
-              letterSpacing: 0,
-              background: "var(--surface-2, #1a2820)",
-              border: "1px solid var(--border, #2d4a38)",
-              borderRadius: 6,
-              color: "var(--accent, #e08040)",
-              caretColor: "var(--accent, #e08040)",
-            }}
             type="text"
             value={digit}
           />
@@ -163,7 +145,7 @@ export function OtpForm() {
       </div>
       <button
         className="btn accent"
-        disabled={state === "submitting" || code.some((d) => !d)}
+        disabled={state === "submitting" || !otpIsComplete(code)}
         style={{ justifyContent: "center" }}
         type="submit"
       >
