@@ -23,6 +23,36 @@ const ICON_PATHS: Record<string, ReactNode> = {
       strokeLinejoin="round"
     />
   ),
+  arrowLeft: (
+    <path
+      d="M13 8H4M7 4.5 3.5 8 7 11.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  refresh: (
+    <path
+      d="M13 8a5 5 0 1 1-1.5-3.5M13 2.5V5h-2.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  alert: (
+    <path
+      d="M8 2 14.5 13.5H1.5L8 2zM8 6.3v3.4M8 11.7v.3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
   plus: (
     <path
       d="M8 3v10M3 8h10"
