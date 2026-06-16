@@ -31,6 +31,22 @@ export async function getComments(
   }
 }
 
+export async function getTripComments(
+  accessToken: string,
+  tripId: string,
+): Promise<CommentWithAuthor[]> {
+  try {
+    const response = await fetch(`${apiUrl()}/trips/${tripId}/comments/all`, {
+      cache: "no-store",
+      headers: authHeaders(accessToken),
+    });
+    if (!response.ok) return [];
+    return (await response.json()) as CommentWithAuthor[];
+  } catch {
+    return [];
+  }
+}
+
 export async function createComment(
   accessToken: string,
   tripId: string,

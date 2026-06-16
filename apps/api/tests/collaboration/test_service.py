@@ -24,6 +24,7 @@ from traveltogether.collaboration.service import (
     create_comment,
     delete_comment,
     list_comments,
+    list_trip_comments,
     update_comment,
 )
 from traveltogether.identity.models import User
@@ -133,6 +134,44 @@ def test_list_comments_ordered_by_creation(session: Session) -> None:
     comments = list_comments(session, FARE, target)
 
     assert [c.id for c in comments] == [first.id, second.id]
+
+
+def test_list_trip_comments_spans_targets_scoped_to_trip(session: Session) -> None:
+    alice = _user(session, "alice@example.com")
+    trip = _trip(session, alice.id)
+    other_trip = _trip(session, alice.id)
+    _join(session, trip.id, alice.id, MembershipRole.member)
+    _join(session, other_trip.id, alice.id, MembershipRole.member)
+
+    mural = create_comment(
+        session,
+        author_id=alice.id,
+        trip_id=trip.id,
+        target_type=CommentTargetType.trip,
+        target_id=trip.id,
+        body="recado no mural",
+    )
+    anchored = create_comment(
+        session,
+        author_id=alice.id,
+        trip_id=trip.id,
+        target_type=FARE,
+        target_id=uuid.uuid4(),
+        body="ancorado numa pesquisa",
+    )
+    create_comment(
+        session,
+        author_id=alice.id,
+        trip_id=other_trip.id,
+        target_type=CommentTargetType.trip,
+        target_id=other_trip.id,
+        body="de outra viagem",
+    )
+
+    comments = list_trip_comments(session, trip.id)
+
+    # Abrange alvos (mural + ancorado), ordenado por criação, escopo da Viagem.
+    assert [c.id for c in comments] == [mural.id, anchored.id]
 
 
 def test_only_author_can_edit(session: Session) -> None:

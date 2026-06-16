@@ -82,6 +82,38 @@ def test_member_posts_and_lists_comment(
     assert body[0]["body"] == "ótimo preço"
 
 
+def test_list_all_trip_comments_spans_targets(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    headers = _auth_headers(ALICE_EMAIL, monkeypatch)
+    trip_id = _create_trip(client, headers)
+
+    # Comentário no mural (alvo Viagem).
+    client.post(
+        f"/trips/{trip_id}/comments",
+        json={"target_type": "trip", "target_id": trip_id, "body": "no mural"},
+        headers=headers,
+    )
+    # Comentário ancorado num Item de Roteiro real.
+    stop = client.post(f"/trips/{trip_id}/stops", json={"city": "Porto"}, headers=headers).json()
+    item = client.post(
+        f"/trips/{trip_id}/stops/{stop['id']}/itinerary",
+        json={"title": "Ribeira"},
+        headers=headers,
+    ).json()
+    client.post(
+        f"/trips/{trip_id}/comments",
+        json={"target_type": "itinerary_item", "target_id": item["id"], "body": "ancorado"},
+        headers=headers,
+    )
+
+    listed = client.get(f"/trips/{trip_id}/comments/all", headers=headers)
+    assert listed.status_code == 200
+    body = listed.json()
+    assert [c["body"] for c in body] == ["no mural", "ancorado"]
+    assert {c["target_type"] for c in body} == {"trip", "itinerary_item"}
+
+
 def test_non_member_cannot_post(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     alice = _auth_headers(ALICE_EMAIL, monkeypatch)
     trip_id = _create_trip(client, alice)

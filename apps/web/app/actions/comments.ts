@@ -4,7 +4,13 @@ import type { CommentCreate, CommentTargetType } from "@traveltogether/types";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
-import { createComment, deleteComment, getComments, updateComment } from "@/lib/api/comments";
+import {
+  createComment,
+  deleteComment,
+  getComments,
+  getTripComments,
+  updateComment,
+} from "@/lib/api/comments";
 
 export async function getCommentsAction(
   tripId: string,
@@ -14,6 +20,12 @@ export async function getCommentsAction(
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
   return getComments(session.apiAccessToken, tripId, targetType, targetId);
+}
+
+export async function getTripCommentsAction(tripId: string) {
+  const session = await getAuthSession();
+  if (!session?.apiAccessToken) redirect("/login");
+  return getTripComments(session.apiAccessToken, tripId);
 }
 
 export async function createCommentAction(tripId: string, data: CommentCreate) {

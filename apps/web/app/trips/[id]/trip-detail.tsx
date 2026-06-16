@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppTopbar } from "@/app/app-topbar";
 import { getAuthSession } from "@/auth";
 import { Breadcrumbs, CoverGraphic, Icon, type RoutePoint } from "@/components/atlas";
-import CommentThread from "@/components/comment-thread";
+import MuralThread from "@/components/mural-thread";
 import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
 import { getTasks } from "@/lib/api/tasks";
@@ -505,14 +505,8 @@ export default async function TripDetail({ id, activeTab }: Props) {
             recados e combinados da viagem
           </span>
         </div>
-        <div className="card" style={{ padding: "8px 24px 18px" }}>
-          <CommentThread
-            tripId={id}
-            targetType="trip"
-            targetId={id}
-            currentUserId={currentUser?.id ?? ""}
-            role={membership.role}
-          />
+        <div className="card" style={{ padding: "18px 24px" }}>
+          <MuralThread tripId={id} currentUserId={currentUser?.id ?? ""} role={membership.role} />
         </div>
       </>
     );

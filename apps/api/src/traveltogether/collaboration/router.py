@@ -20,6 +20,7 @@ from traveltogether.collaboration.service import (
     create_comment,
     delete_comment,
     list_comments,
+    list_trip_comments,
     resolve_target_trip_id,
     update_comment,
 )
@@ -85,16 +86,7 @@ def post_comment(
     return CommentPublic.model_validate(comment)
 
 
-@router.get("/trips/{trip_id}/comments", response_model=list[CommentWithAuthor])
-def get_comments(
-    trip_id: uuid.UUID,
-    target_type: CommentTargetType,
-    target_id: uuid.UUID,
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[Session, Depends(get_session)],
-) -> list[CommentWithAuthor]:
-    _require_membership(session, trip_id, current_user.id)
-    comments = list_comments(session, target_type, target_id)
+def _with_authors(session: Session, comments: list[Comment]) -> list[CommentWithAuthor]:
     authors = get_users_by_ids(session, [c.author_id for c in comments])
     return [
         CommentWithAuthor(
@@ -106,6 +98,29 @@ def get_comments(
         )
         for c in comments
     ]
+
+
+@router.get("/trips/{trip_id}/comments/all", response_model=list[CommentWithAuthor])
+def get_all_trip_comments(
+    trip_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[CommentWithAuthor]:
+    # Mural: todos os Comentários da Viagem (alvo Viagem + ancorados).
+    _require_membership(session, trip_id, current_user.id)
+    return _with_authors(session, list_trip_comments(session, trip_id))
+
+
+@router.get("/trips/{trip_id}/comments", response_model=list[CommentWithAuthor])
+def get_comments(
+    trip_id: uuid.UUID,
+    target_type: CommentTargetType,
+    target_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> list[CommentWithAuthor]:
+    _require_membership(session, trip_id, current_user.id)
+    return _with_authors(session, list_comments(session, target_type, target_id))
 
 
 @router.patch("/comments/{comment_id}", response_model=CommentPublic)

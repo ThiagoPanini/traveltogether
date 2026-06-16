@@ -128,6 +128,19 @@ def list_comments(
     )
 
 
+def list_trip_comments(session: Session, trip_id: uuid.UUID) -> list[Comment]:
+    """Lista todos os Comentários da Viagem (mural + ancorados), por criação.
+
+    Alimenta o Mural, que mostra o alvo `Viagem` junto dos ancorados a
+    `Pesquisa de Passagem`/`Item de Roteiro` (estes read-only no mural).
+    """
+    return list(
+        session.exec(
+            select(Comment).where(Comment.trip_id == trip_id).order_by(col(Comment.created_at))
+        )
+    )
+
+
 def update_comment(session: Session, comment: Comment, user_id: uuid.UUID, body: str) -> Comment:
     """Edita o corpo; só o autor pode (senão NotAuthorError)."""
     if comment.author_id != user_id:
