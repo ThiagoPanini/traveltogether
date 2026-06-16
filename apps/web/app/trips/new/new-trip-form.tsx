@@ -6,6 +6,7 @@ import { type FormEvent, useState } from "react";
 import { AirportAutocomplete, type AirportPatch } from "@/components/airport-autocomplete";
 import { Icon } from "@/components/atlas";
 import { DateField } from "@/components/date-field";
+import { newTripDatesValid } from "@/lib/trips/new-trip";
 import { createTripWithStopsAction } from "./actions";
 
 type FormState = "idle" | "submitting" | "error";
@@ -73,15 +74,18 @@ export function NewTripForm() {
     setStops((prev) => prev.filter((s) => s.key !== key));
   }
 
+  const withStops = hasStops === true;
+  const datesValid = newTripDatesValid(
+    start,
+    end,
+    withStops ? stops.map((s) => ({ arrive: s.arrive, depart: s.depart })) : [],
+  );
   const valid =
     name.trim() &&
     originCity.trim() &&
     originAirport.trim().length === 3 &&
-    start &&
-    end &&
-    end >= start &&
-    (hasStops !== true ||
-      stops.every((s) => s.city.trim() && s.airport.trim().length === 3 && s.arrive && s.depart));
+    datesValid &&
+    (!withStops || stops.every((s) => s.city.trim() && s.airport.trim().length === 3));
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
