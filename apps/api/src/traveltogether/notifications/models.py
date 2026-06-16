@@ -44,6 +44,19 @@ class Notification(SQLModel, table=True):  # type: ignore[call-arg]
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class DigestState(SQLModel, table=True):  # type: ignore[call-arg]
+    """Marca d'água do digest por destinatário (#112).
+
+    Guarda quando o último e-mail de digest saiu, para o job não reenviar
+    Notificações já mandadas. Uma linha por `Usuário`.
+    """
+
+    __tablename__: ClassVar[str] = "digest_state"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    recipient_id: uuid.UUID = Field(foreign_key="users.id", primary_key=True)
+    last_sent_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 class NotificationPublic(SQLModel):
     id: uuid.UUID
     kind: NotificationKind

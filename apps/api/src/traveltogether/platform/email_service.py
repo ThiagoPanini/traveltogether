@@ -69,6 +69,96 @@ _INVITE_TEMPLATE = """
 """
 
 
+_DIGEST_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {{ font-family: 'IBM Plex Mono', monospace, sans-serif; background: #0f1a14; color: #e8e0d4; margin: 0; padding: 40px 20px; }}
+    .card {{ max-width: 480px; margin: 0 auto; background: #1a2820; border: 1px solid #2d4a38; border-radius: 8px; padding: 40px; }}
+    .brand {{ font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: #6b8f72; margin-bottom: 32px; }}
+    h1 {{ font-size: 22px; color: #e8e0d4; margin: 0 0 12px; font-weight: 600; }}
+    p {{ color: #9aab9f; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }}
+    .trip {{ font-size: 16px; color: #e8e0d4; font-weight: 600; margin: 24px 0 8px; }}
+    ul {{ margin: 0 0 16px; padding-left: 18px; }}
+    li {{ color: #9aab9f; font-size: 14px; line-height: 1.6; }}
+    .btn {{ display: inline-block; background: #e08040; color: #0f1a14; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 14px; margin-top: 8px; }}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">traveltogether</div>
+    <h1>{heading}</h1>
+    <p>Você tem novidades nas suas viagens desde o último resumo.</p>
+    {groups_html}
+    <a class="btn" href="{inbox_url}">Ver na inbox</a>
+  </div>
+</body>
+</html>
+"""
+
+
+def render_digest_html(
+    *,
+    recipient_name: str | None,
+    groups: list[tuple[str, list[str]]],
+    inbox_url: str,
+) -> str:
+    """Monta o HTML do digest da marca, agrupado por Viagem, com link de volta.
+
+    `groups` é uma lista de `(nome da Viagem, linhas)` — primitivos, para o
+    adapter de plataforma não depender dos models do boundary `notifications`.
+    """
+    import html as html_lib  # noqa: PLC0415
+
+    blocks: list[str] = []
+    for trip_name, lines in groups:
+        items = "".join(f"<li>{html_lib.escape(line)}</li>" for line in lines)
+        blocks.append(f'<div class="trip">{html_lib.escape(trip_name)}</div><ul>{items}</ul>')
+
+    heading = f"Olá, {html_lib.escape(recipient_name)}" if recipient_name else "Seu resumo"
+    return _DIGEST_TEMPLATE.format(
+        heading=heading,
+        groups_html="".join(blocks),
+        inbox_url=html_lib.escape(inbox_url, quote=True),
+    )
+
+
+def send_digest_email(
+    to_email: str,
+    recipient_name: str | None,
+    groups: list[tuple[str, list[str]]],
+    inbox_url: str,
+) -> None:
+    """Envia o e-mail de digest das Notificações não lidas, agrupado por Viagem."""
+    api_key = os.getenv("RESEND_API_KEY")
+    total = sum(len(lines) for _, lines in groups)
+    if not api_key:
+        logger.info(
+            "[email_service] Digest para %s — %d itens (RESEND_API_KEY ausente)",
+            to_email,
+            total,
+        )
+        return
+
+    import httpx  # noqa: PLC0415
+
+    html = render_digest_html(recipient_name=recipient_name, groups=groups, inbox_url=inbox_url)
+    response = httpx.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={
+            "from": _EMAIL_FROM,
+            "to": [to_email],
+            "subject": f"Seu resumo de viagens — {total} novidade(s) — traveltogether",
+            "html": html,
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+
+
 def send_otp_email(to_email: str, code: str) -> None:
     """Envia e-mail com código OTP de 6 dígitos."""
     api_key = os.getenv("RESEND_API_KEY")

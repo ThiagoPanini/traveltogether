@@ -181,6 +181,18 @@ def list_legs_for_trips(session: Session, trip_ids: list[uuid.UUID]) -> list[Leg
     )
 
 
+def get_trips_by_ids(session: Session, ids: list[uuid.UUID]) -> dict[uuid.UUID, Trip]:
+    """Resolve várias Viagens por id de uma vez.
+
+    Interface explícita para outros boundaries (ex.: `notifications` no digest)
+    lerem o nome da Viagem sem importar o model Trip (ADR-0014).
+    """
+    if not ids:
+        return {}
+    rows = session.exec(select(Trip).where(col(Trip.id).in_(ids))).all()
+    return {trip.id: trip for trip in rows}
+
+
 def get_trip_membership(
     session: Session, trip_id: uuid.UUID, user_id: uuid.UUID
 ) -> Membership | None:
