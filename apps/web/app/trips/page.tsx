@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/auth";
 import { AppShell } from "@/components/app-shell";
 import { Code, CoverGraphic, Icon } from "@/components/atlas";
+import { activityHref, activityKindLabel } from "@/lib/activity/activity-item";
 import { getRecentActivity } from "@/lib/api/activity";
 import { getCurrentUser } from "@/lib/api/current-user";
 import { getFares } from "@/lib/api/fares";
@@ -222,7 +223,7 @@ export default async function TripsPage() {
                 {activity.map((item) => (
                   <Link
                     key={item.id}
-                    href={`/trips/${item.trip_id}`}
+                    href={activityHref(item)}
                     style={{
                       display: "flex",
                       alignItems: "baseline",
@@ -240,11 +241,7 @@ export default async function TripsPage() {
                         flexShrink: 0,
                       }}
                     >
-                      {item.kind === "member_joined"
-                        ? "entrou"
-                        : item.kind === "comment"
-                          ? "comentou"
-                          : "pesquisa"}
+                      {activityKindLabel(item.kind)}
                     </span>
                     {item.actor_name && (
                       <span style={{ fontWeight: 600, fontSize: 13.5, flexShrink: 0 }}>
