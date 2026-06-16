@@ -30,6 +30,17 @@ def update_user_profile(
     return user
 
 
+def get_user_id_by_email(session: Session, email: str) -> uuid.UUID | None:
+    """Resolve o id do Usuário por e-mail (normalizado), ou None se não existir.
+
+    Interface explícita para outros boundaries (ex.: collaboration resolvendo
+    menções `@email`) sem importar o model User (ADR-0014).
+    """
+    normalized = email.strip().lower()
+    user = session.exec(select(User).where(User.email == normalized)).first()
+    return user.id if user is not None else None
+
+
 def get_users_by_ids(session: Session, ids: list[uuid.UUID]) -> dict[uuid.UUID, User]:
     """Resolve vários Usuários por id de uma vez (evita N+1 ao exibir autoria)."""
     if not ids:

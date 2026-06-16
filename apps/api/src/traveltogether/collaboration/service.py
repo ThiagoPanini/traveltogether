@@ -5,6 +5,7 @@ chamando o service do boundary dono (ex.: trips.service.get_trip_membership),
 nunca importando seus modelos.
 """
 
+import re
 import uuid
 from datetime import UTC, datetime
 
@@ -14,6 +15,9 @@ from traveltogether.collaboration.models import Comment, CommentTargetType
 from traveltogether.fares.service import fare_quote_trip_id
 from traveltogether.trips.models import MembershipRole
 from traveltogether.trips.service import get_trip_membership, itinerary_item_trip_id
+
+# `@email` numa menção: arroba seguida de um e-mail (que tem o seu próprio arroba).
+_MENTION_RE = re.compile(r"@([\w.+-]+@[\w-]+\.[\w.-]+)")
 
 
 class NotMemberError(Exception):
@@ -76,7 +80,38 @@ def create_comment(
     session.add(comment)
     session.commit()
     session.refresh(comment)
+
+    _notify_mentions(session, comment)
     return comment
+
+
+def _notify_mentions(session: Session, comment: Comment) -> None:
+    """Notifica `@email` mencionados que são Membros da Viagem, exceto o autor.
+
+    Resolve cada e-mail via identity.service; só notifica quem tem Membership
+    na Viagem do Comentário (ADR-0014/0017, invariante 20).
+    """
+    from traveltogether.identity.service import get_user_id_by_email  # noqa: PLC0415
+    from traveltogether.notifications.models import NotificationKind  # noqa: PLC0415
+    from traveltogether.notifications.service import notify  # noqa: PLC0415
+
+    seen: set[uuid.UUID] = set()
+    for email in _MENTION_RE.findall(comment.body):
+        user_id = get_user_id_by_email(session, email)
+        if user_id is None or user_id == comment.author_id or user_id in seen:
+            continue
+        if get_trip_membership(session, comment.trip_id, user_id) is None:
+            continue
+        seen.add(user_id)
+        notify(
+            session,
+            recipient_id=user_id,
+            kind=NotificationKind.mention,
+            text="Você foi mencionado em um Comentário",
+            trip_id=comment.trip_id,
+            target_type="comment",
+            target_id=comment.id,
+        )
 
 
 def list_comments(

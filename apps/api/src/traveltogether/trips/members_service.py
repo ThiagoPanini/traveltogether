@@ -109,11 +109,28 @@ def add_member_by_email(
     session.commit()
     session.refresh(invitation)
 
+    resolved_trip_name = trip_name
+    if resolved_trip_name is None:
+        trip = session.get(Trip, trip_id)
+        resolved_trip_name = trip.name if trip is not None else ""
+
     if existing_user is None:
         send_invite_email_async(
             to_email=normalized,
-            trip_name=trip_name or "",
+            trip_name=resolved_trip_name,
             inviter_name=inviter_name,
+        )
+    else:
+        # Quem já tem conta vê o Convite na própria inbox (ADR-0017, invariante 20).
+        from traveltogether.notifications.models import NotificationKind  # noqa: PLC0415
+        from traveltogether.notifications.service import notify  # noqa: PLC0415
+
+        notify(
+            session,
+            recipient_id=existing_user.id,
+            kind=NotificationKind.invite,
+            text=f"Você foi convidado para {resolved_trip_name}",
+            trip_id=trip_id,
         )
 
     return AddMemberResult(invitation=invitation, existing_user=existing_user)

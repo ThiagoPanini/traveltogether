@@ -174,7 +174,7 @@ def post_choose(
     leg = _get_leg_or_404(session, leg_id)
     _require_organizer(session, leg, current_user.id)
     _get_fare_or_404(session, leg_id, fare_id)
-    updated = mark_chosen(session, leg_id, fare_id)
+    updated = mark_chosen(session, leg_id, fare_id, actor_id=current_user.id)
     return FareQuotePublic.model_validate(updated)
 
 

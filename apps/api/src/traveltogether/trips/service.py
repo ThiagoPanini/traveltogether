@@ -190,6 +190,15 @@ def get_trip_membership(
     ).first()
 
 
+def get_trip_member_ids(session: Session, trip_id: uuid.UUID) -> list[uuid.UUID]:
+    """Ids dos `Usuário`s membros da Viagem.
+
+    Interface explícita para outros boundaries fanout de Notificação sem
+    importar o model Membership (ADR-0014/0017).
+    """
+    return list(session.exec(select(Membership.user_id).where(Membership.trip_id == trip_id)).all())
+
+
 def count_memberships(session: Session, trip_id: uuid.UUID) -> int:
     """Nº de `Membership`s da Viagem — denominador do rateio (invariante 19).
 

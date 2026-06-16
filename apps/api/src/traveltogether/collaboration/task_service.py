@@ -102,6 +102,31 @@ def get_assignee_ids(session: Session, task_id: uuid.UUID) -> list[uuid.UUID]:
     return list(session.exec(select(TaskAssignee.user_id).where(TaskAssignee.task_id == task_id)))
 
 
+def _notify_new_assignees(
+    session: Session,
+    task: Task,
+    previous_ids: Sequence[uuid.UUID],
+    actor_id: uuid.UUID,
+) -> None:
+    """Avisa quem virou Responsável agora (e não era), exceto o ator (ADR-0017)."""
+    from traveltogether.notifications.models import NotificationKind  # noqa: PLC0415
+    from traveltogether.notifications.service import notify  # noqa: PLC0415
+
+    previous = set(previous_ids)
+    for user_id in get_assignee_ids(session, task.id):
+        if user_id in previous or user_id == actor_id:
+            continue
+        notify(
+            session,
+            recipient_id=user_id,
+            kind=NotificationKind.task,
+            text=f"Você foi designado para a Tarefa '{task.title}'",
+            trip_id=task.trip_id,
+            target_type="task",
+            target_id=task.id,
+        )
+
+
 def create_task(
     session: Session,
     *,
@@ -134,6 +159,7 @@ def create_task(
     _set_assignees(session, task, trip_id, assignee_ids)
     session.commit()
     session.refresh(task)
+    _notify_new_assignees(session, task, previous_ids=(), actor_id=created_by)
     return task
 
 
@@ -163,12 +189,16 @@ def update_task(
         _validate_anchor(session, task.trip_id, anchor_type, anchor_id)
         task.anchor_type = anchor_type
         task.anchor_id = anchor_id
+    previous_assignees: list[uuid.UUID] = []
     if assignee_ids is not None:
+        previous_assignees = get_assignee_ids(session, task.id)
         _set_assignees(session, task, task.trip_id, assignee_ids)
     task.updated_at = datetime.now(UTC)
     session.add(task)
     session.commit()
     session.refresh(task)
+    if assignee_ids is not None:
+        _notify_new_assignees(session, task, previous_ids=previous_assignees, actor_id=user_id)
     return task
 
 
