@@ -1,7 +1,7 @@
 """Lógica de domínio para o boundary trips."""
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 from sqlmodel import Session, col, select
 
@@ -188,6 +188,28 @@ def get_trip_membership(
     return session.exec(
         select(Membership).where(Membership.trip_id == trip_id).where(Membership.user_id == user_id)
     ).first()
+
+
+def count_memberships(session: Session, trip_id: uuid.UUID) -> int:
+    """Nº de `Membership`s da Viagem — denominador do rateio (invariante 19).
+
+    Interface explícita para o boundary budget sem importar o model Membership.
+    """
+    return len(session.exec(select(Membership.id).where(col(Membership.trip_id) == trip_id)).all())
+
+
+def stop_period(
+    session: Session, stop_id: uuid.UUID
+) -> tuple[datetime | None, datetime | None] | None:
+    """Datas (chegada, partida) de uma Parada, ou None se não existir.
+
+    Interface explícita para o boundary budget derivar as noites da `Hospedagem`
+    sem importar o model Stop (ADR-0014/0016).
+    """
+    stop = session.get(Stop, stop_id)
+    if stop is None:
+        return None
+    return (stop.arrival_date, stop.departure_date)
 
 
 def itinerary_item_trip_id(session: Session, item_id: uuid.UUID) -> uuid.UUID | None:

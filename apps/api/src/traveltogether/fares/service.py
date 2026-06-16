@@ -91,6 +91,21 @@ def leg_fare_status(
     return status
 
 
+def chosen_fare_costs_for_trip(session: Session, trip_id: uuid.UUID) -> list[tuple[Decimal, str]]:
+    """Custos das `Pesquisa de Passagem`s `Escolhida`s de uma Viagem: (valor, moeda).
+
+    Interface explícita para o boundary budget agregar o Orçamento sem importar
+    o model FareQuote (ADR-0014/0016). A passagem é por pessoa.
+    """
+    rows = session.exec(
+        select(FareQuote)
+        .join(Leg, col(Leg.id) == col(FareQuote.leg_id))
+        .where(col(Leg.trip_id) == trip_id)
+        .where(col(FareQuote.is_chosen).is_(True))
+    )
+    return [(fare.value, fare.currency) for fare in rows]
+
+
 def leg_has_fare_quotes(session: Session, leg_id: uuid.UUID) -> bool:
     return (
         session.exec(select(FareQuote.id).where(col(FareQuote.leg_id) == leg_id)).first()

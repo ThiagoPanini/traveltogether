@@ -354,3 +354,70 @@ export interface TaskUpdate {
   anchor_id?: string | null;
   assignee_ids?: string[] | null;
 }
+
+// Boundary budget — Orçamento por moeda, sem conversão de câmbio (ADR-0016, invariantes 15 e 19).
+export type RateioBasis = "per_person" | "split";
+
+export interface LodgingPublic {
+  id: string;
+  trip_id: string;
+  stop_id: string;
+  description: string;
+  nightly_value: string;
+  currency: string;
+  basis: RateioBasis;
+  created_by: string;
+  created_at: string;
+}
+
+export interface LodgingCreate {
+  stop_id: string;
+  description?: string;
+  nightly_value: string;
+  currency: string;
+  basis?: RateioBasis;
+}
+
+export interface LodgingUpdate {
+  stop_id?: string | null;
+  description?: string | null;
+  nightly_value?: string | null;
+  currency?: string | null;
+  basis?: RateioBasis | null;
+}
+
+export interface ExtraPublic {
+  id: string;
+  trip_id: string;
+  description: string;
+  value: string;
+  currency: string;
+  basis: RateioBasis;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ExtraCreate {
+  description?: string;
+  value: string;
+  currency: string;
+  basis?: RateioBasis;
+}
+
+export interface ExtraUpdate {
+  description?: string | null;
+  value?: string | null;
+  currency?: string | null;
+  basis?: RateioBasis | null;
+}
+
+export interface CurrencySubtotal {
+  currency: string;
+  per_group: string;
+  per_person: string;
+}
+
+export interface BudgetSummary {
+  member_count: number;
+  subtotals: CurrencySubtotal[];
+}
