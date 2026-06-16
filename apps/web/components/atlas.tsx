@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
+import type { CountdownValue } from "@/lib/dashboard/panel-data";
 import { topographicAvatar } from "@/lib/identity/avatar";
 import { initials } from "@/lib/identity/user-display";
 import { TRIP_STATUS_LABEL, type TripStatus } from "@/lib/trips/card";
@@ -194,6 +195,36 @@ const ICON_PATHS: Record<string, ReactNode> = {
   user: (
     <path
       d="M8 8.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 14c0-2.6 2.4-4.5 5.5-4.5s5.5 1.9 5.5 4.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  chevronRight: (
+    <path
+      d="M6 3.5 10.5 8 6 12.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  wallet: (
+    <path
+      d="M2.5 4.5h11v8h-11v-8zM2.5 6.5h11M11 9.5h1.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  chat: (
+    <path
+      d="M2.5 3.5h11v7h-7l-3 2.5v-2.5h-1v-7z"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.4"
@@ -484,4 +515,91 @@ export function MiniRoute({ codes }: { codes: string[] }) {
       ))}
     </span>
   );
+}
+
+// ---------- countdown (dias até o embarque) ----------
+// Renderiza o resultado da derivação `countdown` (lib/dashboard/panel-data):
+// passado / hoje / N dias. Lógica fica na derivação testada; aqui só pintura.
+export function Countdown({ value }: { value: CountdownValue }) {
+  if (value.kind === "past") {
+    return (
+      <span className="mono" style={{ color: "var(--muted)" }}>
+        já passou
+      </span>
+    );
+  }
+  if (value.kind === "today") {
+    return (
+      <span className="mono" style={{ color: "var(--accent)", fontWeight: 600 }}>
+        é hoje
+      </span>
+    );
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6 }}>
+      <span className="mono-num" style={{ fontWeight: 700, fontSize: 22, lineHeight: 1 }}>
+        {value.days}
+      </span>
+      <span className="mono" style={{ fontSize: 10, color: "var(--muted)" }}>
+        dia{value.days !== 1 ? "s" : ""}
+      </span>
+    </span>
+  );
+}
+
+// ---------- alert card (item de "o que precisa de mim") ----------
+// Linha acionável: ícone + título + subtítulo + chevron. Navega via `href`
+// (renderiza `Link`) ou dispara `onClick`. Sem href nem onClick → estático
+// (modo read-only do Painel de exemplo).
+export function AlertCard({
+  icon = "alert",
+  title,
+  sub,
+  href,
+  onClick,
+  tone = "warn",
+}: {
+  icon?: IconName;
+  title: string;
+  sub?: string;
+  href?: string;
+  onClick?: () => void;
+  tone?: "warn" | "info";
+}) {
+  const inner = (
+    <>
+      <span className="ico">
+        <Icon name={icon} size={17} />
+      </span>
+      <span style={{ minWidth: 0 }}>
+        <span className="ttl" style={{ display: "block" }}>
+          {title}
+        </span>
+        {sub && (
+          <span className="sub" style={{ display: "block" }}>
+            {sub}
+          </span>
+        )}
+      </span>
+      <span className="go">
+        <Icon name="chevronRight" size={16} />
+      </span>
+    </>
+  );
+  const className = `alert ${tone}`;
+  if (href) {
+    return (
+      <Link className={className} href={href}>
+        {inner}
+      </Link>
+    );
+  }
+  if (onClick) {
+    return (
+      <button className={className} onClick={onClick} type="button">
+        {inner}
+      </button>
+    );
+  }
+  return <div className={className}>{inner}</div>;
 }
