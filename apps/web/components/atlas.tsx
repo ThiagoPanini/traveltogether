@@ -232,6 +232,25 @@ const ICON_PATHS: Record<string, ReactNode> = {
       strokeLinejoin="round"
     />
   ),
+  route: (
+    <path
+      d="M4 13h5.5a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 1 0-5H12M4 13a1.4 1.4 0 1 1-2.8 0 1.4 1.4 0 0 1 2.8 0zm10-10a1.4 1.4 0 1 1-2.8 0 1.4 1.4 0 0 1 2.8 0z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  eye: (
+    <path
+      d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8zM8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
+  ),
 };
 
 export type IconName = keyof typeof ICON_PATHS;

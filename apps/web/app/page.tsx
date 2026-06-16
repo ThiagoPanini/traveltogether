@@ -1,152 +1,118 @@
 import Link from "next/link";
 
-import { Code, Icon } from "@/components/atlas";
+import { Icon } from "@/components/atlas";
+import { HomePreview } from "@/components/home-preview";
+import { PublicTopBar } from "@/components/public-top-bar";
+import { CTA_BAND, FOOTER_NOTE, HERO, HOME_FEATURES, SECTION_FEATS } from "@/lib/home/content";
 
-const demoCities = [
-  { code: "GRU", city: "São Paulo", sub: "origem" },
-  { code: "LIS", city: "Lisboa", sub: "5 noites" },
-  { code: "CDG", city: "Paris", sub: "5 noites" },
-  { code: "FCO", city: "Roma", sub: "4 noites" },
-  { code: "GRU", city: "São Paulo", sub: "volta" },
-];
-const demoEdges = ["✓ escolhida", "2 pesquisas", "1 pesquisa", "sem pesquisas"];
-
-const pillars = [
-  {
-    n: "01",
-    icon: "pin" as const,
-    title: "Itinerário com Paradas",
-    body: "Origem, cidades e datas formam a espinha da viagem. Os trajetos entre elas aparecem sozinhos.",
-  },
-  {
-    n: "02",
-    icon: "plane" as const,
-    title: "Pesquisas de Passagem",
-    body: "Achou um voo bom? Registra no trajeto: preço, duração, escalas, bagagem. Tudo comparável lado a lado.",
-  },
-  {
-    n: "03",
-    icon: "compass" as const,
-    title: "Decisão em grupo",
-    body: "Cada pessoa dá upvote no que prefere. O organizador bate o martelo marcando a Escolhida.",
-  },
-];
-
+// Home pública (#136), à paridade do protótipo (HomeScreen): hero, 6 feature
+// cards, HomePreview, banda de CTA e copy de acesso aberto (ADR-0013). Toda a
+// copy mora em lib/home/content (testada). Componente server: o gancho do
+// botão "Ver exemplo" (DemoOverlay) chega em #137 — aqui ele é inerte.
 export default function Home() {
   return (
     <div className="public-home">
-      <header className="topbar">
-        <div className="shell topbar-in">
-          <Link className="brand" href="/">
-            <span className="brand-mark">
-              <Icon name="plane" size={14} />
-            </span>
-            travel<em>together</em>
-          </Link>
-          <div className="topbar-right">
-            <Link className="btn small accent" href="/login">
-              Entrar
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicTopBar />
 
       <div className="page fadeup">
         <div className="shell">
           {/* hero */}
-          <div style={{ padding: "56px 0 40px", maxWidth: 820 }}>
-            <div className="kicker" style={{ marginBottom: 18 }}>
-              planejamento coletivo de viagens
+          <div className="home-hero">
+            <div style={{ maxWidth: 540 }}>
+              <div
+                className="mono"
+                style={{ color: "var(--accent)", fontWeight: 600, marginBottom: 18 }}
+              >
+                {HERO.kicker}
+              </div>
+              <h1 className="display" style={{ fontSize: "clamp(40px, 6vw, 72px)" }}>
+                {HERO.headline}
+              </h1>
+              <p
+                className="soft"
+                style={{ fontSize: 18, maxWidth: 480, marginTop: 22, textWrap: "pretty" }}
+              >
+                {HERO.sub}
+              </p>
+              <div style={{ display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
+                <Link className="btn accent" href="/login">
+                  {HERO.primaryCta} <Icon name="arrowRight" size={15} />
+                </Link>
+                {/* #137: este botão abre o DemoOverlay; por ora é inerte. */}
+                <button className="btn ghost" type="button">
+                  <Icon name="eye" size={15} /> {HERO.demoCta}
+                </button>
+              </div>
+              <div className="mono" style={{ fontSize: 10, color: "var(--muted)", marginTop: 18 }}>
+                {HERO.finePrint}
+              </div>
             </div>
-            <h1 className="display" style={{ fontSize: "clamp(44px, 7vw, 84px)" }}>
-              A viagem do grupo, finalmente fora do grupo do zap.
-            </h1>
-            <p
-              className="soft"
-              style={{ fontSize: 19, maxWidth: 560, marginTop: 22, textWrap: "pretty" }}
-            >
-              Montem o itinerário cidade a cidade, registrem as passagens que cada um encontrou e
-              decidam juntos — com votos, não com 200 mensagens.
-            </p>
-            <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
-              <Link className="btn accent" href="/login">
-                Entrar <Icon name="arrowRight" size={15} />
-              </Link>
-              <a className="btn ghost" href="#demo-route">
-                Como funciona
-              </a>
-            </div>
+
+            <HomePreview />
           </div>
 
-          {/* demo route board */}
-          <div className="card" id="demo-route" style={{ padding: "26px 28px", marginTop: 24 }}>
-            <div className="section-head" style={{ marginBottom: 6 }}>
-              <span className="kicker">exemplo</span>
-              <h2 style={{ fontSize: 16 }}>Eurotrip · 10–24 set 2026</h2>
-              <span className="spacer" />
-              <span className="chip outline">4 viajantes</span>
+          {/* o que você organiza aqui */}
+          <div style={{ marginTop: 84 }}>
+            <div className="section-head" style={{ marginBottom: 22 }}>
+              <span className="kicker">{SECTION_FEATS.kicker}</span>
+              <h2 style={{ fontSize: 20 }}>{SECTION_FEATS.heading}</h2>
             </div>
-            <div className="routeline">
-              {demoCities.map((c, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: static demo route
-                <span key={i} style={{ display: "contents" }}>
-                  {i > 0 && (
-                    <span className="route-edge" style={{ cursor: "default" }}>
-                      <span
-                        className="line"
-                        style={{ animation: "dashmove 1.6s linear infinite" }}
-                      />
-                      <span className="edge-meta">{demoEdges[i - 1]}</span>
-                    </span>
-                  )}
-                  <div className="route-node">
-                    <Code code={c.code} size="md" />
-                    <span className="city">{c.city}</span>
-                    <span className="dates">{c.sub}</span>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {HOME_FEATURES.map((f) => (
+                <div key={f.title} className="feat">
+                  <div className="feat-ico">
+                    <Icon name={f.icon} size={18} />
                   </div>
-                </span>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 7 }}>{f.title}</h3>
+                  <p className="soft" style={{ fontSize: 14, textWrap: "pretty" }}>
+                    {f.body}
+                  </p>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* three pillars */}
+          {/* banda de fechamento */}
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: 18,
-              marginTop: 56,
-            }}
-          >
-            {pillars.map((f) => (
-              <div key={f.n} className="card flat" style={{ padding: "24px 22px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 16,
-                  }}
-                >
-                  <span style={{ color: "var(--accent)" }}>
-                    <Icon name={f.icon} size={20} />
-                  </span>
-                  <span className="mono-num" style={{ fontSize: 12, color: "var(--muted)" }}>
-                    {f.n}
-                  </span>
-                </div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>{f.title}</h3>
-                <p className="soft" style={{ fontSize: 14.5, textWrap: "pretty" }}>
-                  {f.body}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* footer note */}
-          <div
+            className="card"
             style={{
               marginTop: 64,
+              padding: "40px 36px",
+              display: "flex",
+              alignItems: "center",
+              gap: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: "1 1 360px" }}>
+              <h2 className="display" style={{ fontSize: 30, marginBottom: 8 }}>
+                {CTA_BAND.heading}
+              </h2>
+              <p className="soft" style={{ fontSize: 15, maxWidth: 520 }}>
+                {CTA_BAND.body}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <Link className="btn accent" href="/login">
+                {CTA_BAND.primaryCta} <Icon name="arrowRight" size={15} />
+              </Link>
+              {/* #137: idem ao hero — abre o DemoOverlay. */}
+              <button className="btn ghost" type="button">
+                <Icon name="eye" size={15} /> {CTA_BAND.demoCta}
+              </button>
+            </div>
+          </div>
+
+          {/* rodapé — acesso aberto */}
+          <div
+            style={{
+              marginTop: 48,
               display: "flex",
               alignItems: "center",
               gap: 14,
@@ -155,7 +121,7 @@ export default function Home() {
           >
             <hr className="hairline" style={{ flex: 1 }} />
             <span className="mono" style={{ fontSize: 10 }}>
-              beta fechado · acesso por convite
+              {FOOTER_NOTE}
             </span>
             <hr className="hairline" style={{ flex: 1 }} />
           </div>

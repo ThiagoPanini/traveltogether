@@ -1586,3 +1586,66 @@ fieldset.card legend {
   border-color: var(--ok);
   color: #fff;
 }
+
+/* ============================================================
+   Home pública (#136) — hero, feature cards, preview-frame
+   ============================================================ */
+.home-hero {
+  display: grid;
+  grid-template-columns: 1fr 0.92fr;
+  gap: 48px;
+  align-items: center;
+  padding: 44px 0 16px;
+}
+@media (max-width: 900px) {
+  .home-hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-top: 28px;
+  }
+  .home-preview {
+    max-width: 460px;
+  }
+}
+
+.feat {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 20px 22px;
+}
+.feat-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  background: var(--chip-bg);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+}
+
+.preview-frame {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 30px 70px -30px rgba(31, 58, 46, 0.45);
+  overflow: hidden;
+}
+.preview-frame .pf-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface-2);
+}
+.preview-frame .pf-bar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
