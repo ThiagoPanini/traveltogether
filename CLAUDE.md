@@ -103,10 +103,10 @@ Unitários montam um engine SQLite `create_engine("sqlite://", poolclass=StaticP
 
 ## Fluxo de trabalho
 
-- **Planejamento via GitHub Issues** estilo Matt Pocock (ADR-0005): cada vertical slice é uma issue grabável; label `ready-for-agent` (AFK) vs `hitl` (para nas bordas). Labels de área (`infra`,`ci`,`web`,`api`) e boundary (`identity`,`trips`,`fares`,…).
+- **Planejamento via GitHub Issues** estilo Matt Pocock (ADR-0005): cada vertical slice é uma issue grabável. Labels são **prefixados por eixo** (facilita o filtro do agente): `status:` (`ready-for-agent` AFK · `hitl` para nas bordas · `blocked`), `type:` (`feat`/`fix`/`docs`/`chore`/`test`/`refactor`, espelha Conventional Commits), `area:` (`web`/`api`/`infra`/`ci`), `boundary:` (`identity`/`trips`/`fares`/`shared`/`platform`/`collaboration`/`budget`/`notifications`) e `phase:` (`1`/`2`).
 - **Commits:** Conventional Commits, validados por commitlint (commit-msg hook).
 - **Hooks (lefthook):** pre-commit roda gitleaks; pre-push roda o gate completo (ruff format/check, pyright, pytest "not integration", biome, typecheck web).
-- **CI (`.github/workflows/pr-checks.yml`):** mesmo gate (web · api · security/gitleaks); ao ficar verde, **abre PR para `main` automaticamente** em branches `feat/**`, `fix/**`, …, `worktree/**`. **Merge continua humano.**
+- **CI (`.github/workflows/pr-checks.yml`):** mesmo gate (web · api · security/gitleaks); ao ficar verde, **abre PR para `main` automaticamente** em branches `feat/**`, `fix/**`, `chore/**`, `docs/**`, `refactor/**`, `test/**`, `worktree/**`. **Merge continua humano.** A `main` é **branch protegida**: exige PR + os 3 checks (`web`/`api`/`security`) verdes para merge, sem force-push/delete; `enforce_admins` off → o owner faz bypass quando precisar.
 - **Ops AFK (ADR-0006, só neste projeto):** o agente executa via MCP até as bordas 🔴 (DNS no Cloudflare, secrets de produção no Coolify/`gh secret`), registrando em `docs/ai-ops/`. Secrets gerados são **provisórios** — o operador rotaciona pós-setup.
 
 ## Variáveis de ambiente

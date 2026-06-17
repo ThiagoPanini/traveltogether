@@ -1,6 +1,6 @@
 # ADR 0017 — Notificações persistidas por destinatário, sem barramento de eventos
 
-- **Status:** Accepted
+- **Status:** Accepted *(o tipo de notificação `decision` foi **removido** junto com a `Escolhida` de grupo pelo [ADR-0018](0018-rotas-multi-trecho-e-decisao-por-pessoa.md); sobram `invite`/`task`/`mention`. O resto — persistência por destinatário, sem barramento — permanece.)*
 - **Data:** 2026-06-15
 - **Decisores:** Thiago Panini (solo)
 - **Relacionado:** [docs/CONTEXT.md](../CONTEXT.md) (`Notificação`, `Atividade`, `Preferências de Notificação`, boundary `notifications`, invariante 20), [ADR-0014](0014-boundary-collaboration-alvo-polimorfico.md), [ADR-0015](0015-convite-com-aceite-explicito.md)

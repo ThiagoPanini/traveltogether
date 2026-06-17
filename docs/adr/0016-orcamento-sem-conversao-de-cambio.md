@@ -1,6 +1,6 @@
 # ADR 0016 — Orçamento sem conversão de câmbio + boundary `budget`
 
-- **Status:** Accepted
+- **Status:** Accepted *(a fonte de passagens do `Orçamento` passou de `Escolhida` de grupo para `Preferida`/`Comprada` **por-pessoa** pelo [ADR-0018](0018-rotas-multi-trecho-e-decisao-por-pessoa.md); o resto — sem câmbio, subtotais por moeda — permanece)*
 - **Data:** 2026-06-15
 - **Decisores:** Thiago Panini (solo)
 - **Relacionado:** [docs/CONTEXT.md](../CONTEXT.md) (`Orçamento`, `Hospedagem`, `Extra`, `Base de rateio`, boundary `budget`, invariantes 15 e 19), [ADR-0004](0004-modelo-de-itinerario-e-ancoragem-da-pesquisa.md)
