@@ -207,6 +207,69 @@ class LegUpdate(SQLModel):
     target_date: datetime | None = None
 
 
+class SegmentMode(StrEnum):
+    """Modo de um `Trecho` (ADR-0019, invariante 26).
+
+    `air` hospeda `Pesquisa`/`Upvote`/`Preferida`; `ground` é conector estrutural
+    sem tarifa (custo de aluguel vira `Extra`).
+    """
+
+    air = "air"
+    ground = "ground"
+
+
+class Route(SQLModel, table=True):  # type: ignore[call-arg]
+    """`Rota` — caminho candidato **autorado** de um `Trajeto` (ADR-0018).
+
+    Ex.: "direto" ou "via Miami". Vive entre os dois extremos do `Trajeto`
+    (invariante 22); é uma sequência ordenada de `Trecho`s.
+    """
+
+    __tablename__: ClassVar[str] = "routes"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    leg_id: uuid.UUID = Field(foreign_key="legs.id")
+    label: str = ""
+    order: int
+    created_by: uuid.UUID = Field(foreign_key="users.id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class Segment(SQLModel, table=True):  # type: ignore[call-arg]
+    """`Trecho` — perna aeroporto→aeroporto (ou terrestre) de uma `Rota` (ADR-0018/0019).
+
+    Nova unidade de comparação: `Pesquisa de Passagem` ancora aqui (via
+    `fare_quote_segments`). `mode` default `air`; só `air` hospeda tarifa.
+    """
+
+    __tablename__: ClassVar[str] = "segments"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    route_id: uuid.UUID = Field(foreign_key="routes.id")
+    mode: SegmentMode = SegmentMode.air
+    origin_airport: str | None = None
+    destination_airport: str | None = None
+    order: int
+
+
+class RoutePublic(SQLModel):
+    id: uuid.UUID
+    leg_id: uuid.UUID
+    label: str
+    order: int
+    created_by: uuid.UUID
+    created_at: datetime
+
+
+class SegmentPublic(SQLModel):
+    id: uuid.UUID
+    route_id: uuid.UUID
+    mode: SegmentMode
+    origin_airport: str | None
+    destination_airport: str | None
+    order: int
+
+
 class TripCreate(SQLModel):
     name: str
     description: str = ""

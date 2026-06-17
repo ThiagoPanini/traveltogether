@@ -8,11 +8,24 @@ from typing import ClassVar
 from sqlmodel import Field, SQLModel
 
 
+class FareQuoteSegment(SQLModel, table=True):  # type: ignore[call-arg]
+    """Ligação `Pesquisa`↔`Trecho` (ADR-0018/0019).
+
+    Reancora a `Pesquisa de Passagem` no `Trecho` (deixa de ancorar `Leg`).
+    Cardinalidade M:N preparando o ida-e-volta (ADR-0019); no esqueleto (#143)
+    é sempre 1 `Trecho` por `Pesquisa`.
+    """
+
+    __tablename__: ClassVar[str] = "fare_quote_segments"  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    fare_quote_id: uuid.UUID = Field(foreign_key="fare_quotes.id", primary_key=True)
+    segment_id: uuid.UUID = Field(foreign_key="segments.id", primary_key=True)
+
+
 class FareQuote(SQLModel, table=True):  # type: ignore[call-arg]
     __tablename__: ClassVar[str] = "fare_quotes"  # pyright: ignore[reportIncompatibleVariableOverride]
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    leg_id: uuid.UUID = Field(foreign_key="legs.id")
     registered_by: uuid.UUID = Field(foreign_key="users.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     value: Decimal
@@ -32,6 +45,7 @@ class FareQuote(SQLModel, table=True):  # type: ignore[call-arg]
 class FareQuotePublic(SQLModel):
     id: uuid.UUID
     leg_id: uuid.UUID
+    segment_id: uuid.UUID
     registered_by: uuid.UUID
     created_at: datetime
     value: Decimal

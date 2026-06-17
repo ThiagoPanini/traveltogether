@@ -30,6 +30,19 @@ def session_fixture() -> Iterator[Session]:
     SQLModel.metadata.drop_all(engine)
 
 
+def _new_leg(session: Session) -> uuid.UUID:
+    """Cria um `Trajeto` real (com Rota/Trecho default) e devolve seu id."""
+    from traveltogether.identity.models import User
+    from traveltogether.trips.legs_service import create_leg
+    from traveltogether.trips.service import create_trip
+
+    user = User(id=uuid.uuid4(), email=f"u{uuid.uuid4().hex[:8]}@example.com")
+    session.add(user)
+    session.commit()
+    trip, _ = create_trip(session, user.id, "Trip", "", "São Paulo")
+    return create_leg(session, trip.id).id
+
+
 def _make_fare(session: Session, leg_id: uuid.UUID) -> FareQuote:
     return create_fare_quote(
         session=session,
@@ -46,14 +59,14 @@ def _make_fare(session: Session, leg_id: uuid.UUID) -> FareQuote:
 
 
 def test_mark_chosen_sets_flag(session: Session) -> None:
-    leg_id = uuid.uuid4()
+    leg_id = _new_leg(session)
     fare = _make_fare(session, leg_id)
     result = mark_chosen(session, leg_id, fare.id)
     assert result.is_chosen is True
 
 
 def test_mark_chosen_twice_toggles_off(session: Session) -> None:
-    leg_id = uuid.uuid4()
+    leg_id = _new_leg(session)
     fare = _make_fare(session, leg_id)
     mark_chosen(session, leg_id, fare.id)
     result = mark_chosen(session, leg_id, fare.id)
@@ -61,7 +74,7 @@ def test_mark_chosen_twice_toggles_off(session: Session) -> None:
 
 
 def test_mark_chosen_moves_mark(session: Session) -> None:
-    leg_id = uuid.uuid4()
+    leg_id = _new_leg(session)
     fare_a = _make_fare(session, leg_id)
     fare_b = _make_fare(session, leg_id)
     mark_chosen(session, leg_id, fare_a.id)
@@ -72,7 +85,7 @@ def test_mark_chosen_moves_mark(session: Session) -> None:
 
 
 def test_mark_chosen_wrong_leg_raises(session: Session) -> None:
-    leg_id = uuid.uuid4()
+    leg_id = _new_leg(session)
     other_leg = uuid.uuid4()
     fare = _make_fare(session, leg_id)
     with pytest.raises(ValueError, match="fare does not belong to leg"):

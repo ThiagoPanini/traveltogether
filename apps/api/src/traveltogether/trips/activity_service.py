@@ -86,17 +86,36 @@ def list_recent_activity(
         )
 
     # ── fare_registered: Pesquisas registradas em Trajetos dessas Viagens ────
-    from traveltogether.fares.models import FareQuote  # noqa: PLC0415
+    from traveltogether.fares.models import FareQuote, FareQuoteSegment  # noqa: PLC0415
+    from traveltogether.trips.models import Route, Segment  # noqa: PLC0415
 
     legs = session.exec(select(Leg).where(col(Leg.trip_id).in_(trip_ids))).all()
     leg_ids = [leg.id for leg in legs]
     leg_to_trip_id = {leg.id: leg.trip_id for leg in legs}
     if leg_ids:
-        fares = session.exec(select(FareQuote).where(col(FareQuote.leg_id).in_(leg_ids))).all()
+        # Trecho → Trajeto e Pesquisa → Trecho, em queries escalares (tipadas)
+        seg_to_leg = {
+            seg_id: leg_id
+            for seg_id, leg_id in session.exec(
+                select(Segment.id, Route.leg_id)
+                .join(Route, col(Route.id) == col(Segment.route_id))
+                .where(col(Route.leg_id).in_(leg_ids))
+            )
+        }
+        fare_to_leg: dict[uuid.UUID, uuid.UUID] = {}
+        for fare_id, seg_id in session.exec(
+            select(FareQuoteSegment.fare_quote_id, FareQuoteSegment.segment_id).where(
+                col(FareQuoteSegment.segment_id).in_(list(seg_to_leg))
+            )
+        ):
+            fare_to_leg.setdefault(fare_id, seg_to_leg[seg_id])
+        fares = list(
+            session.exec(select(FareQuote).where(col(FareQuote.id).in_(list(fare_to_leg))))
+        )
         fare_actor_ids = list({f.registered_by for f in fares})
         fare_users = get_users_by_ids(session, fare_actor_ids)
         for fare in fares:
-            trip_id = leg_to_trip_id.get(fare.leg_id)
+            trip_id = leg_to_trip_id.get(fare_to_leg[fare.id])
             if trip_id is None:
                 continue
             trip = trip_by_id.get(trip_id)

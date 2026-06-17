@@ -30,6 +30,8 @@ def create_leg(
     destination_stop_id: uuid.UUID | None = None,
     target_date: datetime | None = None,
 ) -> Leg:
+    from traveltogether.trips.routes_service import ensure_default_route_and_segment
+
     existing = session.exec(
         select(Leg).where(
             col(Leg.trip_id) == trip_id,
@@ -38,6 +40,9 @@ def create_leg(
         )
     ).first()
     if existing is not None:
+        ensure_default_route_and_segment(
+            session, existing, created_by=_leg_author(session, trip_id)
+        )
         return existing
 
     leg = Leg(
@@ -50,7 +55,16 @@ def create_leg(
     session.add(leg)
     session.commit()
     session.refresh(leg)
+    ensure_default_route_and_segment(session, leg, created_by=_leg_author(session, trip_id))
     return leg
+
+
+def _leg_author(session: Session, trip_id: uuid.UUID) -> uuid.UUID:
+    """Autor da `Rota` "direta" derivada: o criador da `Viagem` (Organizador)."""
+    trip = session.get(Trip, trip_id)
+    if trip is None:
+        raise ValueError(f"trip {trip_id} not found")
+    return trip.created_by
 
 
 def list_legs(session: Session, trip_id: uuid.UUID) -> list[Leg]:
@@ -79,6 +93,9 @@ def update_leg(
 
 
 def delete_leg(session: Session, leg: Leg) -> None:
+    from traveltogether.trips.routes_service import delete_routes_for_leg
+
+    delete_routes_for_leg(session, leg.id, commit=False)
     session.delete(leg)
     session.commit()
 
@@ -104,6 +121,10 @@ def sync_legs_from_stops(
     Raises LegHasFareError if a leg that would be removed has FareQuotes.
     """
     from traveltogether.fares.service import leg_has_fare_quotes
+    from traveltogether.trips.routes_service import (
+        delete_routes_for_leg,
+        ensure_default_route_and_segment,
+    )
     from traveltogether.trips.stops_service import list_stops
 
     if stops is None:
@@ -128,8 +149,9 @@ def sync_legs_from_stops(
         if leg_has_fare_quotes(session, leg.id):
             raise LegHasFareError(f"leg {leg.id} has fares and cannot be removed during sync")
 
-    # Remove obsolete legs
+    # Remove obsolete legs (cascade their Rotas/Trechos first)
     for leg in to_remove:
+        delete_routes_for_leg(session, leg.id, commit=False)
         session.delete(leg)
     session.flush()
 
@@ -153,6 +175,11 @@ def sync_legs_from_stops(
         if pair in desired_set:
             leg.order = desired.index(pair) + 1
             session.add(leg)
+
+    # Garante a Rota "direta" + Trecho aéreo de cada Trajeto (esqueleto ADR-0018)
+    session.flush()
+    for leg in list_legs(session, trip.id):
+        ensure_default_route_and_segment(session, leg, created_by=trip.created_by, commit=False)
 
     if commit:
         session.commit()

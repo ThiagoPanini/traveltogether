@@ -61,15 +61,21 @@ def _member(session: Session, trip: Trip, user: User, role: MembershipRole) -> M
 
 
 def _leg(session: Session, trip: Trip) -> Leg:
+    from traveltogether.trips.routes_service import ensure_default_route_and_segment
+
     leg = Leg(trip_id=trip.id, order=0)
     session.add(leg)
     session.commit()
     session.refresh(leg)
+    ensure_default_route_and_segment(session, leg, created_by=trip.created_by)
     return leg
 
 
 def _fare(session: Session, leg: Leg, registered_by: User) -> FareQuote:
-    fare = FareQuote(
+    from traveltogether.fares.service import create_fare_quote
+
+    return create_fare_quote(
+        session=session,
         leg_id=leg.id,
         registered_by=registered_by.id,
         value=Decimal("1200.00"),
@@ -80,10 +86,6 @@ def _fare(session: Session, leg: Leg, registered_by: User) -> FareQuote:
         destination_airport="LIS",
         airline="TAP",
     )
-    session.add(fare)
-    session.commit()
-    session.refresh(fare)
-    return fare
 
 
 def test_invite_to_existing_user_creates_invite_notification(session: Session) -> None:

@@ -236,9 +236,31 @@ export interface PendingActionPublic {
   label: string;
 }
 
+// Rota/Trecho — modelo de 4 níveis (ADR-0018/0019).
+export type SegmentMode = "air" | "ground";
+
+export interface RoutePublic {
+  id: string;
+  leg_id: string;
+  label: string;
+  order: number;
+  created_by: string;
+  created_at: string;
+}
+
+export interface SegmentPublic {
+  id: string;
+  route_id: string;
+  mode: SegmentMode;
+  origin_airport: string | null;
+  destination_airport: string | null;
+  order: number;
+}
+
 export interface FareQuotePublic {
   id: string;
   leg_id: string;
+  segment_id: string;
   registered_by: string;
   created_at: string;
   value: string;

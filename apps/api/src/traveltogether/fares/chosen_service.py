@@ -1,10 +1,15 @@
-"""Serviço para marcar/desmarcar Pesquisa Escolhida (invariante 5)."""
+"""Serviço para marcar/desmarcar Pesquisa Escolhida (invariante 5).
+
+Transitório no esqueleto (#143): a `Escolhida` é por-`Trecho` (não mais por
+`Trajeto`). É aposentada pela decisão por-pessoa `Preferida`/`Comprada` (#145).
+"""
 
 import uuid
 
 from sqlmodel import Session, col, select
 
-from traveltogether.fares.models import FareQuote
+from traveltogether.fares.models import FareQuote, FareQuoteSegment
+from traveltogether.fares.service import fare_leg_id, fare_segment_ids
 
 
 def mark_chosen(
@@ -15,7 +20,7 @@ def mark_chosen(
     actor_id: uuid.UUID | None = None,
 ) -> FareQuote:
     fare = session.get(FareQuote, fare_id)
-    if fare is None or fare.leg_id != leg_id:
+    if fare is None or fare_leg_id(session, fare_id) != leg_id:
         raise ValueError("fare does not belong to leg")
 
     if fare.is_chosen:
@@ -25,15 +30,19 @@ def mark_chosen(
         session.refresh(fare)
         return fare
 
-    # unmark any currently chosen fare for this leg
-    chosen = session.exec(
-        select(FareQuote)
-        .where(col(FareQuote.leg_id) == leg_id)
-        .where(col(FareQuote.is_chosen) == True)  # noqa: E712
-    ).first()
-    if chosen is not None:
-        chosen.is_chosen = False
-        session.add(chosen)
+    # unmark any currently chosen fare sharing the same Trecho(s)
+    segment_ids = fare_segment_ids(session, fare_id)
+    if segment_ids:
+        chosen_rows = session.exec(
+            select(FareQuote)
+            .join(FareQuoteSegment, col(FareQuoteSegment.fare_quote_id) == col(FareQuote.id))
+            .where(col(FareQuoteSegment.segment_id).in_(segment_ids))
+            .where(col(FareQuote.is_chosen).is_(True))
+            .distinct()
+        )
+        for chosen in chosen_rows:
+            chosen.is_chosen = False
+            session.add(chosen)
 
     fare.is_chosen = True
     session.add(fare)

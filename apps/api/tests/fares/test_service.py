@@ -13,6 +13,7 @@ from traveltogether.fares.models import FareQuote
 from traveltogether.fares.service import (
     create_fare_quote,
     delete_fare_quote,
+    fare_leg_id,
     list_fare_quotes,
     update_fare_quote,
 )
@@ -69,7 +70,7 @@ def _make_fare(session: Session, user: User, leg: Leg, airline: str = "LATAM") -
 
 def test_create_fare_quote_returns_fare(session: Session, user: User, leg: Leg) -> None:
     fare = _make_fare(session, user, leg)
-    assert fare.leg_id == leg.id
+    assert fare_leg_id(session, fare.id) == leg.id
     assert fare.registered_by == user.id
     assert fare.currency == "BRL"
     assert fare.origin_airport == "GRU"
@@ -95,3 +96,17 @@ def test_delete_fare_quote_removes_it(session: Session, user: User, leg: Leg) ->
     fare = _make_fare(session, user, leg)
     delete_fare_quote(session, fare)
     assert list_fare_quotes(session, leg.id) == []
+
+
+def test_fare_anchors_to_default_segment(session: Session, user: User, leg: Leg) -> None:
+    from traveltogether.fares.service import fare_segment_ids, fare_to_public
+    from traveltogether.trips.routes_service import default_segment_for_leg
+
+    fare = _make_fare(session, user, leg)
+    segment = default_segment_for_leg(session, leg.id)
+    assert segment is not None
+    assert fare_segment_ids(session, fare.id) == [segment.id]
+
+    public = fare_to_public(session, fare)
+    assert public.leg_id == leg.id
+    assert public.segment_id == segment.id

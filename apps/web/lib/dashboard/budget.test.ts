@@ -17,6 +17,7 @@ function makeFare(legId: string, value: string, currency: string): FareQuotePubl
   return {
     id: `fare-${legId}`,
     leg_id: legId,
+    segment_id: `seg-${legId}`,
     registered_by: "user-1",
     created_at: "2026-01-01T00:00:00",
     value,

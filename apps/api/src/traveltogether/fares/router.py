@@ -18,6 +18,8 @@ from traveltogether.fares.models import (
 from traveltogether.fares.service import (
     create_fare_quote,
     delete_fare_quote,
+    fare_leg_id,
+    fare_to_public,
     list_fare_quotes,
     update_fare_quote,
 )
@@ -58,7 +60,7 @@ def _require_organizer(session: Session, leg: Leg, user_id: uuid.UUID) -> None:
 
 def _get_fare_or_404(session: Session, leg_id: uuid.UUID, fare_id: uuid.UUID) -> FareQuote:
     fare = session.get(FareQuote, fare_id)
-    if fare is None or fare.leg_id != leg_id:
+    if fare is None or fare_leg_id(session, fare_id) != leg_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fare not found")
     return fare
 
@@ -92,7 +94,7 @@ def post_fare(
         link=body.link,
         notes=body.notes,
     )
-    return FareQuotePublic.model_validate(fare)
+    return fare_to_public(session, fare)
 
 
 @router.get("/{leg_id}/fares", response_model=list[FareQuoteWithVote])
@@ -107,7 +109,7 @@ def get_fares(
     authors = get_users_by_ids(session, [f.registered_by for f in fares])
     return [
         FareQuoteWithVote(
-            **FareQuotePublic.model_validate(f).model_dump(),
+            **fare_to_public(session, f).model_dump(),
             upvote_count=get_upvote_count(session, f.id),
             user_voted=user_has_upvoted(session, f.id, current_user.id),
             registered_by_display_name=(
@@ -147,7 +149,7 @@ def patch_fare(
         link=body.link,
         notes=body.notes,
     )
-    return FareQuotePublic.model_validate(updated)
+    return fare_to_public(session, updated)
 
 
 @router.delete("/{leg_id}/fares/{fare_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -175,7 +177,7 @@ def post_choose(
     _require_organizer(session, leg, current_user.id)
     _get_fare_or_404(session, leg_id, fare_id)
     updated = mark_chosen(session, leg_id, fare_id, actor_id=current_user.id)
-    return FareQuotePublic.model_validate(updated)
+    return fare_to_public(session, updated)
 
 
 # ── upvotes ───────────────────────────────────────────────────────────────────
@@ -194,7 +196,8 @@ def _get_fare_by_id_or_404(session: Session, fare_id: uuid.UUID) -> FareQuote:
 
 
 def _require_fare_membership(session: Session, fare: FareQuote, user_id: uuid.UUID) -> None:
-    leg = session.get(Leg, fare.leg_id)
+    leg_id = fare_leg_id(session, fare.id)
+    leg = session.get(Leg, leg_id) if leg_id is not None else None
     if leg is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="leg not found")
     membership = get_trip_membership(session, leg.trip_id, user_id)

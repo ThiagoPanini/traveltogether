@@ -168,7 +168,7 @@ def test_sync_legs_removes_leg_when_stop_removed(session: Session, trip: Trip) -
 
 
 def test_sync_legs_raises_when_leg_has_fares(session: Session, trip: Trip) -> None:
-    from traveltogether.fares.models import FareQuote
+    from traveltogether.fares.service import create_fare_quote
     from traveltogether.trips.stops_service import create_stop
 
     s1 = create_stop(session, trip.id, "A")
@@ -179,7 +179,8 @@ def test_sync_legs_raises_when_leg_has_fares(session: Session, trip: Trip) -> No
     mid_leg = next(
         leg for leg in legs if leg.origin_stop_id == s1.id and leg.destination_stop_id == s2.id
     )
-    fare = FareQuote(
+    create_fare_quote(
+        session=session,
         leg_id=mid_leg.id,
         registered_by=uuid.uuid4(),
         value=Decimal("500"),
@@ -190,8 +191,6 @@ def test_sync_legs_raises_when_leg_has_fares(session: Session, trip: Trip) -> No
         destination_airport="MVD",
         airline="GOL",
     )
-    session.add(fare)
-    session.commit()
 
     # Removing s2 would remove the s1→s2 leg which has fares
     delete_s2 = next(s for s in [s2])
