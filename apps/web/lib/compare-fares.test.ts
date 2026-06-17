@@ -8,6 +8,8 @@ const base: Omit<FareRow, "id" | "value" | "upvote_count" | "user_preferred"> = 
   registered_by: "user-1",
   created_at: "2026-01-01T00:00:00",
   currency: "BRL",
+  points: null,
+  loyalty_program: null,
   flight_date: "2026-09-01T10:00:00",
   duration_minutes: 180,
   stops: 0,

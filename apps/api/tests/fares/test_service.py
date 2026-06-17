@@ -110,3 +110,38 @@ def test_fare_anchors_to_default_segment(session: Session, user: User, leg: Leg)
     public = fare_to_public(session, fare)
     assert public.leg_id == leg.id
     assert public.segment_id == segment.id
+
+
+def test_create_fare_quote_with_points_and_fee(session: Session, user: User, leg: Leg) -> None:
+    from traveltogether.fares.service import fare_to_public
+
+    fare = create_fare_quote(
+        session=session,
+        leg_id=leg.id,
+        registered_by=user.id,
+        value=Decimal("242.21"),
+        currency="BRL",
+        flight_date=datetime(2025, 9, 1, tzinfo=UTC),
+        duration_minutes=600,
+        origin_airport="GRU",
+        destination_airport="MIA",
+        airline="LATAM",
+        points=135_530,
+        loyalty_program="milhas LATAM",
+    )
+    assert fare.points == 135_530
+    assert fare.loyalty_program == "milhas LATAM"
+    # par de dinheiro (taxa) preservado, sem conversão.
+    assert fare.value == Decimal("242.21")
+
+    public = fare_to_public(session, fare)
+    assert public.points == 135_530
+    assert public.loyalty_program == "milhas LATAM"
+
+
+def test_create_fare_quote_without_points_defaults_none(
+    session: Session, user: User, leg: Leg
+) -> None:
+    fare = _make_fare(session, user, leg)
+    assert fare.points is None
+    assert fare.loyalty_program is None

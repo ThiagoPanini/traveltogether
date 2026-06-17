@@ -184,14 +184,14 @@ def preferred_fare_costs_for_trip(
     Interface explícita para o boundary budget (ADR-0016/0018, invariante 19).
     Uma `Pesquisa` ida-e-volta (vários `Trecho`s) entra **uma única vez** por
     pessoa — dedup por (usuário, Pesquisa).
+
+    Cada custo é `(quantidade, unidade)` onde `unidade` é código de moeda OU
+    rótulo de programa de fidelidade (ADR-0019, invariante 15 estendido): nada
+    se converte. Uma Pesquisa pontos + taxa rende **duas** linhas — a taxa em
+    dinheiro (quando > 0) e os pontos no programa — sem cruzar unidades.
     """
     rows = session.exec(
-        select(
-            col(Preference.user_id),
-            col(FareQuote.id),
-            col(FareQuote.value),
-            col(FareQuote.currency),
-        )
+        select(col(Preference.user_id), FareQuote)
         .join(Segment, col(Segment.id) == col(Preference.segment_id))
         .join(Route, col(Route.id) == col(Segment.route_id))
         .join(Leg, col(Leg.id) == col(Route.leg_id))
@@ -200,10 +200,13 @@ def preferred_fare_costs_for_trip(
     ).all()
     seen: set[tuple[uuid.UUID, uuid.UUID]] = set()
     costs: list[tuple[Decimal, str]] = []
-    for user_id, fare_id, value, currency in rows:
-        key = (user_id, fare_id)
+    for user_id, fare in rows:
+        key = (user_id, fare.id)
         if key in seen:
             continue
         seen.add(key)
-        costs.append((value, currency))
+        if fare.value > 0:
+            costs.append((fare.value, fare.currency))
+        if fare.points is not None and fare.points > 0 and fare.loyalty_program:
+            costs.append((Decimal(fare.points), fare.loyalty_program))
     return costs

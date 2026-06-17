@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Code, Icon } from "@/components/atlas";
 import type { FareRow, SortKey } from "@/lib/compare-fares";
 import { sortFares } from "@/lib/compare-fares";
-import { formatDate, formatDuration } from "@/lib/fares/format";
+import { formatDate, formatDuration, formatFarePrice } from "@/lib/fares/format";
 
 interface Props {
   legId: string;
@@ -100,7 +100,7 @@ export default function ComparePanel({ initialRows }: Props) {
                 className="mono-num"
                 style={{ fontWeight: 700, fontSize: 18, whiteSpace: "nowrap" }}
               >
-                {row.currency} {row.value}
+                {formatFarePrice(row.value, row.currency, row.points, row.loyalty_program)}
               </div>
               <span className="upvote">
                 <Icon name="up" size={12} /> {row.upvote_count}

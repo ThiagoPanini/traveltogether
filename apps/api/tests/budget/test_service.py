@@ -90,7 +90,14 @@ def _add_stop(
 
 
 def _add_preferred_fare(
-    session: Session, trip: Trip, user: User, value: str, currency: str
+    session: Session,
+    trip: Trip,
+    user: User,
+    value: str,
+    currency: str,
+    *,
+    points: int | None = None,
+    loyalty_program: str | None = None,
 ) -> None:
     leg = create_leg(session, trip.id)
     fare = create_fare_quote(
@@ -104,6 +111,8 @@ def _add_preferred_fare(
         origin_airport="GRU",
         destination_airport="LIS",
         airline="TAP",
+        points=points,
+        loyalty_program=loyalty_program,
     )
     toggle_preference(session, fare.id, user.id)
 
@@ -141,6 +150,27 @@ def test_aggregate_keeps_currencies_separate_without_conversion(
     assert set(by_currency) == {"BRL", "EUR"}
     assert by_currency["BRL"].per_person == Decimal("1500.00")
     assert by_currency["EUR"].per_person == Decimal("200.00")  # 100 × 2 noites, 1 pessoa
+
+
+def test_points_fare_subtotal_is_separate_from_currency(
+    session: Session, trip: Trip, user: User
+) -> None:
+    # Pesquisa em pontos + taxa: o subtotal de milhas NÃO cruza com o de R$.
+    _add_preferred_fare(
+        session,
+        trip,
+        user,
+        "242.21",
+        "BRL",
+        points=135_530,
+        loyalty_program="milhas LATAM",
+    )
+    summary = aggregate_budget(session, trip.id)
+    by_unit = {s.currency: s for s in summary.subtotals}
+
+    assert set(by_unit) == {"BRL", "milhas LATAM"}
+    assert by_unit["BRL"].per_person == Decimal("242.21")
+    assert by_unit["milhas LATAM"].per_person == Decimal("135530")  # nunca "valor da milha"
 
 
 def test_split_basis_divides_per_person_by_member_count(

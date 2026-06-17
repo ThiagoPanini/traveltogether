@@ -23,10 +23,39 @@ export function moneyValue(value: string): number {
 export function formatMoney(value: string, currency: string): string {
   const numeric = moneyValue(value);
   if (!Number.isFinite(numeric)) return `${currency} ${value}`;
+  // Intl insere NBSP (U+00A0) entre símbolo e número; normaliza p/ espaço comum.
   return new Intl.NumberFormat("pt-BR", {
     currency: currency || "BRL",
     style: "currency",
-  }).format(numeric);
+  })
+    .format(numeric)
+    .replace(/ /g, " ");
+}
+
+/** Pontos formatados com separador de milhar pt-BR + rótulo do programa. */
+export function formatPoints(points: number, loyaltyProgram: string): string {
+  return `${new Intl.NumberFormat("pt-BR").format(points)} ${loyaltyProgram}`;
+}
+
+/**
+ * Preço completo da Pesquisa: pontos (quando houver) seguidos da taxa em
+ * dinheiro. Sem conversão (invariante 15 estendida, ADR-0019): as unidades
+ * andam separadas, juntas por "·". Taxa zero é omitida (arranjo só-pontos).
+ */
+export function formatFarePrice(
+  value: string,
+  currency: string,
+  points: number | null,
+  loyaltyProgram: string | null,
+): string {
+  const parts: string[] = [];
+  if (points != null && points > 0 && loyaltyProgram) {
+    parts.push(formatPoints(points, loyaltyProgram));
+  }
+  if (moneyValue(value) > 0 || parts.length === 0) {
+    parts.push(formatMoney(value, currency));
+  }
+  return parts.join(" · ");
 }
 
 /** Data do voo abreviada (ex.: "seg., 01 set."). */

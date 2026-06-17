@@ -31,6 +31,12 @@ class FareQuote(SQLModel, table=True):  # type: ignore[call-arg]
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     value: Decimal
     currency: str
+    # Par opcional de pontos (programa de fidelidade), ao lado do par de dinheiro
+    # (ADR-0019, invariante 15 estendido): arranjos só-dinheiro, só-pontos ou
+    # pontos + taxa. `loyalty_program` é o rótulo livre da unidade (ex.: "milhas
+    # LATAM"). Nada se converte entre dinheiro e pontos.
+    points: int | None = None
+    loyalty_program: str | None = None
     flight_date: datetime
     duration_minutes: int
     stops: int = 0
@@ -69,6 +75,8 @@ class FareQuotePublic(SQLModel):
     created_at: datetime
     value: Decimal
     currency: str
+    points: int | None = None
+    loyalty_program: str | None = None
     flight_date: datetime
     duration_minutes: int
     stops: int
@@ -112,6 +120,8 @@ class FareQuoteWithVote(FareQuotePublic):
 class FareQuoteCreate(SQLModel):
     value: Decimal
     currency: str
+    points: int | None = None
+    loyalty_program: str | None = None
     flight_date: datetime
     duration_minutes: int
     stops: int = 0
@@ -126,6 +136,8 @@ class FareQuoteCreate(SQLModel):
 class FareQuoteUpdate(SQLModel):
     value: Decimal | None = None
     currency: str | None = None
+    points: int | None = None
+    loyalty_program: str | None = None
     flight_date: datetime | None = None
     duration_minutes: int | None = None
     stops: int | None = None

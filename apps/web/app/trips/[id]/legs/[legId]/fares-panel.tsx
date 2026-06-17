@@ -7,7 +7,7 @@ import { AirlineAutocomplete } from "@/components/airline-autocomplete";
 import { Code, Icon, UserAvatar } from "@/components/atlas";
 import CommentThread from "@/components/comment-thread";
 import { IataAutocomplete } from "@/components/iata-autocomplete";
-import { formatDate, formatDuration, formatMoney, moneyValue } from "@/lib/fares/format";
+import { formatDate, formatDuration, formatFarePrice, moneyValue } from "@/lib/fares/format";
 import {
   createFareAction,
   deleteFareAction,
@@ -31,6 +31,8 @@ interface Props {
 const EMPTY_FORM = {
   value: "",
   currency: "BRL",
+  points: "",
+  loyalty_program: "",
   flight_date: "",
   duration_minutes: "",
   stops: "0",
@@ -150,8 +152,10 @@ export default function FaresPanel({
     e.preventDefault();
     setLoading(true);
     const fare = await createFareAction(legId, {
-      value: form.value,
+      value: form.value || "0",
       currency: form.currency,
+      points: form.points ? Number(form.points) : null,
+      loyalty_program: form.loyalty_program || null,
       flight_date: `${form.flight_date}T00:00:00`,
       duration_minutes: Number(form.duration_minutes),
       stops: Number(form.stops),
@@ -192,7 +196,7 @@ export default function FaresPanel({
       label: "Preço",
       render: (f) => (
         <strong className="mono-num" style={{ fontSize: 16 }}>
-          {formatMoney(f.value, f.currency)}
+          {formatFarePrice(f.value, f.currency, f.points, f.loyalty_program)}
         </strong>
       ),
       best: (f) => moneyValue(f.value) === minPrice,
@@ -284,11 +288,10 @@ export default function FaresPanel({
                 value={form.airline}
               />
               <label className="field">
-                <span>Valor</span>
+                <span>Valor (taxa)</span>
                 <input
                   onChange={(e) => setField("value", e.target.value)}
                   placeholder="4280"
-                  required
                   value={form.value}
                 />
               </label>
@@ -302,6 +305,24 @@ export default function FaresPanel({
                     <option key={c}>{c}</option>
                   ))}
                 </select>
+              </label>
+            </div>
+            <div className="form-row cols-4">
+              <label className="field">
+                <span>Pontos (opcional)</span>
+                <input
+                  onChange={(e) => setField("points", e.target.value)}
+                  placeholder="135530"
+                  value={form.points}
+                />
+              </label>
+              <label className="field">
+                <span>Programa de fidelidade</span>
+                <input
+                  onChange={(e) => setField("loyalty_program", e.target.value)}
+                  placeholder="milhas LATAM"
+                  value={form.loyalty_program}
+                />
               </label>
             </div>
             <div className="form-row cols-4">
@@ -551,7 +572,12 @@ export default function FaresPanel({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {formatMoney(fare.value, fare.currency)}
+                      {formatFarePrice(
+                        fare.value,
+                        fare.currency,
+                        fare.points,
+                        fare.loyalty_program,
+                      )}
                     </div>
                     <button
                       className={`upvote ${vote.voted ? "on" : ""}`}

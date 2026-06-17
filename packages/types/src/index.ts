@@ -265,6 +265,10 @@ export interface FareQuotePublic {
   created_at: string;
   value: string;
   currency: string;
+  // Par opcional de pontos (programa de fidelidade) ao lado do par de dinheiro
+  // (ADR-0019, invariante 15 estendido): nada se converte entre eles.
+  points: number | null;
+  loyalty_program: string | null;
   flight_date: string;
   duration_minutes: number;
   stops: number;
@@ -294,6 +298,8 @@ export interface FareMarker {
 export interface FareQuoteCreate {
   value: string;
   currency: string;
+  points?: number | null;
+  loyalty_program?: string | null;
   flight_date: string;
   duration_minutes: number;
   stops?: number;
@@ -308,6 +314,8 @@ export interface FareQuoteCreate {
 export interface FareQuoteUpdate {
   value?: string | null;
   currency?: string | null;
+  points?: number | null;
+  loyalty_program?: string | null;
   flight_date?: string | null;
   duration_minutes?: number | null;
   stops?: number | null;

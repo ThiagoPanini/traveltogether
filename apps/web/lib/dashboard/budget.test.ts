@@ -22,6 +22,8 @@ function makeFare(legId: string, value: string, currency: string): FareQuotePubl
     created_at: "2026-01-01T00:00:00",
     value,
     currency,
+    points: null,
+    loyalty_program: null,
     flight_date: "2026-09-01T00:00:00",
     duration_minutes: 600,
     stops: 0,

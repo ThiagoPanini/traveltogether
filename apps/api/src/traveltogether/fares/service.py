@@ -84,6 +84,8 @@ def fare_to_public(session: Session, fare: FareQuote) -> FareQuotePublic:
         created_at=fare.created_at,
         value=fare.value,
         currency=fare.currency,
+        points=fare.points,
+        loyalty_program=fare.loyalty_program,
         flight_date=fare.flight_date,
         duration_minutes=fare.duration_minutes,
         stops=fare.stops,
@@ -111,6 +113,8 @@ def create_fare_quote(
     checked_baggage: bool = False,
     link: str = "",
     notes: str = "",
+    points: int | None = None,
+    loyalty_program: str | None = None,
     segment_id: uuid.UUID | None = None,
 ) -> FareQuote:
     """Cria uma `Pesquisa` ancorada num `Trecho`.
@@ -127,6 +131,8 @@ def create_fare_quote(
         registered_by=registered_by,
         value=value,
         currency=currency,
+        points=points,
+        loyalty_program=loyalty_program,
         flight_date=flight_date,
         duration_minutes=duration_minutes,
         stops=stops,
@@ -191,6 +197,8 @@ def update_fare_quote(
     fare: FareQuote,
     value: Decimal | None = None,
     currency: str | None = None,
+    points: int | None = None,
+    loyalty_program: str | None = None,
     flight_date: datetime | None = None,
     duration_minutes: int | None = None,
     stops: int | None = None,
@@ -205,6 +213,10 @@ def update_fare_quote(
         fare.value = value
     if currency is not None:
         fare.currency = currency
+    if points is not None:
+        fare.points = points
+    if loyalty_program is not None:
+        fare.loyalty_program = loyalty_program
     if flight_date is not None:
         fare.flight_date = flight_date
     if duration_minutes is not None:
