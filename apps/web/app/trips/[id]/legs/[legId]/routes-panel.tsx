@@ -1,6 +1,6 @@
 "use client";
 
-import type { RouteWithSegments, SegmentPublic } from "@traveltogether/types";
+import type { RouteWithSegments, SegmentMode, SegmentPublic } from "@traveltogether/types";
 import { useState } from "react";
 
 import { Icon } from "@/components/atlas";
@@ -52,12 +52,18 @@ export default function RoutesPanel({ tripId, legId, initialRoutes }: Props) {
     setLoading(false);
   }
 
-  async function handleAddSegment(routeId: string, origin: string, dest: string) {
+  async function handleAddSegment(
+    routeId: string,
+    origin: string,
+    dest: string,
+    mode: SegmentMode,
+  ) {
     if (loading) return;
     setLoading(true);
     const seg = await addSegmentAction(tripId, legId, routeId, {
       origin_airport: origin.trim() || null,
       destination_airport: dest.trim() || null,
+      mode,
     });
     if (seg) {
       setRoutes((rs) =>
@@ -123,7 +129,7 @@ export default function RoutesPanel({ tripId, legId, initialRoutes }: Props) {
           ) : (
             <ol className="board">
               {route.segments.map((seg, index) => (
-                <li key={seg.id} className="board-row">
+                <li key={seg.id} className={`board-row segment-${seg.mode}`} data-mode={seg.mode}>
                   <span className="mono">{segmentLabel(seg)}</span>
                   <span className="chip outline">{seg.mode === "air" ? "aéreo" : "terrestre"}</span>
                   <span className="spacer" />
@@ -161,7 +167,7 @@ export default function RoutesPanel({ tripId, legId, initialRoutes }: Props) {
 
           <AddSegmentForm
             disabled={loading}
-            onAdd={(origin, dest) => handleAddSegment(route.id, origin, dest)}
+            onAdd={(origin, dest, mode) => handleAddSegment(route.id, origin, dest, mode)}
           />
         </article>
       ))}
@@ -191,13 +197,14 @@ function AddSegmentForm({
   onAdd,
 }: {
   disabled: boolean;
-  onAdd: (origin: string, dest: string) => void;
+  onAdd: (origin: string, dest: string, mode: SegmentMode) => void;
 }) {
   const [origin, setOrigin] = useState("");
   const [dest, setDest] = useState("");
+  const [mode, setMode] = useState<SegmentMode>("air");
 
   return (
-    <div className="form-row cols-3">
+    <div className="form-row cols-4">
       <input
         className="field"
         placeholder="Origem (IATA)"
@@ -212,14 +219,24 @@ function AddSegmentForm({
         onChange={(e) => setDest(e.target.value.toUpperCase())}
         maxLength={3}
       />
+      <select
+        className="field"
+        value={mode}
+        onChange={(e) => setMode(e.target.value as SegmentMode)}
+        aria-label="Modo do Trecho"
+      >
+        <option value="air">aéreo</option>
+        <option value="ground">terrestre</option>
+      </select>
       <button
         type="button"
         className="btn small ghost"
         disabled={disabled}
         onClick={() => {
-          onAdd(origin, dest);
+          onAdd(origin, dest, mode);
           setOrigin("");
           setDest("");
+          setMode("air");
         }}
       >
         <Icon name="plus" /> Adicionar Trecho

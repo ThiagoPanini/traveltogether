@@ -621,6 +621,13 @@ fieldset.card legend {
 .board-row:hover {
   background: var(--surface-2);
 }
+/* Trecho aéreo × terrestre (invariante 26): aéreo pontilhado, terrestre contínuo. */
+.board-row.segment-air {
+  border-left: 3px dotted var(--accent, #46c6c6);
+}
+.board-row.segment-ground {
+  border-left: 3px solid var(--ink-soft, #8a8a8a);
+}
 
 /* ---------- section headers ---------- */
 .section-head {

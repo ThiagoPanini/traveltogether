@@ -14,12 +14,16 @@ from decimal import Decimal
 from sqlmodel import Session, col, select
 
 from traveltogether.fares.models import FareQuote, FareQuotePublic, FareQuoteSegment
-from traveltogether.trips.models import Leg, Route, Segment
+from traveltogether.trips.models import Leg, Route, Segment, SegmentMode
 from traveltogether.trips.routes_service import default_segment_for_leg
 
 
 class SegmentNotFoundError(Exception):
     """Raised when a Leg has no resolvable default Segment (skeleton invariant)."""
+
+
+class GroundSegmentError(Exception):
+    """`Trecho` terrestre não hospeda `Pesquisa`/`Upvote`/`Preferida` (invariante 26)."""
 
 
 def fare_segment_ids(session: Session, fare_id: uuid.UUID) -> list[uuid.UUID]:
@@ -126,7 +130,13 @@ def create_fare_quote(
         segment = default_segment_for_leg(session, leg_id)
         if segment is None:
             raise SegmentNotFoundError(f"leg {leg_id} has no default segment")
-        segment_id = segment.id
+    else:
+        segment = session.get(Segment, segment_id)
+        if segment is None:
+            raise SegmentNotFoundError(f"segment {segment_id} not found")
+    if segment.mode == SegmentMode.ground:
+        raise GroundSegmentError(f"segment {segment.id} is ground; it cannot host a fare quote")
+    segment_id = segment.id
     fare = FareQuote(
         registered_by=registered_by,
         value=value,

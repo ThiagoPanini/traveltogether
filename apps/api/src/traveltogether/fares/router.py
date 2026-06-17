@@ -24,6 +24,7 @@ from traveltogether.fares.preferences_service import (
     user_purchased_fare,
 )
 from traveltogether.fares.service import (
+    GroundSegmentError,
     create_fare_quote,
     delete_fare_quote,
     fare_leg_id,
@@ -80,24 +81,29 @@ def post_fare(
 ) -> FareQuotePublic:
     leg = _get_leg_or_404(session, leg_id)
     _require_trip_membership(session, leg, current_user.id)
-    fare = create_fare_quote(
-        session=session,
-        leg_id=leg_id,
-        registered_by=current_user.id,
-        value=body.value,
-        currency=body.currency,
-        points=body.points,
-        loyalty_program=body.loyalty_program,
-        flight_date=body.flight_date,
-        duration_minutes=body.duration_minutes,
-        stops=body.stops,
-        checked_baggage=body.checked_baggage,
-        origin_airport=body.origin_airport,
-        destination_airport=body.destination_airport,
-        airline=body.airline,
-        link=body.link,
-        notes=body.notes,
-    )
+    try:
+        fare = create_fare_quote(
+            session=session,
+            leg_id=leg_id,
+            registered_by=current_user.id,
+            value=body.value,
+            currency=body.currency,
+            points=body.points,
+            loyalty_program=body.loyalty_program,
+            flight_date=body.flight_date,
+            duration_minutes=body.duration_minutes,
+            stops=body.stops,
+            checked_baggage=body.checked_baggage,
+            origin_airport=body.origin_airport,
+            destination_airport=body.destination_airport,
+            airline=body.airline,
+            link=body.link,
+            notes=body.notes,
+        )
+    except GroundSegmentError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
     return fare_to_public(session, fare)
 
 

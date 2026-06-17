@@ -112,6 +112,33 @@ def test_fare_anchors_to_default_segment(session: Session, user: User, leg: Leg)
     assert public.segment_id == segment.id
 
 
+def test_ground_segment_rejects_fare(session: Session, user: User, leg: Leg) -> None:
+    """`Trecho` terrestre é conector estrutural — não hospeda `Pesquisa` (invariante 26)."""
+    from traveltogether.fares.service import GroundSegmentError
+    from traveltogether.trips.models import SegmentMode
+    from traveltogether.trips.routes_service import add_segment, create_route
+
+    route = create_route(session, leg.id, created_by=user.id, label="via Orlando")
+    ground = add_segment(
+        session, route.id, origin_airport="ORL", destination_airport="MIA", mode=SegmentMode.ground
+    )
+
+    with pytest.raises(GroundSegmentError):
+        create_fare_quote(
+            session=session,
+            leg_id=leg.id,
+            registered_by=user.id,
+            value=Decimal("100.00"),
+            currency="BRL",
+            flight_date=datetime(2025, 9, 1, tzinfo=UTC),
+            duration_minutes=120,
+            origin_airport="ORL",
+            destination_airport="MIA",
+            airline="",
+            segment_id=ground.id,
+        )
+
+
 def test_create_fare_quote_with_points_and_fee(session: Session, user: User, leg: Leg) -> None:
     from traveltogether.fares.service import fare_to_public
 
