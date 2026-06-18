@@ -112,3 +112,19 @@ Unitários montam um engine SQLite `create_engine("sqlite://", poolclass=StaticP
 ## Variáveis de ambiente
 
 `DATABASE_URL` (Postgres), `TRAVELTOGETHER_API_URL` (web → api), `AUTH_SECRET` (**igual nos dois apps**), `AUTH_ALLOWLIST` (CSV de e-mails liberados). Ver `.env.example`.
+
+## Agent skills
+
+Configuração que os skills de engenharia (estilo Matt Pocock, ADR-0005) assumem. Editável direto em `docs/agents/*.md`; re-rodar o `/setup-matt-pocock-skills` só é preciso para trocar de issue tracker ou recomeçar do zero.
+
+### Issue tracker
+
+Issues e PRDs vivem no **GitHub Issues** (via `gh`); PRs externos **não** são superfície de triagem. Ver `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Os cinco papéis canônicos de triagem mapeiam para a convenção de eixo `status:` do repo (reusa `status:ready-for-agent` e `status:hitl`). Ver `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Repo **single-context**: glossário em `docs/CONTEXT.md` + decisões em `docs/adr/`. Ver `docs/agents/domain.md`.
