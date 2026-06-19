@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasApiAccessToken } from "./session";
+import { hasApiAccessToken, rootRedirectTarget } from "./session";
 
 describe("hasApiAccessToken", () => {
   it("aceita sessão com token de API não vazio", () => {
@@ -16,5 +16,16 @@ describe("hasApiAccessToken", () => {
   it("rejeita sessão nula ou token vazio", () => {
     expect(hasApiAccessToken(null)).toBe(false);
     expect(hasApiAccessToken({ apiAccessToken: "" })).toBe(false);
+  });
+});
+
+describe("rootRedirectTarget", () => {
+  it("sessão com token de API cai no Painel", () => {
+    expect(rootRedirectTarget({ apiAccessToken: "token" })).toBe("/overview");
+  });
+
+  it("sem token (deslogado) cai no Login", () => {
+    expect(rootRedirectTarget(null)).toBe("/login");
+    expect(rootRedirectTarget({ apiAccessToken: "" })).toBe("/login");
   });
 });
