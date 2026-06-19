@@ -3,22 +3,30 @@
 import { signIn } from "next-auth/react";
 import { type ClipboardEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { Icon } from "@/components/atlas";
 import { CODE_TTL_SECONDS, canResend, formatTtl } from "@/lib/identity/login-flow";
 import { OTP_LENGTH, otpDigit, otpFromPaste, otpIsComplete } from "@/lib/identity/otp-code";
 import { requestOtp } from "../../lib/api/otp-actions";
+import { Icon } from "./icons";
 
 const EMPTY_CODE = Array.from({ length: OTP_LENGTH }, () => "");
 
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 /**
- * Passo `code` do Login: células OTP + cronômetro regressivo (TTL), reenvio e
- * estado "expirado". A verdade da verificação é o backend via `signIn("otp")`;
- * aqui só dirigimos o fluxo e o feedback visual.
+ * Passo `code` do Login ("Carimbe a entrada", #166): células DM Mono que
+ * assentam por dígito + carimbo "A bordo ✓" antes de navegar. A verdade da
+ * verificação é o backend via `signIn("otp")`; aqui só dirigimos o fluxo e o
+ * feedback visual. Pele Espresso — comportamento intacto.
  */
 export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmail: () => void }) {
   const [code, setCode] = useState<string[]>(EMPTY_CODE);
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
   const [expired, setExpired] = useState(false);
   const [seconds, setSeconds] = useState(CODE_TTL_SECONDS);
   const [resent, setResent] = useState(false);
@@ -26,14 +34,14 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
 
   // Cronômetro regressivo do TTL: ao chegar a zero, marca o código como expirado.
   useEffect(() => {
-    if (expired) return;
+    if (expired || verified) return;
     if (seconds <= 0) {
       setExpired(true);
       return;
     }
     const timer = setTimeout(() => setSeconds((s) => s - 1), 1000);
     return () => clearTimeout(timer);
-  }, [seconds, expired]);
+  }, [seconds, expired, verified]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -41,7 +49,7 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
 
   async function onVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (!otpIsComplete(code) || expired || verifying) return;
+    if (!otpIsComplete(code) || expired || verifying || verified) return;
     setVerifying(true);
     setError(null);
 
@@ -49,11 +57,14 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
       email: email.trim().toLowerCase(),
       code: code.join(""),
       redirect: false,
-      callbackUrl: "/trips",
+      callbackUrl: "/overview",
     });
 
     if (result?.ok && result.url) {
-      window.location.replace(result.url);
+      // Carimba "A bordo ✓" e só então navega — o beat assinatura do login.
+      const url = result.url;
+      setVerified(true);
+      setTimeout(() => window.location.replace(url), prefersReducedMotion() ? 150 : 850);
       return;
     }
     setVerifying(false);
@@ -104,43 +115,29 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
   }
 
   return (
-    <form className="form-grid" onSubmit={onVerify}>
-      <button
-        className="link-btn"
-        onClick={onChangeEmail}
-        style={{
-          alignItems: "center",
-          color: "var(--muted)",
-          display: "inline-flex",
-          fontSize: 13,
-          gap: 5,
-          textAlign: "left",
-        }}
-        type="button"
-      >
+    <form className="auth-form" onSubmit={onVerify}>
+      <button className="auth-back" onClick={onChangeEmail} type="button">
         <Icon name="arrowLeft" size={13} /> trocar e-mail
       </button>
       <div>
-        <h1 className="display" style={{ fontSize: 26, marginBottom: 8 }}>
-          Digite o código
-        </h1>
-        <p className="soft" style={{ fontSize: 14 }}>
-          Enviamos um código de 6 dígitos para <strong>{email}</strong>.
+        <h1 className="auth-title sm">Carimbe a entrada</h1>
+        <p className="auth-sub">
+          Os 6 dígitos que enviamos para <strong>{email}</strong>.
         </p>
       </div>
 
-      <div className={`otp-cells ${error ? "shake" : ""}`}>
+      <div className={`auth-otp ${error ? "shake" : ""}`}>
         {code.map((digit, i) => (
           <input
-            // biome-ignore lint/suspicious/noArrayIndexKey: OTP cells are positional by design
+            // biome-ignore lint/suspicious/noArrayIndexKey: células OTP são posicionais por desenho
             key={i}
             ref={(el) => {
               inputRefs.current[i] = el;
             }}
             aria-label={`Dígito ${i + 1} do código`}
             autoComplete="one-time-code"
-            className={`otp-cell ${error ? "err" : ""}`}
-            disabled={expired || verifying}
+            className={`auth-otp-cell ${digit ? "filled" : ""} ${error ? "err" : ""}`}
+            disabled={expired || verifying || verified}
             inputMode="numeric"
             maxLength={1}
             onChange={(e) => onDigitChange(i, e.target.value)}
@@ -153,83 +150,61 @@ export function CodeStep({ email, onChangeEmail }: { email: string; onChangeEmai
         ))}
       </div>
 
+      {verified && (
+        <div className="auth-stamp-wrap">
+          <span className="auth-stamp">A bordo ✓</span>
+        </div>
+      )}
+
       {error && (
-        <p
-          role="alert"
-          style={{
-            alignItems: "center",
-            color: "var(--danger)",
-            display: "flex",
-            fontSize: 13,
-            gap: 6,
-          }}
-        >
+        <p className="auth-error" role="alert">
           <Icon name="alert" size={14} /> {error}
         </p>
       )}
       {resent && (
-        <p
-          role="status"
-          style={{
-            alignItems: "center",
-            color: "var(--ok)",
-            display: "flex",
-            fontSize: 13,
-            gap: 6,
-          }}
-        >
+        <p className="auth-ok" role="status">
           <Icon name="check" size={14} /> Novo código enviado.
         </p>
       )}
 
-      {expired ? (
-        <div className="empty" style={{ padding: "20px 18px" }}>
-          <Icon name="clock" size={20} />
-          <div style={{ color: "var(--ink-soft)", fontWeight: 600 }}>Esse código expirou</div>
-          <div style={{ fontSize: 13 }}>
-            Códigos valem por 5 minutos. Peça um novo para continuar.
+      {!verified &&
+        (expired ? (
+          <div className="auth-expired">
+            <Icon name="clock" size={20} />
+            <div className="auth-expired-title">Esse código expirou</div>
+            <div>Códigos valem por 5 minutos. Peça um novo para continuar.</div>
           </div>
-        </div>
-      ) : (
-        <button
-          className="btn accent"
-          disabled={!otpIsComplete(code) || verifying}
-          style={{ height: 46, justifyContent: "center" }}
-          type="submit"
-        >
-          {verifying ? (
-            <>
-              <span className="spinner" /> Verificando…
-            </>
-          ) : (
-            <>
-              Entrar <Icon name="arrowRight" size={14} />
-            </>
-          )}
-        </button>
-      )}
+        ) : (
+          <button
+            className="btn accent auth-btn"
+            disabled={!otpIsComplete(code) || verifying}
+            type="submit"
+          >
+            {verifying ? (
+              "Verificando…"
+            ) : (
+              <>
+                Entrar <Icon name="arrowRight" size={14} />
+              </>
+            )}
+          </button>
+        ))}
 
-      <div
-        style={{
-          alignItems: "center",
-          display: "flex",
-          gap: 12,
-          justifyContent: "space-between",
-        }}
-      >
-        <span className="mono" style={{ color: "var(--muted)", fontSize: 11 }}>
-          {expired ? "código expirado" : `expira em ${formatTtl(seconds)}`}
-        </span>
-        <button
-          className="link-btn"
-          disabled={!canResend(seconds, expired)}
-          onClick={onResend}
-          style={{ alignItems: "center", display: "inline-flex", fontSize: 13, gap: 5 }}
-          type="button"
-        >
-          <Icon name="refresh" size={12} /> Reenviar código
-        </button>
-      </div>
+      {!verified && (
+        <div className="auth-foot">
+          <span className="auth-ttl">
+            {expired ? "código expirado" : `expira em ${formatTtl(seconds)}`}
+          </span>
+          <button
+            className="auth-back"
+            disabled={!canResend(seconds, expired)}
+            onClick={onResend}
+            type="button"
+          >
+            <Icon name="refresh" size={12} /> Reenviar código
+          </button>
+        </div>
+      )}
     </form>
   );
 }
