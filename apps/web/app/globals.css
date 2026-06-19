@@ -711,6 +711,405 @@ a {
   animation: slideIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* ---- Wizard de cadastro (#162) ---- */
+.wiz-head {
+  max-width: 640px;
+  margin: 4px 0 26px;
+}
+.wiz-head h1 {
+  font-size: 38px;
+  line-height: 1.05;
+  margin: 8px 0 8px;
+}
+.wiz-head p {
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+.wizard {
+  max-width: 720px;
+}
+
+.wiz-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+}
+.wiz-pip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--line-soft);
+  color: var(--muted-dim);
+}
+.wiz-pip.now {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.wiz-pip.done {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.wiz-pip-n {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.wiz-pip-l {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wiz-card {
+  padding: 28px;
+}
+.wiz-step {
+  display: grid;
+  gap: 16px;
+  animation: pageIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.wiz-step h2 {
+  font-size: 26px;
+  margin: 0;
+}
+.wiz-hint {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+  max-width: 56ch;
+}
+.wiz-empty {
+  color: var(--muted-soft);
+  font-style: italic;
+}
+
+/* Campos rotulados do wizard: .field vira grupo (rótulo + controle).
+   `:where(.wizard)` zera a especificidade do ancestral — evita o aviso de
+   especificidade descendente do biome contra seletores de uma classe só. */
+:where(.wizard) .field {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  position: relative;
+}
+:where(.wizard) .field > span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+:where(.wizard) .field input,
+:where(.wizard) .field textarea {
+  width: 100%;
+  background: var(--ivory);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-btn);
+  padding: 13px 15px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+}
+:where(.wizard) .field input:focus,
+:where(.wizard) .field textarea:focus {
+  border-color: var(--accent);
+}
+
+.form-row {
+  display: grid;
+  gap: 14px;
+}
+.form-row.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wiz-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  background: var(--ivory);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-sub);
+  box-shadow: var(--shadow-card);
+  max-height: 240px;
+  overflow: auto;
+}
+.wiz-menu button {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 11px;
+  border: none;
+  background: none;
+  border-radius: var(--r-btn);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+}
+.wiz-menu button:hover {
+  background: var(--line-soft);
+}
+.wiz-menu-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.wiz-stops {
+  display: grid;
+  gap: 14px;
+}
+.wiz-stop {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--r-sub);
+  background: var(--ivory);
+}
+.wiz-stop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wiz-modes {
+  display: grid;
+  gap: 10px;
+}
+.wiz-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--r-sub);
+}
+.wiz-mode-leg {
+  font-weight: 600;
+}
+.wiz-toggle {
+  display: inline-flex;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-btn);
+  overflow: hidden;
+  flex: none;
+}
+.wiz-toggle-opt {
+  padding: 8px 16px;
+  border: none;
+  background: var(--ivory);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wiz-toggle-opt.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.wiz-invite {
+  display: flex;
+  gap: 10px;
+}
+.wiz-invite input {
+  flex: 1;
+  background: var(--ivory);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-btn);
+  padding: 13px 15px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+}
+.wiz-invite input:focus {
+  border-color: var(--accent);
+}
+.wiz-invites {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wiz-invites li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--r-btn);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.wiz-review {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.wiz-review > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wiz-review dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0;
+}
+.wiz-review dd {
+  margin: 0;
+}
+
+.wiz-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* DateField — portado do Atlas, remapeado p/ tokens Espresso. */
+.date-field {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.date-field-input {
+  flex: 1;
+  background: var(--ivory);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-btn);
+  padding: 13px 15px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  outline: none;
+}
+.date-field-input:focus {
+  border-color: var(--accent);
+}
+.date-field-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  border-radius: var(--r-btn);
+  cursor: pointer;
+}
+.date-field-btn:hover {
+  color: var(--accent);
+  background: var(--line-soft);
+}
+.cal-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 268px;
+  background: var(--ivory);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-sub);
+  box-shadow: var(--shadow-card);
+  padding: 12px;
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cal-head button {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--line);
+  background: var(--ivory);
+  color: var(--ink);
+  border-radius: var(--r-btn);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.cal-head button:hover {
+  border-color: var(--ink);
+}
+.cal-title {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.04em;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-dow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 4px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  border: none;
+  background: none;
+  color: var(--ink);
+  border-radius: var(--r-btn);
+  cursor: pointer;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.cal-day:hover:not(:disabled) {
+  background: var(--line-soft);
+}
+.cal-day.on {
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+}
+.cal-day:disabled {
+  color: var(--muted-dim);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 860px) {
   .sidebar {
     display: none;
