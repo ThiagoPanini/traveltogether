@@ -12,7 +12,8 @@ import { GoogleMark, Icon } from "./icons";
 // Login "Caderno de Bordo" (chassi Espresso, #166): troca de pele, não de
 // comportamento — a máquina de passos (choose → email → code) e as actions
 // (requestOtp / signIn) seguem intactas. Tipografia sem serifa (títulos em
-// Space Grotesk via .auth-title); o dado mono mora nos dígitos do código.
+// Space Grotesk — wordmark traveltogether na entrada (.auth-wordmark), .auth-title
+// nos passos seguintes); o dado mono mora nos dígitos do código.
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<LoginStep>("choose");
@@ -60,8 +61,12 @@ export function LoginForm() {
 
         {step === "choose" && (
           <>
-            <h1 className="auth-title">Entre ou crie sua conta</h1>
-            <p className="auth-sub">Qualquer e-mail vale — a conta nasce na hora.</p>
+            <h1 className="auth-wordmark">
+              travel<span className="auth-wordmark-accent">together</span>
+            </h1>
+            <p className="auth-sub">
+              O lugar para organizar sua viagem entre amigos de maneira fácil e rápida
+            </p>
             <button
               className="btn ink auth-btn"
               disabled={googleLoading}
@@ -89,12 +94,7 @@ export function LoginForm() {
             >
               <Icon name="mail" size={16} /> Entrar com e-mail
             </button>
-            <p className="auth-note">
-              <span className="auth-tick" aria-hidden="true">
-                <Icon name="check" size={10} />
-              </span>
-              Aqui ninguém decora senha — nunca pedimos uma.
-            </p>
+            <p className="auth-tagline">Entre para iniciar sua jornada</p>
           </>
         )}
 

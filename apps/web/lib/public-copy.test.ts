@@ -14,8 +14,13 @@ describe("public auth copy", () => {
     expect(source).not.toContain("beta fechado");
     expect(source).not.toContain("allowlist");
 
-    // identidade do produto + acesso aberto explícito no headline
-    expect(source).toContain("Entre ou crie sua conta");
+    // identidade do produto: o wordmark traveltogether lidera a tela
+    expect(source).toContain("auth-wordmark");
+    expect(source).toContain("together");
+    // proposta de valor + chamada à jornada (sem o headline genérico antigo)
+    expect(source).not.toContain("Entre ou crie sua conta");
+    expect(source).toContain("O lugar para organizar sua viagem entre amigos");
+    expect(source).toContain("Entre para iniciar sua jornada");
     expect(source).toContain("Google");
   });
 });

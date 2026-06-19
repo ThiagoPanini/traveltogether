@@ -1448,6 +1448,20 @@ a {
 .auth-title.sm {
   font-size: 25px;
 }
+/* Wordmark que lidera a tela de entrada (espelha o protótipo Espresso):
+   "travel" em tinta + "together" no acento, display Space Grotesk apertado. */
+.auth-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 6.6vw, 44px);
+  line-height: 1;
+  letter-spacing: -1.4px;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+.auth-wordmark-accent {
+  color: var(--accent);
+}
 .auth-sub {
   font-size: 15px;
   line-height: 1.5;
@@ -1490,25 +1504,12 @@ a {
   text-transform: uppercase;
   color: var(--muted-soft);
 }
-.auth-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-  margin: 24px 0 0;
-  font-size: 13px;
-  color: var(--muted-soft);
-}
-.auth-tick {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: 1.3px solid var(--ok);
-  border-radius: 50%;
-  color: var(--ok);
+/* Fecho do card de entrada — chamada à jornada, centrada e discreta. */
+.auth-tagline {
+  text-align: center;
+  margin: 26px 0 0;
+  font-size: 14px;
+  color: var(--muted);
 }
 .auth-back {
   display: inline-flex;
