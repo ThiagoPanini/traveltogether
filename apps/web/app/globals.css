@@ -191,6 +191,39 @@ a {
     opacity: 1;
   }
 }
+@keyframes stampRich {
+  0% {
+    opacity: 0;
+    transform: rotate(-9deg) scale(2.6);
+  }
+  42% {
+    opacity: 1;
+    transform: rotate(-12deg) scale(0.84);
+  }
+  58% {
+    transform: rotate(-6deg) scale(1.1);
+  }
+  74% {
+    transform: rotate(-11deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-9deg) scale(1);
+  }
+}
+@keyframes inkring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  55% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
 
 /* ---- Superfícies reutilizáveis (cards, botões, campos) ---- */
 .card {
@@ -737,47 +770,204 @@ a {
   width: 100%;
 }
 
+/* Trilho de carimbos (#168): passo concluído vira selo girado; o atual é um
+   chip escuro com rótulo; os pendentes, círculo tracejado com número. */
 .wiz-rail {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   list-style: none;
-  margin: 0 0 18px;
+  margin: 0 0 28px;
   padding: 0;
 }
-.wiz-pip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
-  padding: 7px 12px;
-  border-radius: var(--r-pill);
-  border: 1.5px solid var(--line-soft);
-  color: var(--muted-dim);
+.wiz-chip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  background: var(--ivory);
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
-.wiz-pip.now {
+.wiz-chip.done {
+  border-style: solid;
+  border-color: rgba(194, 99, 47, 0.4);
+}
+.wiz-chip.now {
+  padding: 8px 14px 8px 9px;
+  border-style: solid;
   border-color: var(--ink);
-  color: var(--ink);
+  background: var(--ink);
+  box-shadow: var(--lift-ink);
 }
-.wiz-pip.done {
-  border-color: var(--accent);
-  color: var(--accent);
+.wiz-chip-mark {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.wiz-pip-n {
+.wiz-chip-n {
+  width: 24px;
+  height: 24px;
+  border: 1.5px dashed rgba(44, 32, 24, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
+  color: var(--muted-soft);
 }
-.wiz-pip-l {
-  font-size: 13px;
+.wiz-chip.now .wiz-chip-n {
+  border-style: solid;
+  border-color: var(--paper);
+  color: var(--paper);
+}
+.wiz-chip-stamp {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--accent);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transform: rotate(-7deg);
+  animation: stampPress 0.5s ease both;
+}
+.wiz-chip-label {
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  color: var(--paper);
 }
 
+/* Virar-de-passaporte (#168): perspectiva no wrapper → rotateY do cartão tem
+   profundidade real (o cartão remonta a cada passo e refaz o pageIn). */
+.wiz-flip {
+  perspective: 1400px;
+}
 .wiz-card {
   padding: 28px;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation: pageIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .wiz-step {
   display: grid;
   gap: 16px;
-  animation: pageIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Fecho "Viagem criada" (#168): carimbo + anel + fita-resumo. */
+.wiz-done {
+  text-align: center;
+}
+.wiz-done-seal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin-bottom: 18px;
+}
+.wiz-done-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 172px;
+  height: 54px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--accent-deep);
+  border-radius: 11px;
+  opacity: 0;
+  pointer-events: none;
+  animation: inkring 0.8s ease-out 0.18s both;
+}
+.wiz-done-stamp {
+  display: inline-block;
+  border: 2.5px solid var(--accent-deep);
+  color: var(--accent-deep);
+  border-radius: 9px;
+  padding: 8px 18px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transform: rotate(-9deg);
+  animation: stampRich 0.7s ease both;
+}
+.wiz-done h2 {
+  font-size: clamp(26px, 4.4vw, 34px);
+  margin: 0 0 10px;
+  line-height: 1.05;
+}
+.wiz-done-sub {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 0 auto 24px;
+  max-width: 44ch;
+}
+.wiz-done-fita {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sub);
+  padding: 18px;
+  text-align: left;
+  margin: 0 0 26px;
+}
+.wiz-done-ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.wiz-done-city {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+.wiz-done-hop {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+}
+.wiz-done-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.wiz-done-cols div {
+  display: grid;
+  gap: 3px;
+}
+.wiz-done-cols dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0;
+}
+.wiz-done-cols dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
 }
 .wiz-step h2 {
   font-size: 26px;
@@ -966,30 +1156,6 @@ a {
   border-radius: var(--r-btn);
   font-family: var(--font-mono);
   font-size: 13px;
-}
-
-.wiz-review {
-  display: grid;
-  gap: 0;
-  margin: 0;
-}
-.wiz-review > div {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 14px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line-soft);
-}
-.wiz-review dt {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 0;
-}
-.wiz-review dd {
-  margin: 0;
 }
 
 .wiz-nav {
