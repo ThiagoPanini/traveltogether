@@ -17,12 +17,14 @@ export default async function NewTripPage() {
 
   return (
     <AppShell user={user}>
-      <div className="wiz-head">
-        <span className="kicker">Nova viagem</span>
-        <h1>Comece pelo nome.</h1>
-        <p>Origem, paradas e modo entram em seguida — passagens, depois, no Painel.</p>
+      <div className="wiz-page">
+        <div className="wiz-head">
+          <span className="kicker">Nova viagem</span>
+          <h1>Comece pelo nome.</h1>
+          <p>Origem, paradas e modo entram em seguida — passagens, depois, no Painel.</p>
+        </div>
+        <NewTripForm creatorEmail={user.email} />
       </div>
-      <NewTripForm creatorEmail={user.email} />
     </AppShell>
   );
 }

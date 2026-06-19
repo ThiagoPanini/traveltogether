@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildWizardPlan, deriveWizardLegs, type WizardState } from "./wizard";
+import { formatDateRange } from "../format/date";
+import { buildWizardPlan, deriveWizardLegs, summarizeWizard, type WizardState } from "./wizard";
 
 function state(over: Partial<WizardState> = {}): WizardState {
   return {
@@ -86,5 +87,42 @@ describe("buildWizardPlan", () => {
       { city: "Nova York", arrival_date: "2026-07-01", departure_date: "2026-07-08" },
       { city: "Miami", arrival_date: "2026-07-08", departure_date: "2026-07-15" },
     ]);
+  });
+});
+
+describe("summarizeWizard (fita do fecho 'Viagem criada')", () => {
+  it("encadeia as cidades origem → paradas → origem na fita", () => {
+    const ribbon = summarizeWizard(state()).ribbon;
+    expect(
+      ribbon.filter((r) => r.kind === "city").map((r) => (r.kind === "city" ? r.label : "")),
+    ).toEqual(["São Paulo", "Nova York", "Miami", "São Paulo"]);
+  });
+
+  it("conta os Trajetos no radar e carrega o modo de cada salto", () => {
+    const s = summarizeWizard(state());
+    expect(s.legCount).toBe(3);
+    expect(
+      s.ribbon.filter((r) => r.kind === "hop").map((r) => (r.kind === "hop" ? r.mode : "")),
+    ).toEqual(["air", "ground", "air"]);
+  });
+
+  it("período usa o mesmo formato do resto do app", () => {
+    expect(summarizeWizard(state()).periodLabel).toBe(formatDateRange("2026-07-01", "2026-07-15"));
+  });
+
+  it("grupo conta convites pendentes (dedupe, sem o criador)", () => {
+    const s = summarizeWizard(
+      state({
+        creatorEmail: "org@grupo.app",
+        inviteEmails: ["a@x.com", "A@x.com", "org@grupo.app", "b@x.com"],
+      }),
+    );
+    expect(s.inviteCount).toBe(2);
+  });
+
+  it("sem Paradas a fita fica vazia de Trajetos", () => {
+    const s = summarizeWizard(state({ stops: [], legModes: [] }));
+    expect(s.legCount).toBe(0);
+    expect(s.ribbon).toEqual([]);
   });
 });

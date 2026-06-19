@@ -13,8 +13,7 @@ Hub fechado para organização de viagens em grupo. Beta fechado para um grupo d
 Leia, nesta ordem, o conhecimento durável que **não** está derivável do código:
 
 1. **`docs/CONTEXT.md`** — glossário canônico de domínio + **invariantes** (regras que sempre valem; código que as viola é bug). A linguagem do produto vive aqui.
-2. **`docs/adr/`** — decisões arquiteturais (por quê, não só o quê). As mais carregadas de contexto: 0003 (modelo de acesso), 0004 (itinerário), 0006 (autonomia de ops).
-3. **`DESIGN.md`** — direção visual provisória (dark-first, acento cyan, mono nos dados de viagem).
+2. **`DESIGN.md`** — direção visual provisória (dark-first, acento cyan, mono nos dados de viagem).
 
 ### Convenção de nomes (não negociável)
 

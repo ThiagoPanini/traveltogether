@@ -1,5 +1,7 @@
 import type { SegmentMode, StopCreate } from "@traveltogether/types";
 
+import { formatDateRange } from "../format/date";
+
 // Orquestração do cadastro de Viagem (wizard 6 passos), rodada 0 Espresso.
 // Lógica pura: traduz o estado do wizard num PLANO estrutural fiel ao domínio
 // (ADR-0018/0019). A server action executa o plano; aqui não há fetch nem FastAPI.
@@ -87,6 +89,44 @@ function dedupeInvites(emails: string[], creatorEmail: string): WizardInvite[] {
     invites.push({ email });
   }
   return invites;
+}
+
+/** Item da fita do fecho: cidade ou salto (com o modo do Trajeto). */
+export type WizardRibbonItem =
+  | { kind: "city"; key: string; label: string }
+  | { kind: "hop"; key: string; mode: SegmentMode };
+
+/** Conteúdo da fita-resumo do fecho "Viagem criada" (passo final, #168). */
+export interface WizardSummary {
+  /** Cidades e saltos em sequência (origem → paradas → origem), com keys. */
+  ribbon: WizardRibbonItem[];
+  /** Quantos Trajetos a Viagem leva ao radar. */
+  legCount: number;
+  /** Período no mesmo formato do resto do app. */
+  periodLabel: string;
+  /** Convites pendentes (dedupe, sem o criador). */
+  inviteCount: number;
+}
+
+/**
+ * Deriva a fita-resumo que o passo final celebra após criar a Viagem. Pura,
+ * espelha o que `buildWizardPlan` monta — sem inventar dado de preço (radar
+ * segue esqueleto na rodada 0).
+ */
+export function summarizeWizard(state: WizardState): WizardSummary {
+  const legs = deriveWizardLegs(state.origin, state.stops);
+  const ribbon: WizardRibbonItem[] = [];
+  legs.forEach((leg, index) => {
+    if (index === 0) ribbon.push({ kind: "city", key: "city-0", label: leg.from });
+    ribbon.push({ kind: "hop", key: `hop-${index}`, mode: state.legModes[index] ?? "air" });
+    ribbon.push({ kind: "city", key: `city-${index + 1}`, label: leg.to });
+  });
+  return {
+    ribbon,
+    legCount: legs.length,
+    periodLabel: formatDateRange(state.start, state.end),
+    inviteCount: dedupeInvites(state.inviteEmails, state.creatorEmail).length,
+  };
 }
 
 export function buildWizardPlan(state: WizardState): WizardPlan {

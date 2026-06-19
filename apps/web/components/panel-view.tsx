@@ -6,7 +6,11 @@ import type {
   PanelMember,
   RadarRow,
 } from "@/lib/dashboard/active-panel";
+import type { PanelGreeting } from "@/lib/dashboard/greeting";
 import { initials } from "@/lib/identity/user-display";
+
+// Trilho do estado vazio (#169): os passos que a primeira viagem percorre.
+const EMPTY_STEPS = ["Nome", "Rota", "Grupo", "Radar"] as const;
 
 // Painel apresentacional Espresso (rodada 0). Recebe o `ActivePanel` já
 // derivado (buildActivePanel) e NADA mais — sem fetch, sem sessão, sem hooks.
@@ -66,16 +70,47 @@ function RadarLine({ row }: { row: RadarRow }) {
   );
 }
 
+function StepArrow() {
+  return (
+    <svg
+      className="panel-empty-arrow"
+      width={15}
+      height={15}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 function EmptyPanel() {
   return (
     <div className="panel-empty">
-      <span className="kicker">Ponto de partida</span>
+      <div className="panel-empty-kicker">
+        <span className="compass" aria-hidden="true" />
+        <span className="kicker">Ponto de partida</span>
+      </div>
       <h1>O mapa ainda está em branco.</h1>
       <p>
         Toda viagem começa com um nome. Cadastre a primeira, monte a rota com o grupo e registrem
         juntos as pesquisas de passagem — cada preço encontrado fica guardado para comparar.
       </p>
       <div className="card panel-empty-card">
+        <div className="panel-empty-steps">
+          {EMPTY_STEPS.map((label, i) => (
+            <div key={label} className="panel-empty-step">
+              <span className="panel-empty-step-n">{i + 1}</span>
+              <span className="panel-empty-step-l">{label}</span>
+              {i < EMPTY_STEPS.length - 1 && <StepArrow />}
+            </div>
+          ))}
+        </div>
         <Link className="btn ink" href="/trips/new">
           + Criar a primeira viagem
         </Link>
@@ -85,7 +120,13 @@ function EmptyPanel() {
   );
 }
 
-export function PanelView({ panel }: { panel: ActivePanel }) {
+export function PanelView({
+  panel,
+  greeting,
+}: {
+  panel: ActivePanel;
+  greeting?: PanelGreeting | null;
+}) {
   if (panel.isEmpty || !panel.hero) {
     return <EmptyPanel />;
   }
@@ -94,6 +135,12 @@ export function PanelView({ panel }: { panel: ActivePanel }) {
 
   return (
     <div className="panel">
+      {greeting && (
+        <div className="panel-greeting">
+          <span className="kicker panel-greeting-date">{greeting.dateLine}</span>
+          <h1 className="panel-greeting-name">{greeting.salutation}</h1>
+        </div>
+      )}
       <div className="card panel-hero">
         <span className="kicker panel-hero-kicker">Próxima viagem</span>
         <h2 className="panel-hero-name">{hero.name}</h2>

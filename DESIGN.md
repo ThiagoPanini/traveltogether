@@ -20,7 +20,10 @@
 
 - **Casco (`AppShell`):** sidebar escura no desktop (marca + CTA "Nova viagem" + nav + chip de identidade), header + drawer no mobile. Fundo da área de conteúdo com as linhas "deriva/respira".
 - **Navegação (3 itens):** Início · Viagens · Perfil. Na rodada 0 **só Início resolve** (para o Painel); Viagens e Perfil ficam **inertes** ("em breve"). O **logout** pendura no chip de identidade da sidebar.
-- **Painel** e **wizard de nova viagem** entram nas fatias seguintes da rodada 0 — mesma pele, mesmas primitivas.
+- **Login:** reconstruído em Espresso (validado no Round 1, portado na **passada de conformidade** de 2026-06-19). Cartão "Caderno de Bordo" — kicker bússola, "Continuar com Google" (escuro, com *lift*), divisor "ou", "Entrar com e-mail" (outline), código de 6 dígitos em células **DM Mono** com *settle* + carimbo "A bordo ✓". Títulos em Space Grotesk; **sem serifa/itálico** (refino Round 1.5). Sem senha; acesso por allowlist.
+- **Painel (Início):** hero da próxima viagem (nome · período · viajantes · fita de cidades), **saudação** (data mono + nome) e **estado-vazio** com trilho numerado (1 nome → 2 rota → 3 grupo → 4 radar). O **radar fica esqueleto** ("cotação em breve"): preço vivo, sparkline, "desde ontem" e selo de quedas são **Round 3**.
+- **Wizard de nova viagem:** 6 passos, **centrado e espaçado**, com **trilho de carimbos** (passo feito = carimbo) e transição "**virar-de-passaporte**", fechando no carimbo **"Viagem criada"** (+ fita-resumo) → Painel. Modo **binário** (aéreo/terrestre); conexão de voo, multi-modo, destino-final explícito e volta assimétrica são Round 3.
+- **Roteamento / Home pública:** a landing (Home pública, ADR-0013) **não foi prototipada no Espresso** → sai da superfície viva (dorme como o Atlas, sem deletar). `/` cai direto no **login** (ou no **Painel**, se já logado). O redesenho da landing fica para depois.
 
 ## Aplicação por área — referência Atlas em sunset
 
