@@ -17,6 +17,39 @@ describe("PanelView (Espresso)", () => {
     expect(html).not.toMatch(/sem você pedir/i);
   });
 
+  it("estado vazio: trilho numerado dos passos à paridade do protótipo", () => {
+    const panel: ActivePanel = { hero: null, others: [], isEmpty: true };
+    const html = renderToStaticMarkup(<PanelView panel={panel} />);
+
+    for (const step of ["Nome", "Rota", "Grupo", "Radar"]) {
+      expect(html).toContain(step);
+    }
+  });
+
+  it("painel cheio mostra a saudação (data + nome) acima do hero", () => {
+    const panel: ActivePanel = {
+      isEmpty: false,
+      others: [],
+      hero: {
+        tripId: "eua",
+        name: "EUA Trip",
+        periodLabel: "01 jul – 15 jul",
+        members: [],
+        ribbon: [],
+        radar: [],
+      },
+    };
+    const html = renderToStaticMarkup(
+      <PanelView
+        greeting={{ dateLine: "quinta · 18 jun", salutation: "Bom dia, Marina" }}
+        panel={panel}
+      />,
+    );
+
+    expect(html).toContain("Bom dia, Marina");
+    expect(html).toContain("quinta · 18 jun");
+  });
+
   it("radar pinta 'cotação em breve' por Trajeto e nenhum preço", () => {
     const panel: ActivePanel = {
       isEmpty: false,

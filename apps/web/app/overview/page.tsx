@@ -12,6 +12,8 @@ import {
   type PanelLegMode,
   selectActiveTrip,
 } from "@/lib/dashboard/active-panel";
+import { buildGreeting } from "@/lib/dashboard/greeting";
+import { displayLabel } from "@/lib/identity/user-display";
 
 // Início (#161, chassi Espresso): Painel da Viagem ativa/próxima. A page server
 // só busca os dados; toda derivação vive em `buildActivePanel` (testado) e a
@@ -26,6 +28,7 @@ export default async function OverviewPage() {
 
   const now = new Date();
   const todayIso = now.toISOString().slice(0, 10);
+  const greeting = buildGreeting(displayLabel(user), now);
   const activeTrip = selectActiveTrip(trips, todayIso);
 
   // Carrega Trajetos, membros e modos só da Viagem em foco (sem N+1 global).
@@ -62,7 +65,7 @@ export default async function OverviewPage() {
 
   return (
     <AppShell user={user}>
-      <PanelView panel={panel} />
+      <PanelView greeting={greeting} panel={panel} />
     </AppShell>
   );
 }

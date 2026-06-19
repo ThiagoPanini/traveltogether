@@ -558,6 +558,91 @@ a {
   color: var(--muted);
 }
 
+/* Bússola para fundo claro (kicker do estado vazio) — irmã da .brand-mark da
+   sidebar, mas com miolo em tinta em vez de areia. */
+.compass {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.compass::before {
+  content: "";
+  width: 1.6px;
+  height: 11px;
+  background: var(--accent);
+  border-radius: 2px;
+  transform: rotate(38deg);
+  transform-origin: bottom;
+}
+.compass::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.panel-empty-kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+
+/* Trilho numerado dos passos no cartão do estado vazio. */
+.panel-empty-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 10px;
+  margin-bottom: 28px;
+}
+.panel-empty-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.panel-empty-step-n {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper);
+}
+.panel-empty-step-l {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.panel-empty-arrow {
+  color: var(--accent);
+}
+
+/* Saudação do Painel cheio (data em mono + nome em display). */
+.panel-greeting {
+  margin-bottom: 22px;
+}
+.panel-greeting-date {
+  display: block;
+}
+.panel-greeting-name {
+  font-size: clamp(26px, 4vw, 34px);
+  margin: 6px 0 0;
+}
+
 .panel-hero {
   padding: clamp(20px, 3vw, 28px);
   margin-bottom: 24px;
