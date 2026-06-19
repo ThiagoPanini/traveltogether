@@ -28,7 +28,7 @@ export default async function TasksPage() {
   const enriched = view.columns.flatMap((col) => col.tasks);
 
   return (
-    <AppShell user={user} counts={{ tasks: view.count }}>
+    <AppShell user={user}>
       <main className="page fadeup">
         <div className="shell">
           <div className="section-head" style={{ marginBottom: 6 }}>

@@ -111,7 +111,7 @@ export default async function TripsPage() {
     .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
 
   return (
-    <AppShell user={user} counts={{ pending: pending.length }}>
+    <AppShell user={user}>
       <main className="page fadeup">
         <div className="shell">
           <div className="section-head" style={{ marginBottom: 28 }}>

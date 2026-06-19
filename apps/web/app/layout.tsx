@@ -1,5 +1,30 @@
 import type { Metadata } from "next";
+import { DM_Mono, Hanken_Grotesk, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+
+// Chassi Espresso (ADR-0020): três famílias via next/font, expostas como CSS
+// vars consumidas em globals.css. Space Grotesk = display; Hanken = corpo;
+// DM Mono = rótulo/dado de viagem.
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const body = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const mono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "traveltogether",
@@ -8,16 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" data-dir="atlas">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Mesmas fontes/eixos do protótipo Atlas: Archivo (wdth) + IBM Plex Mono */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="pt-BR" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

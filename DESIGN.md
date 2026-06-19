@@ -1,19 +1,30 @@
 # Design — traveltogether
 
-> **Status:** direção visual ativa após segundo handoff de Claude Design (2026-06-11). A direção escolhida para implementação é **Atlas** — papel claro, tinta floresta, laranja queimado. Substitui a direção anterior "Cartão de Embarque" (dark-first, coral), que fica **descontinuada**.
+> **Status:** chassi visual canônico é **Espresso / Assinatura** desde o redesenho de 2026-06-18 (ADR-0020), validado no Claude Design pelo login e depois pelo casco + Painel + wizard. **Supersede a direção Atlas** (papel/floresta, Archivo + IBM Plex Mono), que fica em **sunset** — código congelado em `apps/web/dormant/`, reconstruído tela a tela rodada a rodada. A direção "Cartão de Embarque" (dark-first, coral) segue descontinuada.
 
 ## Direção
 
-**Atlas**: um atlas moderno de viagem em grupo — papel claro com grão sutil, tinta verde-floresta e um laranja queimado como acento. A metáfora não é mais o bilhete perfurado; é a **carta náutica / mapa de rota**: códigos de aeroporto em células split-flap, capas com linhas topográficas, e a rota da `Viagem` desenhada como uma linha de nós (`Origem` → `Parada`s → `Origem`) com setas pontilhadas.
+**Espresso**: papel-carta café de viagem — fundo papel/marfim claro, tinta café profunda e um laranja-queimado de acento, com a metáfora do **carimbo de passaporte** (carimbos, virar-de-página, linhas que respiram). Substitui a carta náutica esverdeada do Atlas. Não é um remapeamento de tokens: muda paleta, tipografia, raio e movimento.
 
-- **Base:** papel claro (`#f4f0e6`), superfícies marfim (`#faf8f1` / `#f1ecdf`), grão de papel fixo e discreto sobre o fundo. Contraste WCAG AA.
-- **Tinta:** verde-floresta profundo (`#1f3a2e`) como cor de texto e de elementos sólidos (marca, avatares, botão primário).
-- **Acento:** laranja queimado (`#c05621`) para kickers, foco de formulário, hover de rota, marcação pessoal `Preferida`/`Comprada` e CTAs.
-- **Tipografia:** **Archivo** (variável, com eixo de largura `wdth` esticado em ~112% nos displays) para títulos e UI; **IBM Plex Mono** para códigos de aeroporto, datas, preços, kickers e qualquer dado de viagem.
-- **Raios:** cantos quase retos (`--radius: 2px`, `--radius-lg: 4px`) — sensação de papel impresso, não de SaaS arredondado.
-- **Motivo visual:** células de código split-flap (cada letra do código de aeroporto de um `Trecho` numa caixa), linhas de contorno topográfico nas capas, banda vertical de acento, kickers mono em maiúsculas com tracking largo.
+- **Base:** papel (`#F2E9D6`) no fundo; superfícies em marfim (`#FBF6EA`). Contraste WCAG AA.
+- **Tinta:** café profundo (`#2C2018`) para texto forte, sidebar e botão escuro; funda (`#1A120C`) na sombra dura e nas bordas.
+- **Acento:** laranja-queimado (`#C2632F`), com laranja-fundo (`#8C481F`) na sombra/realce — para kickers, foco, marca, CTA e marcação pessoal `Preferida`/`Comprada`.
+- **Tipografia (via `next/font`):** **Space Grotesk** nos displays/títulos; **Hanken Grotesk** no corpo/UI; **DM Mono** para qualquer dado de viagem (códigos, datas, preços, kickers).
+- **Raios:** arredondado generoso — cards `22px`, campos/botões `13px`, pílulas `9–11px`. Sensação de papel encorpado, não de SaaS plano.
+- **Sombra:** carimbo de papel — sombra dura **deslocada** (`14px 16px 0`) nos cards; botões com "lift" de offset vertical que afunda no `:active`.
+- **Movimento "Assinatura":** **deriva** (linhas de fundo), **respira** (opacidade pulsando), **sobe** (entradas), **carimbo** (confirmações), **virar-de-passaporte** (passos do wizard). Tudo desligado sob `prefers-reduced-motion`.
 
-## Aplicação por área
+## Superfície construída na rodada 0 (Espresso)
+
+> Rodada 0 do redesenho (ADR-0020): prototype-first. Só estas superfícies estão **vivas e acessíveis**; o resto fica inacessível até ser reconstruído.
+
+- **Casco (`AppShell`):** sidebar escura no desktop (marca + CTA "Nova viagem" + nav + chip de identidade), header + drawer no mobile. Fundo da área de conteúdo com as linhas "deriva/respira".
+- **Navegação (3 itens):** Início · Viagens · Perfil. Na rodada 0 **só Início resolve** (para o Painel); Viagens e Perfil ficam **inertes** ("em breve"). O **logout** pendura no chip de identidade da sidebar.
+- **Painel** e **wizard de nova viagem** entram nas fatias seguintes da rodada 0 — mesma pele, mesmas primitivas.
+
+## Aplicação por área — referência Atlas em sunset
+
+> ⚠️ As seções abaixo descrevem a **direção Atlas (em sunset)**. A **linguagem de domínio e o comportamento** que elas registram seguem valendo; o **vestido visual** (split-flap, topográfico, floresta, Plex Mono) é reconstruído em Espresso conforme cada superfície volta, rodada a rodada. Onde a copy aqui usar termo banido do CONTEXT.md, o CONTEXT.md manda.
 
 - **Home pública:** hero editorial ("A viagem do grupo, finalmente fora do grupo do zap."), um *board* de rota de exemplo animado e três pilares numerados (Itinerário com `Parada`s · `Pesquisa de Passagem`s · Decisão por pessoa). Fecho com nota mono "mvp · acesso por allowlist".
 - **Login:** identificação por e-mail ("Identifique-se" / kicker "embarque"). Copy deixa claro o acesso por allowlist no MVP. Sem senha.
@@ -52,7 +63,7 @@
 2. O tema de viagem aparece como craft de interface (papel, topografia, split-flap), não como kitsch.
 3. Componentes interativos têm foco visível (borda laranja), estados de hover e contraste AA.
 4. `prefers-reduced-motion` é respeitado (animações de entrada e da rota só rodam quando permitido).
-5. Dados de viagem — códigos, datas, preços, moedas — sempre em mono (IBM Plex Mono).
+5. Dados de viagem — códigos, datas, preços, moedas — sempre em mono (DM Mono no chassi Espresso).
 
 ## Rotas multi-trecho e decisão por-pessoa
 

@@ -3,46 +3,44 @@
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
-import { createStop, createTrip } from "@/lib/api/trips";
+import { addSegment, createRoute } from "@/lib/api/routes";
+import { addMember, createStop, createTrip, getLegs } from "@/lib/api/trips";
+import { buildWizardPlan, type WizardState } from "@/lib/trips/wizard";
 
-interface NewStopInput {
-  city: string;
-  airport_code?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  arrival_date?: string | null;
-  departure_date?: string | null;
-}
-
-interface NewTripInput {
-  name: string;
-  description: string;
-  origin: string;
-  airport_code?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-}
-
-export async function createTripAction(data: NewTripInput) {
+/**
+ * Executa o cadastro do wizard (rodada 0 Espresso) seguindo o PLANO puro de
+ * `buildWizardPlan`: cria a Viagem → Paradas em ordem (Trajetos derivam na API)
+ * → para cada Trajeto derivado, 1 Rota "direta" com 1 Trecho do modo escolhido
+ * → convida e-mails como Convites pendentes. Aterrissa no Painel.
+ */
+export async function createTripFromWizardAction(state: WizardState) {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
-  return createTrip(session.apiAccessToken, data);
-}
+  const token = session.apiAccessToken;
 
-export async function createTripWithStopsAction(data: NewTripInput, stops: NewStopInput[]) {
-  const session = await getAuthSession();
-  if (!session?.apiAccessToken) redirect("/login");
+  const plan = buildWizardPlan(state);
 
-  const trip = await createTrip(session.apiAccessToken, data);
+  const trip = await createTrip(token, plan.trip);
   if (!trip) return null;
+  const tripId = trip.trip.id;
 
-  // As paradas são criadas na ordem informada; os Trajetos são derivados
-  // automaticamente pela API a partir dessa ordem (CONTEXT.md, invariante 8).
-  for (const stop of stops) {
-    await createStop(session.apiAccessToken, trip.trip.id, stop);
+  for (const stop of plan.stops) {
+    await createStop(token, tripId, stop);
   }
 
-  return trip;
+  // Trajetos já derivados pela API; casa cada um ao plano pela ordem.
+  const legs = (await getLegs(token, tripId)).sort((a, b) => a.order - b.order);
+  for (let i = 0; i < legs.length; i++) {
+    const legPlan = plan.legs[i];
+    if (!legPlan) continue;
+    const route = await createRoute(token, tripId, legs[i].id, { label: legPlan.route.label });
+    if (!route) continue;
+    await addSegment(token, tripId, legs[i].id, route.id, { mode: legPlan.segment.mode });
+  }
+
+  for (const invite of plan.invites) {
+    await addMember(token, tripId, invite.email);
+  }
+
+  redirect("/overview");
 }

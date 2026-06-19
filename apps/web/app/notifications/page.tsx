@@ -20,7 +20,7 @@ export default async function NotificationsPage() {
   if (!user) redirect("/login");
 
   return (
-    <AppShell user={user} counts={{ notifications: inbox.unread_count }}>
+    <AppShell user={user}>
       <main className="page fadeup">
         <div className="shell">
           <InboxView items={inbox.items} prefs={prefs} />

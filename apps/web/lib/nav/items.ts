@@ -1,84 +1,44 @@
-// Modelo de navegação do AppShell (direção Atlas). Mantido puro para teste:
-// a definição dos itens e a resolução de "ativo" não dependem de React nem
-// do roteador. O componente AppShell consome estes dados.
+// Modelo de navegação do casco Espresso. Mantido puro para teste: a definição
+// dos itens e a resolução de "ativo" não dependem de React nem do roteador. O
+// AppShell consome estes dados e mapeia `icon` para um SVG.
+//
+// Rodada 0 (prototype-first): o protótipo validou três itens, mas só Início tem
+// destino próprio (o Painel). Viagens e Perfil ficam inertes ("em breve") — o
+// protótipo não lhes deu tela e não inventamos uma. Ver DESIGN.md / ADR-0020.
 
-import type { IconName } from "@/components/atlas";
+/** Ícone de cada item; o casco resolve para o SVG Espresso correspondente. */
+export type NavIcon = "home" | "route" | "user";
 
-/** Chave do contador que alimenta o badge de um item (resolvido em runtime). */
-export type NavBadgeKey = "pending" | "tasks" | "notifications";
+/** Chave estável de cada item de navegação. */
+export type NavKey = "inicio" | "viagens" | "perfil";
 
 export interface NavItem {
-  href: string;
-  /** Rótulo na sidebar (desktop). */
+  key: NavKey;
+  /** Rótulo na sidebar. */
   label: string;
-  /** Rótulo curto na tabbar (mobile). */
-  shortLabel: string;
-  icon: IconName;
-  /** Qual contador alimenta o badge, se houver. */
-  badge?: NavBadgeKey;
-  /** Badge com cor de acento (laranja) em vez de neutro. */
-  accent?: boolean;
-  /** Aparece na tabbar mobile (espaço limitado a 5). */
-  inTabbar: boolean;
+  icon: NavIcon;
+  /** Destino roteável, ou `null` para item inerte ("em breve") sem tela própria. */
+  href: string | null;
 }
 
-/** Itens principais da navegação logada, na ordem da sidebar. */
+/** Itens do casco, na ordem do protótipo. */
 export const NAV_ITEMS: NavItem[] = [
-  {
-    href: "/overview",
-    label: "Visão geral",
-    shortLabel: "Geral",
-    icon: "grid",
-    badge: "pending",
-    accent: true,
-    inTabbar: true,
-  },
-  { href: "/trips", label: "Viagens", shortLabel: "Viagens", icon: "compass", inTabbar: true },
-  {
-    href: "/tasks",
-    label: "Tarefas",
-    shortLabel: "Tarefas",
-    icon: "checkSquare",
-    badge: "tasks",
-    inTabbar: true,
-  },
-  {
-    href: "/activity",
-    label: "Atividade",
-    shortLabel: "Atividade",
-    icon: "activity",
-    inTabbar: false,
-  },
-  {
-    href: "/notifications",
-    label: "Notificações",
-    shortLabel: "Avisos",
-    icon: "bell",
-    badge: "notifications",
-    accent: true,
-    inTabbar: true,
-  },
+  { key: "inicio", label: "Início", icon: "home", href: "/overview" },
+  { key: "viagens", label: "Viagens", icon: "route", href: null },
+  { key: "perfil", label: "Perfil", icon: "user", href: null },
 ];
 
-/** Acesso ao Perfil — fora da nav principal, mas presente na tabbar mobile. */
-export const PROFILE_NAV: NavItem = {
-  href: "/profile",
-  label: "Perfil",
-  shortLabel: "Perfil",
-  icon: "user",
-  inTabbar: true,
-};
+/** Item com destino — navega; o casco o renderiza como link, não como rótulo morto. */
+export function isResolved(item: NavItem): item is NavItem & { href: string } {
+  return item.href !== null;
+}
 
 /**
  * Item ativo quando a rota é exatamente o href ou um sub-caminho dele.
- * Ex.: `/trips/123` ativa "Viagens"; `/trips` também.
+ * Itens inertes (sem href) nunca ficam ativos.
  */
-export function isNavActive(href: string, pathname: string): boolean {
-  if (pathname === href) return true;
-  return pathname.startsWith(`${href}/`);
-}
-
-/** Itens da tabbar mobile (máx. 5): principais marcados + Perfil. */
-export function tabbarItems(): NavItem[] {
-  return [...NAV_ITEMS.filter((item) => item.inTabbar), PROFILE_NAV];
+export function isNavActive(item: NavItem, pathname: string): boolean {
+  if (item.href === null) return false;
+  if (pathname === item.href) return true;
+  return pathname.startsWith(`${item.href}/`);
 }
