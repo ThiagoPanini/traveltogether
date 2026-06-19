@@ -3,69 +3,66 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/auth";
 import { AppShell } from "@/components/app-shell";
 import { PanelView } from "@/components/panel-view";
-import { getRecentActivity } from "@/lib/api/activity";
-import { getBudget } from "@/lib/api/budget";
 import { getCurrentUser } from "@/lib/api/current-user";
-import { getNotifications } from "@/lib/api/notifications";
-import { getPendingActions } from "@/lib/api/pending";
-import { getMyTasks } from "@/lib/api/tasks";
-import { getTripMembers, getTrips } from "@/lib/api/trips";
-import { selectNextTrip } from "@/lib/dashboard/next-trip";
-import { buildPanelData } from "@/lib/dashboard/panel-data";
+import { getRoutes } from "@/lib/api/routes";
+import { getLegs, getTripMembers, getTrips } from "@/lib/api/trips";
+import {
+  type ActiveTripBundle,
+  buildActivePanel,
+  type PanelLegMode,
+  selectActiveTrip,
+} from "@/lib/dashboard/active-panel";
 
-// Painel (#111/#135): home do usuário logado. A page server SÓ busca os dados e
-// os passa a `buildPanelData`; toda derivação vive no módulo testado e a pintura
-// no `PanelView` apresentacional. Aqui não há regra de domínio nem JSX de tela.
+// Início (#161, chassi Espresso): Painel da Viagem ativa/próxima. A page server
+// só busca os dados; toda derivação vive em `buildActivePanel` (testado) e a
+// pintura no `PanelView` apresentacional. Sem regra de domínio nem JSX de tela.
 export default async function OverviewPage() {
   const session = await getAuthSession();
   if (!session?.apiAccessToken) redirect("/login");
 
   const accessToken = session.apiAccessToken;
-  const [user, trips, pending, tasks, activity, notifications] = await Promise.all([
-    getCurrentUser(accessToken),
-    getTrips(accessToken),
-    getPendingActions(accessToken),
-    getMyTasks(accessToken),
-    getRecentActivity(accessToken, 6),
-    getNotifications(accessToken),
-  ]);
+  const [user, trips] = await Promise.all([getCurrentUser(accessToken), getTrips(accessToken)]);
   if (!user) redirect("/login");
 
   const now = new Date();
-  const nowIso = now.toISOString().slice(0, 10);
-  const nextTrip = selectNextTrip(trips, nowIso);
+  const todayIso = now.toISOString().slice(0, 10);
+  const activeTrip = selectActiveTrip(trips, todayIso);
 
-  // Orçamento e membros são buscados só da Viagem em destaque (sem N+1 global).
-  const [heroBudget, heroMemberList] = nextTrip
-    ? await Promise.all([
-        getBudget(accessToken, nextTrip.trip.id),
-        getTripMembers(accessToken, nextTrip.trip.id),
-      ])
-    : [null, null];
-  const heroMembers = (heroMemberList?.members ?? []).map((m) => ({
-    seed: m.membership.user_id,
-    label: m.display_name ?? m.email,
-    avatarUrl: m.avatar_url,
-  }));
+  // Carrega Trajetos, membros e modos só da Viagem em foco (sem N+1 global).
+  let active: ActiveTripBundle | null = null;
+  if (activeTrip) {
+    const tripId = activeTrip.trip.id;
+    const [legs, memberList] = await Promise.all([
+      getLegs(accessToken, tripId),
+      getTripMembers(accessToken, tripId),
+    ]);
+    // Modo de cada Trajeto = modo do único Trecho da sua Rota direta (rodada 0).
+    const routesByLeg = await Promise.all(
+      legs.map((leg) => getRoutes(accessToken, tripId, leg.id)),
+    );
+    const legMode: Record<string, PanelLegMode> = {};
+    legs.forEach((leg, i) => {
+      const mode = routesByLeg[i][0]?.segments[0]?.mode;
+      if (mode) legMode[leg.id] = mode;
+    });
 
-  const data = buildPanelData({
-    userName: user.display_name ?? "viajante",
-    now,
-    nextTrip,
-    trips,
-    pending,
-    tasks,
-    activity,
-    notifications,
-    heroBudget,
-    heroMembers,
-  });
+    active = {
+      trip: activeTrip,
+      legs,
+      members: (memberList?.members ?? []).map((m) => ({
+        seed: m.membership.user_id,
+        label: m.display_name ?? m.email,
+        avatarUrl: m.avatar_url,
+      })),
+      legMode,
+    };
+  }
+
+  const panel = buildActivePanel({ trips, active, todayIso });
 
   return (
     <AppShell user={user}>
-      <main>
-        <PanelView data={data} readOnly={false} />
-      </main>
+      <PanelView panel={panel} />
     </AppShell>
   );
 }

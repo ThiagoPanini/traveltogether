@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { EXAMPLE_PANEL_DATA } from "@/lib/demo/example-panel";
+import { EXAMPLE_ACTIVE_PANEL } from "@/lib/demo/example-active-panel";
 import { Icon } from "./atlas";
 import { PanelView } from "./panel-view";
 
@@ -52,7 +52,7 @@ export function DemoOverlay({ onClose }: { onClose: () => void }) {
         </div>
 
         <div style={{ pointerEvents: "none" }}>
-          <PanelView data={EXAMPLE_PANEL_DATA} readOnly />
+          <PanelView panel={EXAMPLE_ACTIVE_PANEL} />
         </div>
       </div>
     </div>

@@ -1,96 +1,44 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { PanelData } from "@/lib/dashboard/panel-data";
+import type { ActivePanel } from "@/lib/dashboard/active-panel";
 import { PanelView } from "./panel-view";
 
-// PanelData estático — o ponto do seam: renderização determinística a partir
-// das props, sem fetch nem sessão. Tudo que a tela mostra vem daqui.
-const data: PanelData = {
-  greeting: "Bom dia, Thiago.",
-  todayLabel: "ter, 16 jun",
-  waitingLabel: "1 coisa esperando você",
-  alerts: [
-    {
-      icon: "compass",
-      title: "Marcar a Escolhida",
-      sub: "GRU → LIS · Portugal",
-      href: "/trips/t1/legs/l1",
-    },
-  ],
-  hero: {
-    tripId: "t1",
-    name: "Portugal",
-    status: "planning",
-    coverSeed: "Portugal",
-    coverCode: "GRU",
-    rangeLabel: "01 jul – 08 jul",
-    nights: 7,
-    countdown: { kind: "days", days: 15 },
-    routeCodes: ["GRU", "LIS", "GRU"],
-    members: [{ seed: "u1", label: "Thiago" }],
-    legsChosen: 1,
-    legsTotal: 2,
-    openTasks: 3,
-    perPersonLabel: "R$ 1.200,00",
-    href: "/trips/t1",
-  },
-  activity: [
-    {
-      id: "a1",
-      kindLabel: "comentou",
-      actorName: "Bia",
-      body: "comentou no Mural",
-      tripName: "Portugal",
-      href: "/trips/t1",
-    },
-  ],
-  tasks: [
-    {
-      id: "k1",
-      title: "Reservar hostel",
-      statusLabel: "a fazer",
-      tripName: "Portugal",
-      href: "/trips/t1/t/tasks",
-    },
-  ],
-  notifications: [{ id: "n1", icon: "users", text: "Você foi convidado", href: "/trips/t1" }],
-  unreadCount: 1,
-  budget: {
-    tripName: "Portugal",
-    rows: [
-      { currency: "BRL", perPersonValue: 1200, perPerson: "R$ 1.200,00", perGroup: "R$ 2.400,00" },
-    ],
-    href: "/trips/t1/t/budget",
-  },
-  hasTrips: true,
-  pendingCount: 1,
-  taskCount: 1,
-};
+describe("PanelView (Espresso)", () => {
+  it("estado vazio: CTA honesto, sem promessa de vigília automática de preço", () => {
+    const panel: ActivePanel = { hero: null, others: [], isEmpty: true };
+    const html = renderToStaticMarkup(<PanelView panel={panel} />);
 
-describe("PanelView (read-only)", () => {
-  const html = renderToStaticMarkup(<PanelView data={data} readOnly />);
-
-  it("pinta os dados derivados (saudação, hero, alerta, aviso, orçamento)", () => {
-    expect(html).toContain("Bom dia, Thiago.");
-    expect(html).toContain("Portugal");
-    expect(html).toContain("Marcar a Escolhida");
-    expect(html).toContain("Você foi convidado");
-    expect(html).toContain("R$ 1.200,00");
+    expect(html).toContain("Criar a primeira viagem");
+    expect(html).toContain("/trips/new");
+    // Decisão "Frescor da Pesquisa": nada de rastreamento diário automático.
+    expect(html).not.toContain("todo dia");
+    expect(html).not.toMatch(/vigi/i);
+    expect(html).not.toMatch(/sem você pedir/i);
   });
 
-  it("não navega no modo read-only (nenhum href emitido)", () => {
-    expect(html).not.toContain("href=");
-  });
+  it("radar pinta 'cotação em breve' por Trajeto e nenhum preço", () => {
+    const panel: ActivePanel = {
+      isEmpty: false,
+      others: [],
+      hero: {
+        tripId: "eua",
+        name: "EUA Trip",
+        periodLabel: "01 jul – 15 jul",
+        members: [{ seed: "u1", label: "Marina", avatarUrl: null }],
+        ribbon: [
+          { kind: "city", key: "c1", label: "São Paulo" },
+          { kind: "hop", key: "h1", mode: "air" },
+          { kind: "city", key: "c2", label: "Nova York" },
+        ],
+        radar: [{ key: "l1", fromTo: "São Paulo → Nova York", mode: "air", status: "pending" }],
+      },
+    };
+    const html = renderToStaticMarkup(<PanelView panel={panel} />);
 
-  it("é determinístico: mesma prop → mesma marcação", () => {
-    expect(renderToStaticMarkup(<PanelView data={data} readOnly />)).toBe(html);
-  });
-
-  it("sem próxima Viagem, não renderiza o hero", () => {
-    const noHero = renderToStaticMarkup(
-      <PanelView data={{ ...data, hero: null, budget: null }} readOnly />,
-    );
-    expect(noHero).not.toContain("embarque em");
+    expect(html).toContain("EUA Trip");
+    expect(html).toContain("São Paulo → Nova York");
+    expect(html).toContain("cotação em breve");
+    expect(html).not.toMatch(/R\$|US\$|menor preço/i);
   });
 });
