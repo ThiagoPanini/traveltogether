@@ -1,0 +1,126 @@
+/* Tema B · Noturno — backbone de estilo (fonte-da-verdade: docs/design/tokens.json). */
+
+:root {
+  /* Fundos */
+  --bg-root: #0f171e;
+  --bg-canvas: #14202b;
+  --bg-inset: #101920;
+  --surface: #1a2530;
+  --surface-bar: #1e2a35;
+  --fill-subtle: #243240;
+  --fill-accent: #33231e;
+
+  /* Linhas e bordas */
+  --line: #2b3945;
+  --line-muted: #33424f;
+  --line-dashed: #3a4a57;
+  --line-strong: #4a5a66;
+  --line-faint: #5a6570;
+
+  /* Texto */
+  --text-bright: #f4ecda;
+  --text-body: #e9e1cf;
+  --text-muted: #9aa7b1;
+  --text-mono: #8a96a0;
+  --text-faint: #7d8a93;
+  --text-faintest: #6b7680;
+
+  /* Acentos e semântica */
+  --accent: #df6a4d;
+  --accent-alert: #e8856e;
+  --on-accent: #14202b;
+  --success: #4fa58e;
+  --warning: #e0a948;
+  --success-border: rgba(79, 165, 142, 0.45);
+  --warning-border: rgba(224, 169, 72, 0.45);
+  --accent-border: rgba(223, 106, 77, 0.45);
+
+  /* Raios */
+  --radius-circle: 50%;
+  --radius-pill: 99px;
+  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-card: 9px;
+  --radius-sm: 7px;
+  --radius-btn: 7px;
+  --radius-bar: 2px;
+
+  /* Bordas */
+  --border-hairline: 1px;
+  --border-outline: 1.5px;
+  --border-accent-edge: 3px;
+
+  /* Layout */
+  --page-gutter: 40px;
+  --max-width-wide: 1040px;
+  --max-width-panel: 1000px;
+  --hero-max: 720px;
+  --login-card: 400px;
+
+  /* Sombra */
+  --shadow-switcher: 0 8px 26px rgba(0, 0, 0, 0.4);
+}
+
+/* Reset enxuto */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg-root);
+  color: var(--text-body);
+  font-family: var(--font-body), "Public Sans", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display: títulos em caixa-alta */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+/* Mono: rótulos, metadados, códigos IATA */
+code,
+kbd,
+samp,
+pre,
+.mono {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-mono);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg-root);
+}
