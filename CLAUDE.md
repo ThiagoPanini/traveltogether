@@ -6,15 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## O que é
 
-Hub fechado para organização de viagens em grupo. Beta fechado para um grupo de amigos, com horizonte de virar SaaS aberto. Monorepo Next.js + FastAPI + Postgres que **espelha deliberadamente a stack do epistemix** (ADR-0001).
+App de organização de viagens em grupo; a alma é compartilhar e decidir **Pesquisas de translado** (passagens). Monorepo Next.js + FastAPI + Postgres.
+
+> **Reset clean-room (2026-06-20):** o app antigo foi deletado de propósito e está sendo reconstruído por fases a partir da fundação documental abaixo. As seções de arquitetura mais adiante descrevem a **intenção**; quando divergirem do código atual ou das ADRs, **a fonte-da-verdade são `CONTEXT.md` + `docs/adr/`**.
 
 ## Antes de qualquer trabalho substantivo
 
 Leia, nesta ordem, o conhecimento durável que **não** está derivável do código:
 
-1. **`docs/CONTEXT.md`** — glossário canônico de domínio + **invariantes** (regras que sempre valem; código que as viola é bug). A linguagem do produto vive aqui.
-2. **`docs/adr/`** — decisões arquiteturais (por quê, não só o quê). As mais carregadas de contexto: 0003 (modelo de acesso), 0004 (itinerário), 0006 (autonomia de ops).
-3. **`DESIGN.md`** — direção visual provisória (dark-first, acento cyan, mono nos dados de viagem).
+1. **`CONTEXT.md`** (raiz) — glossário canônico de domínio + **invariantes** (regras que sempre valem; código que as viola é bug). A linguagem do produto vive aqui.
+2. **`docs/adr/`** — decisões arquiteturais (por quê, não só o quê) + `docs/roadmap.md` para o faseamento.
+3. **`docs/design/`** — sistema visual `Tema B · Noturno` (`DESIGN.md` + `tokens.json`), fonte-da-verdade visual (ADR-0008).
 
 ### Convenção de nomes (não negociável)
 
@@ -127,4 +129,4 @@ Os cinco papéis canônicos de triagem mapeiam para a convenção de eixo `statu
 
 ### Domain docs
 
-Repo **single-context**: glossário em `docs/CONTEXT.md` + decisões em `docs/adr/`. Ver `docs/agents/domain.md`.
+Repo **single-context**: glossário em `CONTEXT.md` (raiz) + decisões em `docs/adr/`. Ver `docs/agents/domain.md`.
