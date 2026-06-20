@@ -15,13 +15,31 @@ def get_database_url() -> str | None:
     return os.environ.get("DATABASE_URL")
 
 
+def normalize_database_url(url: str) -> str:
+    """Força o driver psycopg (v3) — o instalado — mesmo se a URL vier sem sufixo.
+
+    Sem isto, `postgresql://...` faz o SQLAlchemy buscar psycopg2 (ausente) e
+    estourar na criação da engine. Aceita também o legado `postgres://`.
+    """
+    if url.startswith("postgresql+"):
+        return url
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url.removeprefix("postgresql://")
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url.removeprefix("postgres://")
+    return url
+
+
 @lru_cache
 def get_engine() -> Engine | None:
-    """Engine singleton. Retorna None quando DATABASE_URL não está definida."""
+    """Engine singleton. None quando DATABASE_URL ausente ou não construível."""
     url = get_database_url()
     if not url:
         return None
-    return create_engine(url, pool_pre_ping=True)
+    try:
+        return create_engine(normalize_database_url(url), pool_pre_ping=True)
+    except Exception:
+        return None
 
 
 def get_engine_dep() -> Engine | None:
