@@ -1,12 +1,33 @@
-# Compose mínimo para subir o esqueleto localmente (web + api).
-# Postgres entra na fatia #173.
+# Compose local: Postgres 17 (espelha o componente traveltogether-db em produção)
+# + api + web.
 services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: traveltogether
+      POSTGRES_PASSWORD: traveltogether
+      POSTGRES_DB: traveltogether
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traveltogether -d traveltogether"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://traveltogether:traveltogether@db:5432/traveltogether
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
 
   web:
     build:
@@ -18,3 +39,6 @@ services:
       - "3000:3000"
     depends_on:
       - api
+
+volumes:
+  pgdata:

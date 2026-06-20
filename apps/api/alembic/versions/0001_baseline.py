@@ -1,0 +1,27 @@
+"""baseline (sem tabelas de dominio)
+
+Cria apenas a tabela de controle do Alembic (alembic_version) num banco vazio.
+As tabelas de dominio chegam na Fase 2.
+
+Revision ID: 0001_baseline
+Revises:
+Create Date: 2026-06-20
+
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+revision: str = "0001_baseline"
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+def upgrade() -> None:
+    pass
+
+
+def downgrade() -> None:
+    pass
