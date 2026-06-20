@@ -1,11 +1,18 @@
+# Scratch dirs — nunca commitar
 **prompts
 **tmp
 **raw
 *.claude/design
-
-# Local infra/secrets scratch — NUNCA commitar (contém IP de origem da VPS, notas de bootstrap).
-# Caderno do panini-vps vive aqui para edição fácil; o repo é público, então jamais versionar.
 .local/
+
+# Segredos locais — NUNCA commitar (tokens de produção)
+.env
+.env.local
+.env.*.local
+!.env.example
+.mcp.json
+.codex/config.toml
+.claude/settings.local.json
 
 # Python
 __pycache__/
@@ -23,7 +30,6 @@ env/
 .pyright/
 .coverage
 htmlcov/
-.tox/
 
 # uv
 .uv-cache/
@@ -41,15 +47,7 @@ build/
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
-
-# Environment
-.env
-.env.local
-.env.*.local
-!.env.example
 
 # Crypto / SSH material — never commit private keys or certs
 *.key
@@ -58,32 +56,6 @@ id_rsa*
 id_ed25519*
 id_ecdsa*
 *.p12
-*.pfx
-
-# IDE
-.vscode/*
-!.vscode/mcp.json.example
-.idea/
-*.swp
-*.swo
-*~
 
 # OS
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# Claude Code — local overrides (personal, not for the repo)
-.claude/settings.local.json
-.claude/worktrees/
-
-# MCP — configs reais são locais; templates sem segredo ficam versionados.
-.mcp.json
-.codex/config.toml
-.vscode/mcp.json
-
-# Coverage and test artifacts
-coverage/
-.nyc_output/
-playwright-report/
-test-results/

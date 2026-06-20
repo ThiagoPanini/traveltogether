@@ -1,39 +1,14 @@
 import type { Metadata } from "next";
-import { DM_Mono, Hanken_Grotesk, Space_Grotesk } from "next/font/google";
-import "./globals.css";
-
-// Chassi Espresso (ADR-0020): três famílias via next/font, expostas como CSS
-// vars consumidas em globals.css. Space Grotesk = display; Hanken = corpo;
-// DM Mono = rótulo/dado de viagem.
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const body = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const mono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
-  display: "swap",
-});
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "traveltogether",
-  description: "Hub de organização de viagens em grupo.",
+  title: "travel·together",
+  description: "Caderno de bordo compartilhado para planejar viagens em grupo.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="pt-BR">
       <body>{children}</body>
     </html>
   );

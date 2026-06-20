@@ -1,23 +1,21 @@
 {
   "name": "traveltogether",
+  "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@11.1.0",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
-    "prepare": "lefthook install",
-    "dev:api": "cd apps/api && uv run uvicorn --env-file .env.local traveltogether.main:app --reload",
-    "dev:web": "pnpm --filter @traveltogether/web dev",
-    "build:web": "pnpm --filter @traveltogether/web build",
-    "typecheck:web": "pnpm --filter @traveltogether/web typecheck",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome check --write .",
+    "typecheck": "pnpm --filter @traveltogether/web typecheck",
+    "test": "pnpm --filter @traveltogether/web test"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.1.0",
-    "@commitlint/cli": "^19.6.0",
-    "@commitlint/config-conventional": "^19.6.0",
-    "lefthook": "^1.10.0"
+    "@biomejs/biome": "2.1.2",
+    "@commitlint/cli": "19.6.1",
+    "@commitlint/config-conventional": "19.6.0",
+    "lefthook": "1.10.10"
   }
 }
