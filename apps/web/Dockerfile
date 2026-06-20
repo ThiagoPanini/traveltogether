@@ -10,7 +10,6 @@ FROM base AS deps
 ENV PNPM_CONFIG_STRICT_DEP_BUILDS=false
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/package.json
-COPY packages/types/package.json ./packages/types/package.json
 RUN pnpm install --frozen-lockfile --filter @traveltogether/web... --ignore-scripts
 
 FROM base AS build
@@ -22,6 +21,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 FROM node:24-alpine AS runner
+LABEL org.opencontainers.image.source="https://github.com/ThiagoPanini/traveltogether"
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \

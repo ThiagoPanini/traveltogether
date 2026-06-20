@@ -1,36 +1,12 @@
+# Hooks locais. CI continua sendo o gate real (pr-checks.yml).
 pre-commit:
   parallel: true
   commands:
-    secrets:
-      run: gitleaks git --staged --redact --no-banner
+    biome:
+      glob: "*.{js,ts,jsx,tsx,json}"
+      run: pnpm exec biome check --no-errors-on-unmatched {staged_files}
 
 commit-msg:
   commands:
     commitlint:
       run: pnpm exec commitlint --edit {1}
-
-pre-push:
-  parallel: true
-  commands:
-    api-format:
-      root: "apps/api/"
-      glob: "*.py"
-      run: uv run ruff format --check .
-    api-lint:
-      root: "apps/api/"
-      glob: "*.py"
-      run: uv run ruff check .
-    api-types:
-      root: "apps/api/"
-      glob: "*.py"
-      run: uv run pyright
-    api-tests:
-      root: "apps/api/"
-      glob: "*.py"
-      run: uv run pytest -m "not integration" -q
-    web-check:
-      glob: "apps/web/**/*.{ts,tsx,js,jsx,mjs,json,css}"
-      run: pnpm exec biome check apps/web
-    web-types:
-      glob: "apps/web/**/*.{ts,tsx}"
-      run: pnpm --filter @traveltogether/web typecheck

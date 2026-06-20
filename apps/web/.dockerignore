@@ -1,8 +1,6 @@
-node_modules/
-.next/
-out/
-dist/
-.env
-.env.local
-.env.*.local
-*.tsbuildinfo
+node_modules
+.next
+out
+dist
+.turbo
+*.log

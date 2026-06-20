@@ -1,23 +1,14 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "traveltogether",
-  description: "Hub de organização de viagens em grupo.",
+  title: "travel·together",
+  description: "Caderno de bordo compartilhado para planejar viagens em grupo.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" data-dir="atlas">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Mesmas fontes/eixos do protótipo Atlas: Archivo (wdth) + IBM Plex Mono */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="pt-BR">
       <body>{children}</body>
     </html>
   );
