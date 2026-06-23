@@ -8,12 +8,21 @@ App de organização de viagens em grupo; a alma é compartilhar e decidir **Pes
 
 1. **`CONTEXT.md`** — glossário de domínio + invariantes (regras que sempre valem; código que as viola é bug).
 2. **`docs/adr/`** ([índice](docs/adr/README.md)) — decisões e seus porquês · **`docs/roadmap.md`** — faseamento.
-3. **`docs/design/`** — sistema visual `Tema B · Noturno`.
+3. **`docs/design/README.md`** — contrato vivo do sistema visual `Tema B · Noturno`:
+   origem creditada ≠ fonte-da-verdade, dois estratos (`as-built` e `⏳ projetado`)
+   e ordem de leitura para agentes.
 
 ## Convenções (não negociáveis)
 
 - Termo de domínio em pt-BR; **identificador de código em inglês** (mapa no glossário do `CONTEXT.md`). Respeite os termos proibidos lá listados.
 - **Conventional Commits**, subject minúsculo (validado por commitlint).
+
+## Agent skills
+
+- **Design system:** para prototipar ou estender UI, leia
+  `docs/design/README.md` primeiro. Use o estrato `as-built` para superfícies já
+  implementadas e o estrato `⏳ projetado` como spec futura; não abra o bundle
+  `.claude/design` como fonte rotineira.
 
 ## Arquitetura
 

@@ -11,6 +11,6 @@ Decisões arquiteturais da reconstrução clean-room (2026-06-20): difíceis de 
 | [0005](0005-sem-conversao-de-unidades.md) | Sem conversão entre dinheiro e pontos | Aceito |
 | [0006](0006-origem-no-perfil.md) | Origem no Perfil do Usuário (multi-origem) | Aceito |
 | [0007](0007-papeis-camadas-e-convite.md) | Papéis, camadas de escrita e convite com aceite | Aceito (canal do convite em aberto) |
-| [0008](0008-sistema-visual-tema-b-noturno.md) | Sistema visual: Tema B · Noturno como fonte-da-verdade | Aceito |
+| [0008](0008-sistema-visual-tema-b-noturno.md) | Sistema visual: Tema B · Noturno e contrato vivo | Aceito |
 | [0009](0009-faseamento-e-fatiamento.md) | Faseamento outside-in e fatiamento tracer-bullet | Aceito |
 | [0010](0010-rebrand-travelmanager-e-url-panlabs.md) | Rebrand traveltogether → travelmanager e URL em panlabs.tech | Aceito |

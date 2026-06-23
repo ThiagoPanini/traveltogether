@@ -19,7 +19,7 @@ A reconstrução é do zero (reset clean-room). Era preciso decidir **como** mat
 ## Opções consideradas
 
 - **One-shot / big-bang** — rejeitado: sem pontos de validação, rota difícil de corrigir.
-- **PRD único antes de fatiar** (`/to-prd`) — rejeitado: ~redundante com `CONTEXT.md` + ADRs + `DESIGN.md`; atrasa software rodando.
+- **PRD único antes de fatiar** (`/to-prd`) — rejeitado: ~redundante com `CONTEXT.md` + ADRs + `docs/design/`; atrasa software rodando.
 - **Fatiar as fases todas de uma vez** — rejeitado: o planejamento também é incremental; fatiar *just-in-time* dobra o aprendizado da fase anterior pra dentro da próxima.
 
 ## Consequências

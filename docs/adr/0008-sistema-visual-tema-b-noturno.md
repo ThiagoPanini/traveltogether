@@ -1,4 +1,4 @@
-# 0008 — Sistema visual: Tema B · Noturno como fonte-da-verdade
+# 0008 — Sistema visual: Tema B · Noturno e contrato vivo
 
 **Status:** Aceito
 
@@ -6,9 +6,18 @@
 
 A navegabilidade e a beleza são precondição de adoção ([0001](0001-criterio-e-fronteira-da-v1.md)). Foi produzido no claude.ai/design um pack completo de design (tokens, paleta, tipografia, protótipo navegável e spec de reconstrução), avaliado contra o domínio nesta sessão.
 
+Em 2026-06-23, esse pack deixou de ser tratado como "fonte-da-verdade visual"
+direta e virou **origem creditada**. O contrato vivo passa a morar em
+[`../design/`](../design/), separado em dois estratos: implementado
+(`as-built`, código = verdade) e projetado, não construído (`⏳`, bundle +
+reconciliação de domínio).
+
 ## Decisão
 
-A pele do produto é o pack **"Tema B · Modo Escuro (Noturno)"**, importado e persistido em [`../design/`](../design/) ([`DESIGN.md`](../design/DESIGN.md) + [`tokens.json`](../design/tokens.json)).
+A pele do produto é o **Tema B · Modo Escuro (Noturno)**, originado no pack
+Claude Design e oficializado como contrato vivo em [`../design/`](../design/).
+Os tokens nomeados vivem em [`../design/tokens.json`](../design/tokens.json);
+componentes e telas vivem em docs agent-first.
 
 - **Tipografia:** Saira Condensed (display, caixa-alta) + Public Sans (corpo) + Spline Sans Mono (rótulos/IATA).
 - **Paleta:** noturna quente — petróleo/teal (`#0f171e`/`#14202b`) + accent terracota (`#df6a4d`) + cremes.
@@ -31,6 +40,9 @@ Sem tela ainda: **shell global** (Minhas viagens · Perfil · Nova viagem), **on
 
 ## Consequências
 
-- Novos componentes seguem [`tokens.json`](../design/tokens.json).
+- Novos componentes seguem [`../design/README.md`](../design/README.md) e os
+  contratos em [`../design/components/`](../design/components/).
+- Tokens nomeados seguem [`tokens.json`](../design/tokens.json).
 - A copy do protótipo passa pelo filtro do `CONTEXT.md` antes de virar código.
-- O protótipo navegável e o showcase vivem no claude.ai/design; aqui ficam spec + tokens.
+- O protótipo navegável e o showcase ficam como origem congelada/gitignored;
+  o contrato operacional fica em `docs/design/`.
