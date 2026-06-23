@@ -38,9 +38,9 @@ jobs:
       - name: lint (biome)
         run: pnpm exec biome check apps/web
       - name: typecheck (tsc)
-        run: pnpm --filter @traveltogether/web typecheck
+        run: pnpm --filter @travelmanager/web typecheck
       - name: test (vitest)
-        run: pnpm --filter @traveltogether/web test
+        run: pnpm --filter @travelmanager/web test
 
   api:
     name: api

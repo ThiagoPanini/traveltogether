@@ -1,7 +1,7 @@
 // Copy da landing (pt-BR, tom coletivo, metáfora de aviação).
 // Constantes do projeto: nada de "whatsapp" nem "caça".
 
-export const wordmark = "travel·together";
+export const wordmark = "travel·manager";
 
 export const tagline = "Caderno de bordo compartilhado";
 

@@ -1,4 +1,4 @@
-# travel·together
+# travel·manager
 
 Caderno de bordo compartilhado para planejar viagens em grupo: o grupo cadastra a
 viagem, desenha as paradas cidade a cidade e pesquisa o translado entre cada parada,
@@ -19,12 +19,12 @@ Pré-requisitos: Node 24 (`.node-version`), [pnpm](https://pnpm.io) 11, [uv](htt
 ```bash
 # Web
 pnpm install
-pnpm --filter @traveltogether/web dev      # http://localhost:3000
+pnpm --filter @travelmanager/web dev      # http://localhost:3000
 
 # API
 cd apps/api
 uv sync
-uv run uvicorn traveltogether.main:app --reload   # http://localhost:8000/health
+uv run uvicorn travelmanager.main:app --reload   # http://localhost:8000/health
 ```
 
 Ou tudo via Docker:
@@ -40,7 +40,7 @@ pyright + pytest; gitleaks). Rode localmente antes de subir:
 
 ```bash
 node_modules/.bin/biome check apps/web
-pnpm --filter @traveltogether/web typecheck
-pnpm --filter @traveltogether/web test
+pnpm --filter @travelmanager/web typecheck
+pnpm --filter @travelmanager/web test
 cd apps/api && uv run ruff check . && uv run pyright && uv run pytest -m "not integration"
 ```

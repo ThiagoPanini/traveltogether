@@ -1,4 +1,4 @@
-# TravelTogether — Tema B · Modo Escuro (Noturno)
+# TravelManager — Tema B · Modo Escuro (Noturno)
 
 Spec de design completa do protótipo **`Tema-B-Moderno-Escuro.dc.html`**, escrita para que um agente de IA reconstrua ou estenda a interface com fidelidade. Tokens legíveis por máquina em [`tokens.json`](tokens.json). O protótipo navegável e o showcase vivem no claude.ai/design (ver **Procedência**, ao final).
 
@@ -6,7 +6,7 @@ Spec de design completa do protótipo **`Tema-B-Moderno-Escuro.dc.html`**, escri
 
 ## 1. Produto
 
-TravelTogether é um **caderno de bordo compartilhado** para planejar viagens em grupo. O grupo (1) cadastra a viagem, (2) desenha as paradas cidade a cidade e (3) pesquisa o translado entre cada parada, decidindo junto.
+TravelManager é um **caderno de bordo compartilhado** para planejar viagens em grupo. O grupo (1) cadastra a viagem, (2) desenha as paradas cidade a cidade e (3) pesquisa o translado entre cada parada, decidindo junto.
 
 **Princípio de produto inquebrável:**
 > **Milhas e dinheiro vivem só na pesquisa de translado (tela Rotas) — nunca no Painel.** O Painel mostra decisões e progresso; valores aparecem apenas quando o grupo pesquisa o translado.

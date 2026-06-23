@@ -12,9 +12,9 @@ describe("Landing", () => {
     expect(h1s[0]).toHaveTextContent(/pesquisem o translado/i);
   });
 
-  it("mostra o wordmark travel·together", () => {
+  it("mostra o wordmark travel·manager", () => {
     render(<HomePage />);
-    expect(screen.getAllByText("travel·together").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("travel·manager").length).toBeGreaterThanOrEqual(1);
   });
 
   it("apresenta os três step cards", () => {

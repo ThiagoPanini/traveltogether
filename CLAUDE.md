@@ -24,13 +24,13 @@ App de organização de viagens em grupo; a alma é compartilhar e decidir **Pes
 
 ```bash
 # API (de dentro de apps/api/)
-uv run uvicorn traveltogether.main:app --reload    # :8000
+uv run uvicorn travelmanager.main:app --reload    # :8000
 uv run ruff check . && uv run pyright && uv run pytest -m "not integration"
 
 # Web (da raiz)
-pnpm --filter @traveltogether/web dev              # :3000
-pnpm --filter @traveltogether/web typecheck
-pnpm --filter @traveltogether/web test
+pnpm --filter @travelmanager/web dev              # :3000
+pnpm --filter @travelmanager/web typecheck
+pnpm --filter @travelmanager/web test
 node_modules/.bin/biome check apps/web             # NÃO use `pnpm exec biome` (falso-verde)
 ```
 

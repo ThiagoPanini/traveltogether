@@ -1,5 +1,5 @@
 {
-  "name": "traveltogether",
+  "name": "travelmanager",
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@11.1.0",
@@ -9,8 +9,8 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "pnpm --filter @traveltogether/web typecheck",
-    "test": "pnpm --filter @traveltogether/web test"
+    "typecheck": "pnpm --filter @travelmanager/web typecheck",
+    "test": "pnpm --filter @travelmanager/web test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.2",

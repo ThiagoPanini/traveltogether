@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, inspect
 
-from traveltogether.db import database_ready
+from travelmanager.db import database_ready
 
 pytestmark = pytest.mark.integration
 

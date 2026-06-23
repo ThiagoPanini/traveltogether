@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from traveltogether.main import app
+from travelmanager.main import app
 
 
 def test_health_returns_ok() -> None:

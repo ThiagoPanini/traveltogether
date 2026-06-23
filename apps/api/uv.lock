@@ -586,7 +586,7 @@ wheels = [
 ]
 
 [[package]]
-name = "traveltogether"
+name = "travelmanager"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [

@@ -1,18 +1,18 @@
-# Compose local: Postgres 17 (espelha o componente traveltogether-db em produção)
+# Compose local: Postgres 17 (espelha o componente travelmanager-db em produção)
 # + api + web.
 services:
   db:
     image: postgres:17
     environment:
-      POSTGRES_USER: traveltogether
-      POSTGRES_PASSWORD: traveltogether
-      POSTGRES_DB: traveltogether
+      POSTGRES_USER: travelmanager
+      POSTGRES_PASSWORD: travelmanager
+      POSTGRES_DB: travelmanager
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U traveltogether -d traveltogether"]
+      test: ["CMD-SHELL", "pg_isready -U travelmanager -d travelmanager"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -22,7 +22,7 @@ services:
       context: ./apps/api
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://traveltogether:traveltogether@db:5432/traveltogether
+      DATABASE_URL: postgresql+psycopg://travelmanager:travelmanager@db:5432/travelmanager
     ports:
       - "8000:8000"
     depends_on:
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      TRAVELTOGETHER_API_URL: http://api:8000
+      TRAVELMANAGER_API_URL: http://api:8000
     ports:
       - "3000:3000"
     depends_on:

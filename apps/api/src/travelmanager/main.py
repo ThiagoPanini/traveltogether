@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Response
 from sqlalchemy import Engine
 
-from traveltogether.db import database_ready, get_engine_dep
+from travelmanager.db import database_ready, get_engine_dep
 
-app = FastAPI(title="travel·together API")
+app = FastAPI(title="travel·manager API")
 
 
 @app.get("/health")

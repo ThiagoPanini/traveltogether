@@ -1,6 +1,6 @@
 # Roadmap da reconstrução
 
-Mapa vivo das fases da reconstrução do traveltogether — **fonte-da-verdade do faseamento**. Atualizar o status a cada fase. O *porquê* da estratégia está no [ADR-0009](adr/0009-faseamento-e-fatiamento.md); aqui fica só *o quê* e *onde estamos*.
+Mapa vivo das fases da reconstrução do travelmanager — **fonte-da-verdade do faseamento**. Atualizar o status a cada fase. O *porquê* da estratégia está no [ADR-0009](adr/0009-faseamento-e-fatiamento.md); aqui fica só *o quê* e *onde estamos*.
 
 **Cadência:** uma fase por vez; o humano libera o fatiamento da **próxima** só depois da atual **entregar**. **Dentro** da fase, execução autônoma via `/tdd`. Cada fatia = uma issue com label `phase:N` + milestone da fase.
 

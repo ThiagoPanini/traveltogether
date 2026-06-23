@@ -22,7 +22,7 @@ const mono = Spline_Sans_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "travel·together",
+  title: "travel·manager",
   description: "Caderno de bordo compartilhado para planejar viagens em grupo.",
 };
 

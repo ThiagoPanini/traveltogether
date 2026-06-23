@@ -4,8 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine
 
-from traveltogether.db import database_ready, get_engine_dep
-from traveltogether.main import app
+from travelmanager.db import database_ready, get_engine_dep
+from travelmanager.main import app
 
 
 @pytest.fixture

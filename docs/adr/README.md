@@ -1,4 +1,4 @@
-# Architecture Decision Records — traveltogether
+# Architecture Decision Records — travelmanager
 
 Decisões arquiteturais da reconstrução clean-room (2026-06-20): difíceis de reverter, surpreendentes sem contexto, fruto de trade-off real. Fonte-da-verdade junto com [`CONTEXT.md`](../../CONTEXT.md) (domínio) e [`docs/design/`](../design/) (visual). Faseamento em [`docs/roadmap.md`](../roadmap.md).
 
@@ -13,3 +13,4 @@ Decisões arquiteturais da reconstrução clean-room (2026-06-20): difíceis de 
 | [0007](0007-papeis-camadas-e-convite.md) | Papéis, camadas de escrita e convite com aceite | Aceito (canal do convite em aberto) |
 | [0008](0008-sistema-visual-tema-b-noturno.md) | Sistema visual: Tema B · Noturno como fonte-da-verdade | Aceito |
 | [0009](0009-faseamento-e-fatiamento.md) | Faseamento outside-in e fatiamento tracer-bullet | Aceito |
+| [0010](0010-rebrand-travelmanager-e-url-panlabs.md) | Rebrand traveltogether → travelmanager e URL em panlabs.tech | Aceito |

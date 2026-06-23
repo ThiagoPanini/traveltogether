@@ -1,7 +1,7 @@
 [project]
-name = "traveltogether"
+name = "travelmanager"
 version = "0.0.0"
-description = "API do travel·together"
+description = "API do travel·manager"
 requires-python = ">=3.13"
 dependencies = [
   "alembic>=1.14",
@@ -24,7 +24,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/traveltogether"]
+packages = ["src/travelmanager"]
 
 [tool.ruff]
 line-length = 100

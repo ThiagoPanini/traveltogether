@@ -1,4 +1,4 @@
-# Contexto de Domínio — traveltogether
+# Contexto de Domínio — travelmanager
 
 Glossário e invariantes que definem a **linguagem comum** do projeto. É lido por humanos e por agentes de IA antes de qualquer trabalho substantivo. Mudar algo aqui é mudar o jeito de pensar o produto.
 
