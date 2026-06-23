@@ -1,0 +1,27 @@
+/* Botão "Entrar" do topo. Estilo completo no módulo (não inline) para o :hover
+   poder vencer — um style inline ganharia da regra de hover. Borda neutra em
+   repouso que vira preenchimento de acento ao passar o mouse / focar. */
+
+.entrar {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-bright);
+  background: transparent;
+  border: var(--border-outline) solid var(--line-strong);
+  border-radius: var(--radius-btn);
+  padding: 9px 22px;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.entrar:hover,
+.entrar:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}

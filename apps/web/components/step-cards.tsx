@@ -6,7 +6,7 @@ export function StepCards() {
       style={{
         listStyle: "none",
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
         border: "var(--border-hairline) solid var(--line)",
         borderRadius: "var(--radius-lg)",
         overflow: "hidden",
@@ -17,9 +17,9 @@ export function StepCards() {
         <li
           key={step.number}
           style={{
-            padding: "28px 24px",
+            padding: "30px 26px",
             display: "grid",
-            gap: 12,
+            gap: 13,
             borderLeft: index === 0 ? "none" : "var(--border-hairline) solid var(--line)",
           }}
         >
@@ -27,7 +27,7 @@ export function StepCards() {
             <span
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 44,
+                fontSize: 46,
                 fontWeight: 700,
                 lineHeight: 0.9,
                 color: "var(--accent)",

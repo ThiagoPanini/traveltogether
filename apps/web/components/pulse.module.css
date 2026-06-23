@@ -1,0 +1,26 @@
+/* Pulso contínuo das estrelas "vivas" (data-anim do protótipo). Co-localizado
+   com seu reduced-motion (contrato: docs/design/accessibility.md). O elemento é
+   sempre decorativo (aria-hidden); sob reduced-motion fica estático, sem perder
+   forma nem cor. */
+
+.pulse {
+  animation: pulse 4.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

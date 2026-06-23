@@ -1,11 +1,13 @@
 import { wordmark } from "@/lib/landing/content";
+import pulseStyles from "./pulse.module.css";
 
-export function Wordmark({ size = 18 }: { size?: number }) {
+export function Wordmark({ size = 18, pulse = false }: { size?: number; pulse?: boolean }) {
   const ring = Math.round(size * 1.5);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
       <span
         aria-hidden="true"
+        className={pulse ? pulseStyles.pulse : undefined}
         style={{
           width: ring,
           height: ring,

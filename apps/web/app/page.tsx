@@ -1,103 +1,169 @@
-import { BoardingPassRibbon } from "@/components/boarding-pass-ribbon";
+import pulseStyles from "@/components/pulse.module.css";
+import { Reveal } from "@/components/reveal";
+import { ScrollLayers } from "@/components/scroll-layers";
 import { StepCards } from "@/components/step-cards";
 import { Wordmark } from "@/components/wordmark";
-import { cta, heroHeadline, heroSubtitle, tagline } from "@/lib/landing/content";
+import {
+  comoFunciona,
+  footer,
+  heroEyebrow,
+  heroHeadline,
+  heroSubtitle,
+  nav,
+} from "@/lib/landing/content";
+import pageStyles from "./page.module.css";
 
 export default function HomePage() {
   return (
-    <div
-      style={{
-        maxWidth: "var(--max-width-wide)",
-        margin: "0 auto",
-        padding: "var(--page-gutter)",
-        display: "grid",
-        gap: 72,
-      }}
-    >
-      <header
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}
-      >
-        <Wordmark />
-        <span className="mono" style={{ fontSize: 11, color: "var(--text-faint)" }}>
-          {tagline}
-        </span>
-      </header>
+    <>
+      {/* ── Topo: navegação, herói e "como funciona" ── */}
+      <div style={shell}>
+        <Reveal
+          as="header"
+          duration={0.6}
+          distance={18}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            padding: "28px 0 26px",
+            borderBottom: "var(--border-hairline) solid var(--line)",
+          }}
+        >
+          <Wordmark pulse />
+          <a href="#como-funciona" className={pageStyles.entrar}>
+            {nav.entrar}
+          </a>
+        </Reveal>
 
-      <section
-        style={{
-          maxWidth: "var(--hero-max)",
-          display: "grid",
-          gap: 24,
-        }}
-      >
-        <h1 style={{ fontSize: "clamp(40px, 8vw, 74px)", lineHeight: 0.92 }}>
-          {heroHeadline.map((line) => (
-            <span key={line} style={{ display: "block" }}>
-              {line}
+        <section style={{ maxWidth: "var(--hero-max)", padding: "56px 0 48px" }}>
+          <Reveal
+            as="span"
+            className="mono"
+            duration={0.6}
+            distance={18}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 9,
+              letterSpacing: "0.16em",
+              fontSize: 11,
+              color: "var(--text-faint)",
+              marginBottom: 26,
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className={pulseStyles.pulse}
+              style={{ color: "var(--accent)" }}
+            >
+              ✦
+            </span>{" "}
+            {heroEyebrow}
+          </Reveal>
+          <Reveal
+            as="h1"
+            duration={0.7}
+            delay={0.08}
+            style={{
+              fontSize: "clamp(42px, 8vw, 76px)",
+              lineHeight: 0.92,
+              letterSpacing: "0.03em",
+              margin: 0,
+            }}
+          >
+            {heroHeadline.map((segment) => (
+              <span
+                key={segment.text}
+                style={segment.accent ? { color: "var(--accent)" } : undefined}
+              >
+                {segment.text}
+              </span>
+            ))}
+          </Reveal>
+          <Reveal
+            as="p"
+            duration={0.7}
+            delay={0.18}
+            style={{
+              maxWidth: 620,
+              margin: "30px 0 0",
+              fontSize: 17,
+              lineHeight: 1.55,
+              color: "var(--text-muted)",
+            }}
+          >
+            {heroSubtitle}
+          </Reveal>
+        </section>
+
+        <section
+          id="como-funciona"
+          style={{
+            padding: "48px 0 40px",
+            borderTop: "var(--border-hairline) solid var(--line)",
+          }}
+        >
+          <Reveal duration={0.6} distance={20} style={{ marginBottom: 30 }}>
+            <span
+              className="mono"
+              style={{
+                display: "block",
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                color: "var(--accent)",
+                marginBottom: 14,
+              }}
+            >
+              {comoFunciona.eyebrow}
             </span>
-          ))}
-        </h1>
-        <p style={{ fontSize: 17, lineHeight: 1.55, color: "var(--text-muted)" }}>{heroSubtitle}</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <a href="#como-funciona" style={primaryCta}>
-            {cta.primary}
-          </a>
-          <a href="#exemplo" style={ghostCta}>
-            {cta.secondary} →
-          </a>
-        </div>
-      </section>
+            <h2 style={{ fontSize: "clamp(30px, 5vw, 44px)", margin: "0 0 10px" }}>
+              {comoFunciona.title}
+            </h2>
+            <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0 }}>
+              {comoFunciona.intro}
+            </p>
+          </Reveal>
+          <Reveal duration={0.7} distance={24}>
+            <StepCards />
+          </Reveal>
+        </section>
+      </div>
 
-      <section id="como-funciona" style={{ display: "grid", gap: 20 }}>
-        <h2 style={{ fontSize: "clamp(28px, 5vw, 42px)" }}>Como funciona</h2>
-        <StepCards />
-      </section>
+      {/* ── Camadas: o modelo de domínio revelado abaixo da dobra ── */}
+      <ScrollLayers />
 
-      <section style={{ display: "grid", gap: 20 }}>
-        <h2 style={{ fontSize: "clamp(28px, 5vw, 42px)" }}>Um exemplo de bordo</h2>
-        <BoardingPassRibbon />
-      </section>
-
-      <footer
-        style={{
-          borderTop: "var(--border-hairline) solid var(--line)",
-          paddingTop: 24,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 12,
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Wordmark size={14} />
-        <span className="mono" style={{ fontSize: 9, color: "var(--text-faintest)" }}>
-          Decidam o translado juntos
-        </span>
-      </footer>
-    </div>
+      {/* ── Rodapé ── */}
+      <div style={shell}>
+        <footer
+          style={{
+            borderTop: "var(--border-hairline) solid var(--line)",
+            marginTop: 40,
+            padding: "26px 0 120px",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Wordmark size={14} />
+          <span
+            className="mono"
+            style={{ fontSize: 9, letterSpacing: "0.14em", color: "var(--text-faintest)" }}
+          >
+            {footer.caption}
+          </span>
+        </footer>
+      </div>
+    </>
   );
 }
 
-const primaryCta: React.CSSProperties = {
-  background: "var(--accent)",
-  color: "var(--on-accent)",
-  fontFamily: "var(--font-display)",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  fontWeight: 700,
-  fontSize: 15,
-  padding: "12px 22px",
-  borderRadius: "var(--radius-btn)",
-};
-
-const ghostCta: React.CSSProperties = {
-  border: "var(--border-outline) solid var(--line-strong)",
-  color: "var(--text-body)",
-  fontFamily: "var(--font-display)",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  fontWeight: 600,
-  fontSize: 15,
-  padding: "12px 22px",
-  borderRadius: "var(--radius-btn)",
+// Faixa centralizada do topo e do rodapé (a área das camadas tem a sua própria).
+const shell: React.CSSProperties = {
+  maxWidth: "var(--max-width-wide)",
+  margin: "0 auto",
+  padding: "0 var(--page-gutter)",
 };

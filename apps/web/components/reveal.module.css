@@ -1,0 +1,27 @@
+/* Revelação ao entrar na viewport. Duração, distância e atraso são parametrizáveis
+   por custom property (preenchidas pelo componente) para reproduzir o stagger do
+   protótipo — mas a *declaração* da transição mora aqui, para que o reduced-motion
+   abaixo consiga desligá-la (um `transition` inline venceria a media query). */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-dy, 22px));
+  transition:
+    opacity var(--reveal-dur, 0.7s) ease,
+    transform var(--reveal-dur, 0.7s) ease;
+  transition-delay: var(--reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+
+.isVisible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
