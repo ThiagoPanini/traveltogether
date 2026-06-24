@@ -26,6 +26,9 @@ def database_url() -> str:
     return url
 
 
+IDENTITY_TABLES = {"users", "profiles", "sessions", "otp_codes", "auth_identities"}
+
+
 def test_baseline_upgrade_and_readiness(database_url: str) -> None:
     result = subprocess.run(
         ["uv", "run", "alembic", "upgrade", "head"],
@@ -39,4 +42,6 @@ def test_baseline_upgrade_and_readiness(database_url: str) -> None:
 
     engine = create_engine(database_url)
     assert database_ready(engine) is True
-    assert "alembic_version" in inspect(engine).get_table_names()
+    tables = set(inspect(engine).get_table_names())
+    assert "alembic_version" in tables
+    assert IDENTITY_TABLES <= tables

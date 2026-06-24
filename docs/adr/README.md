@@ -14,3 +14,5 @@ Decisões arquiteturais da reconstrução clean-room (2026-06-20): difíceis de 
 | [0008](0008-sistema-visual-tema-b-noturno.md) | Sistema visual: Tema B · Noturno e contrato vivo | Aceito |
 | [0009](0009-faseamento-e-fatiamento.md) | Faseamento outside-in e fatiamento tracer-bullet | Aceito |
 | [0010](0010-rebrand-travelmanager-e-url-panlabs.md) | Rebrand traveltogether → travelmanager e URL em panlabs.tech | Aceito |
+| [0011](0011-topologia-de-autenticacao.md) | Topologia de autenticação: API autoridade de identidade, web cliente OAuth/BFF | Aceito |
+| [0012](0012-camada-de-dados-sqlalchemy.md) | Camada de dados: SQLAlchemy 2.0 + Pydantic v2 (não SQLModel) | Aceito |

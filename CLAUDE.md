@@ -26,7 +26,7 @@ App de organização de viagens em grupo; a alma é compartilhar e decidir **Pes
 
 ## Arquitetura
 
-- `apps/api/` — FastAPI · SQLModel · Alembic · uv · ruff · pyright · pytest. Modelos novos precisam entrar em `alembic/env.py`.
+- `apps/api/` — FastAPI · SQLAlchemy 2.0 + Pydantic v2 · Alembic · uv · ruff · pyright · pytest. Modelos novos precisam entrar em `alembic/env.py`.
 - `apps/web/` — Next.js 15 (App Router) · Vitest.
 
 ## Comandos

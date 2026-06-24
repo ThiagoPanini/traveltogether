@@ -3,9 +3,12 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Response
 from sqlalchemy import Engine
 
+from travelmanager.auth import router as auth_router
 from travelmanager.db import database_ready, get_engine_dep
 
 app = FastAPI(title="travel·manager API")
+
+app.include_router(auth_router)
 
 
 @app.get("/health")

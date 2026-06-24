@@ -6,6 +6,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from travelmanager.models import Base
+
 config = context.config
 
 if config.config_file_name is not None:
@@ -16,8 +18,8 @@ database_url = os.environ.get("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 
-# Sem tabelas de domínio ainda (baseline). A Fase 2 passa a popular o metadata.
-target_metadata = None
+# Fase 2: os modelos de identidade populam o metadata que o autogenerate consome.
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

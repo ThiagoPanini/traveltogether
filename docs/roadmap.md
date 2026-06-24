@@ -22,6 +22,7 @@ Legenda: ✅ entregue · 🚧 em execução · ⬜ a fatiar.
 
 ## Notas de fatiamento (provisório, valem até a fase ser fatiada em issues)
 
+- **Fase 2** — topologia em [ADR-0011](adr/0011-topologia-de-autenticacao.md): **API autoridade de identidade** (cunha sessão opaca em tabela; admite contra prova — `id_token` Google via JWKS / OTP próprio), **web cliente OAuth (Auth.js v5) + BFF**, API interna. Acesso **aberto** (sem allowlist; Convite [ADR-0007](adr/0007-papeis-camadas-e-convite.md) vem depois). Onboarding captura **nome + cidade de origem** ([ADR-0006](adr/0006-origem-no-perfil.md)). A home é **empty-state honesta** (nota no [ADR-0001](adr/0001-criterio-e-fronteira-da-v1.md)); a shell rica *Minhas Viagens* fica na **Fase 3**. Camada de dados em [ADR-0012](adr/0012-camada-de-dados-sqlalchemy.md). Bordas HITL: conta Resend, projeto Google Cloud, secrets/DNS.
 - **Fase 3** — "home/painel" são **dois** lugares: shell global *Minhas Viagens* (lacuna de design, [ADR-0008](adr/0008-sistema-visual-tema-b-noturno.md)) ≠ Painel **da Viagem** (nasce casca → enriquece com #4–6).
 - **Fase 5** — "paradas e rotas" cruza camadas ([CONTEXT.md](../CONTEXT.md) inv. 1, 9): **Paradas** = backbone (Organizador) → **Trajetos** derivados → **Rotas/Trechos** = exploração (qualquer Membro). Por isso 5a/5b.
 - **Fase 6** — depende de Trecho aéreo existir; copy do pack ("votos/escolhida") reescrita para por-pessoa ([ADR-0004](adr/0004-decisao-por-pessoa.md)/[0008](adr/0008-sistema-visual-tema-b-noturno.md)).

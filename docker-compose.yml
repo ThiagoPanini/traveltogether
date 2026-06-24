@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      TRAVELMANAGER_API_URL: http://api:8000
+      INTERNAL_API_URL: http://api:8000
     ports:
       - "3000:3000"
     depends_on:
