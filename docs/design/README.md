@@ -1,64 +1,27 @@
-# Design system travelmanager
+# Noturno — sistema visual do travelmanager
 
-Este diretório é o contrato vivo de design do travelmanager. Ele existe para que
-agentes prototipem e construam novas telas sem abrir o bundle congelado, sem ler
-código por adivinhação e sem reimportar decisões já tomadas.
+`Noturno` é a direção visual do travelmanager: uma pele quente de aviação analógica. O fundo é petróleo profundo — azuis quase pretos, nunca cinza puro — sobre o qual flutuam cremes e off-whites quentes; um único accent terracota (`#df6a4d`) carrega marca, CTA, estado ativo e destaque. A tipografia trabalha em três registros: **Saira Condensed** condensada em caixa-alta para títulos, números e botões; **Public Sans** para o corpo; **Spline Sans Mono** espaçada e em caixa-alta para rótulos, metadados e códigos de aeroporto.
 
-## Regra de fonte
+A metáfora não é decoração: cartão de embarque, tripulação, código IATA, mapa de voo e caderno de bordo são o vocabulário visual porque o produto é sobre **translado** — combinar paradas, comparar caminhos e decidir passagens. Um tema genérico de SaaS não carregaria essa carga semântica; `Noturno` faz a forma falar a mesma língua do domínio. O trade-off é assumido: é uma estética com opinião forte (condensada, escura, com glifos), menos neutra que um tema padrão, e exige disciplina de token e de contraste para não virar ruído. Vale a pena porque dá ao produto uma identidade própria e coerente com o que ele faz.
 
-**Origem não é fonte-da-verdade.** O bundle congelado em
-`.claude/design/design-system-dark-mode/` é a origem creditada do Tema B Noturno,
-mas continua gitignored e não deve ser aberto por agentes como rotina.
+## Origem (não é fonte-da-verdade)
 
-O contrato vivo tem dois estratos:
+`Noturno` nasceu de um protótipo do Claude Design (criado sob o nome antigo *traveltogether*), hoje **congelado e gitignored** em `.claude/design/`. Esse bundle é a origem creditada, **não** a fonte-da-verdade operacional, e não deve ser aberto como rotina. A verdade vive aqui, em dois estratos:
 
-| Estrato | Verdade operacional | Como usar |
-|---|---|---|
-| **Implementado (as-built)** | Código versionado + tokens vivos | Preserve o comportamento e documente deltas contra o bundle. |
-| **Projetado, não construído (⏳)** | Spec extraída do bundle, reconciliada com domínio | Use como blueprint futuro; rotule como não implementado até existir código. |
+- **`as-built.md`** — o que existe em `apps/web` **hoje**. Para superfícies já implementadas, o código versionado é a verdade; este documento o descreve.
+- **`blueprint.md`** — o **⏳ projetado**, ainda não construído (Fases 2–6). Reconcilie cada peça com o domínio (`CONTEXT.md`) **quando** for construí-la, não antes — política just-in-time do [ADR-0003](../adr/0003-faseamento-e-fatiamento.md).
 
-Para intenção e invariantes de domínio, leia `../../CONTEXT.md` e `../adr/`.
-Para forma visual, leia estes documentos. Quando forma e domínio divergirem,
-registre a contradição e aplique o filtro dos ADRs antes de implementar.
-
-## Onde mora cada coisa
-
-| Arquivo | Papel |
-|---|---|
-| `tokens.json` | Fonte viva dos tokens nomeados. |
-| `../../apps/web/app/globals.css` | Espelho CSS consumido pelo app; deve ficar sincronizado com `tokens.json`. |
-| `../../apps/web/lib/design/tokens.ts` | Catálogo TS usado pela página `/tokens` e testes. |
-| `procedencia-e-deltas.md` | Auditoria: origem, mapa implementado/projetado, deltas e worklist. |
-| `design-spec.md` | Tokens, tipografia, voz/copy, movimento e convenções de literais. |
-| `layout.md` | Estrutura de telas, grid, responsivo e z-index. |
-| `accessibility.md` | Semântica, foco, reduced motion, forced colors e trade-offs. |
-| `components/*.md` | Contrato por componente/fronteira de código. |
-| `como-estender-tela-de-viagem.md` | Guia para transformar dados/domínio em UI. |
+Para tokens, leia `tokens.json` (fonte viva) e seu espelho em `../../apps/web/app/globals.css`. Para a especificação de forma — paleta, tipografia, escala, voz e movimento — leia `design-spec.md`. Para intenção e invariantes de domínio, leia `../../CONTEXT.md` e `../adr/`.
 
 ## Ordem de leitura
 
-1. `procedencia-e-deltas.md`
-2. `design-spec.md`
-3. `layout.md`
-4. `accessibility.md`
-5. O arquivo em `components/` da peça que você vai usar ou criar.
-6. `como-estender-tela-de-viagem.md` quando a tela cruza dados de Viagem,
-   Paradas, Trajetos, Rotas, Trechos, Pesquisas, Preferida ou Comprada.
-
-## Mapa rápido
-
-| Superfície | Estrato |
-|---|---|
-| Landing/home pública, `Wordmark`, `StepCards`, `BoardingPassRibbon`, CTAs locais e página `/tokens` | **Implementado (as-built)** |
-| Login/OTP, Painel da Viagem, Rotas, bottom switcher, timeline, decision card, crew row, status/progress, route option, map e ticket | **⏳ Projetado, não construído** |
+1. `design-spec.md` — tokens, tipografia, voz, movimento.
+2. `as-built.md` — antes de tocar qualquer superfície já implementada.
+3. `blueprint.md` — antes de construir uma superfície nova das Fases 2–6.
+4. `../../CONTEXT.md` — sempre que a tela cruzar dados de domínio (Viagem, Parada, Trajeto, Rota, Trecho, Pesquisa, Preferida, Comprada).
 
 ## Regra de edição
 
-- Use token, não literal, para cor, raio, borda, tipografia, sombra e largura
-  nomeada.
-- Se precisar de literal consciente, catalogue em `design-spec.md` e diga qual
-  token ele espelha.
-- Se adicionar movimento, documente reduced-motion no componente.
-- Se criar CSS Module com animação, co-localize `@keyframes` no mesmo módulo.
-- Se um componente sai de `⏳` para implementado, atualize o arquivo dele e
-  `procedencia-e-deltas.md` no mesmo PR.
+- Use token, não literal, para cor, raio, borda, tipografia, sombra e largura nomeada. Literais conscientes são catalogados em `design-spec.md`.
+- Movimento novo documenta `prefers-reduced-motion` junto do componente; CSS Module com animação co-localiza `@keyframes` no mesmo módulo.
+- Quando uma peça sai de `⏳ projetado` para implementado, mova-a de `blueprint.md` para `as-built.md` no mesmo PR.
