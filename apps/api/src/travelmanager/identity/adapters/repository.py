@@ -11,7 +11,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from travelmanager.identity.domain.models import AuthSession, OtpCode, User
+from travelmanager.identity.domain.models import AuthIdentity, AuthSession, OtpCode, User
 
 
 class SqlAlchemySessionRepository:
@@ -117,4 +117,41 @@ class SqlAlchemyUserRepository:
             user: A entidade a persistir.
         """
         self._db.add(user)
+        self._db.flush()
+
+
+class SqlAlchemyIdentityRepository:
+    """Repositório de vínculos de provedor externo ligado a uma `Session` do request."""
+
+    def __init__(self, db: Session) -> None:
+        """Inicializa o repositório.
+
+        Args:
+            db: Sessão SQLAlchemy do request corrente.
+        """
+        self._db = db
+
+    def get_by_provider_subject(self, provider: str, subject: str) -> AuthIdentity | None:
+        """Busca o vínculo pela chave `(provider, subject)`.
+
+        Args:
+            provider: Nome do provedor externo (ex.: `google`).
+            subject: Identificador estável do usuário no provedor.
+
+        Returns:
+            O vínculo correspondente, ou `None`.
+        """
+        return self._db.scalar(
+            select(AuthIdentity).where(
+                AuthIdentity.provider == provider, AuthIdentity.subject == subject
+            )
+        )
+
+    def save(self, identity: AuthIdentity) -> None:
+        """Persiste o vínculo: `add` + `flush` (sem commit).
+
+        Args:
+            identity: A entidade a persistir.
+        """
+        self._db.add(identity)
         self._db.flush()

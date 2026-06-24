@@ -8,7 +8,8 @@ verifica no ponto de uso (o retorno anotado dos `provide_*`).
 from datetime import datetime
 from typing import Protocol
 
-from travelmanager.identity.domain.models import AuthSession, OtpCode, User
+from travelmanager.identity.domain.google import GoogleClaims
+from travelmanager.identity.domain.models import AuthIdentity, AuthSession, OtpCode, User
 
 
 class SessionRepository(Protocol):
@@ -85,6 +86,48 @@ class UserRepository(Protocol):
 
         Args:
             user: A entidade a persistir.
+        """
+        ...
+
+
+class IdentityRepository(Protocol):
+    """Persistência de vínculos de provedor externo (`auth_identities`)."""
+
+    def get_by_provider_subject(self, provider: str, subject: str) -> AuthIdentity | None:
+        """Busca o vínculo pela chave `(provider, subject)`.
+
+        Args:
+            provider: Nome do provedor externo (ex.: `google`).
+            subject: Identificador estável do usuário no provedor.
+
+        Returns:
+            O vínculo correspondente, ou `None` se ainda não existe.
+        """
+        ...
+
+    def save(self, identity: AuthIdentity) -> None:
+        """Cria ou persiste a mutação de um vínculo.
+
+        Args:
+            identity: A entidade a persistir.
+        """
+        ...
+
+
+class GoogleTokenVerifier(Protocol):
+    """Verificador de `id_token` do Google: prova criptográfica → claims de domínio."""
+
+    def verify(self, id_token: str) -> GoogleClaims | None:
+        """Verifica a prova e devolve os claims, ou `None` se inválida.
+
+        A checagem de assinatura (JWKS), `aud`, `iss` e `exp` é interna ao adapter;
+        a regra de e-mail verificado fica no use-case (sobre os claims).
+
+        Args:
+            id_token: O JWT cru emitido pelo Google.
+
+        Returns:
+            Os claims verificados, ou `None` se o token for inválido.
         """
         ...
 

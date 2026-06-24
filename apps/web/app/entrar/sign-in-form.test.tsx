@@ -27,11 +27,25 @@ afterEach(() => {
 
 describe("SignInForm (login OTP, duas etapas)", () => {
   it("passo 1: e-mail, Continuar, divisor 'ou' e a opção do Google", () => {
-    render(<SignInForm />);
+    render(<SignInForm googleEnabled />);
     expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continuar$/i })).toBeInTheDocument();
     expect(screen.getByText(/^ou$/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continuar com google/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /continuar com google/i })).toBeEnabled();
+  });
+
+  it("Google habilitado: o botão dispara o provedor google rumo ao /app", () => {
+    render(<SignInForm googleEnabled />);
+    fireEvent.click(screen.getByRole("button", { name: /continuar com google/i }));
+    expect(signIn).toHaveBeenCalledWith("google", { callbackUrl: "/app" });
+  });
+
+  it("Google indisponível: botão desabilitado e nunca dispara o provedor", () => {
+    render(<SignInForm />);
+    const botao = screen.getByRole("button", { name: /google.*indispon|indispon.*google/i });
+    expect(botao).toBeDisabled();
+    fireEvent.click(botao);
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it("ponta-a-ponta: e-mail → código → cai no /app autenticado", async () => {

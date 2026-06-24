@@ -7,8 +7,11 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from travelmanager.identity.adapters.repository import SqlAlchemySessionRepository
-from travelmanager.identity.domain.models import AuthSession, User
+from travelmanager.identity.adapters.repository import (
+    SqlAlchemyIdentityRepository,
+    SqlAlchemySessionRepository,
+)
+from travelmanager.identity.domain.models import AuthIdentity, AuthSession, User
 
 
 class TestSqlAlchemySessionRepository:
@@ -30,3 +33,24 @@ class TestSqlAlchemySessionRepository:
         repo = SqlAlchemySessionRepository(db_session)
         # when/then:
         assert repo.get_by_token_hash("nao-existe") is None
+
+
+class TestSqlAlchemyIdentityRepository:
+    def test_save_persiste_e_get_le_pelo_par_provider_subject(
+        self, db_session: Session, user: User
+    ) -> None:
+        # given: um vínculo Google para o usuário
+        repo = SqlAlchemyIdentityRepository(db_session)
+        identity = AuthIdentity(
+            user_id=user.id, provider="google", subject="sub-1", email=user.email
+        )
+        # when:
+        repo.save(identity)
+        # then: recuperável pela chave (provider, subject)
+        assert repo.get_by_provider_subject("google", "sub-1") is identity
+
+    def test_get_de_par_inexistente_devolve_none(self, db_session: Session) -> None:
+        # given: repo vazio
+        repo = SqlAlchemyIdentityRepository(db_session)
+        # when/then:
+        assert repo.get_by_provider_subject("google", "nao-existe") is None

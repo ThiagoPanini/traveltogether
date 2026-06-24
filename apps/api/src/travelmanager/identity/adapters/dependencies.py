@@ -17,18 +17,25 @@ from sqlalchemy.orm import Session
 
 from travelmanager.identity.adapters.codes import SecretsCodeGenerator
 from travelmanager.identity.adapters.email import DevEmailSender, ResendEmailSender
+from travelmanager.identity.adapters.google import GoogleIdTokenVerifier
 from travelmanager.identity.adapters.repository import (
+    SqlAlchemyIdentityRepository,
     SqlAlchemyOtpRepository,
     SqlAlchemySessionRepository,
     SqlAlchemyUserRepository,
 )
 from travelmanager.identity.adapters.tokens import SecretsTokenGenerator
-from travelmanager.identity.application.ports import CodeGenerator, EmailSender
+from travelmanager.identity.application.ports import (
+    CodeGenerator,
+    EmailSender,
+    GoogleTokenVerifier,
+)
 from travelmanager.identity.application.use_cases import (
     CreateSession,
     RequestOtp,
     ResolveSession,
     RevokeSession,
+    SignInWithGoogle,
     VerifyOtp,
 )
 from travelmanager.shared.clock import SystemClock
@@ -65,6 +72,20 @@ def provide_email_sender() -> EmailSender:
     if api_key:
         return ResendEmailSender(api_key, os.environ.get("EMAIL_FROM", ""))
     return DevEmailSender()
+
+
+def google_client_id() -> str:
+    """O `GOOGLE_CLIENT_ID` esperado em `aud`; vazio quando não configurado.
+
+    Sem fallback de dev: não há como falsificar uma prova do Google. Sem o client_id
+    real (entra na #196), o verificador rejeita tudo e o web nem expõe o botão.
+    """
+    return os.environ.get("GOOGLE_CLIENT_ID", "")
+
+
+def provide_google_verifier() -> GoogleTokenVerifier:
+    """Verificador de `id_token` do Google (sobrescrevível por um fake nos testes)."""
+    return GoogleIdTokenVerifier(google_client_id())
 
 
 def provide_create_session(db: Annotated[Session, Depends(get_db)]) -> CreateSession:
@@ -104,4 +125,21 @@ def provide_verify_otp(db: Annotated[Session, Depends(get_db)]) -> VerifyOtp:
         create_session,
         SystemClock(),
         otp_pepper(),
+    )
+
+
+def provide_sign_in_with_google(
+    db: Annotated[Session, Depends(get_db)],
+    verifier: Annotated[GoogleTokenVerifier, Depends(provide_google_verifier)],
+) -> SignInWithGoogle:
+    """Monta o use-case `SignInWithGoogle` (reusa o mint de sessão) para o request."""
+    create_session = CreateSession(
+        SqlAlchemySessionRepository(db), SystemClock(), SecretsTokenGenerator(), session_pepper()
+    )
+    return SignInWithGoogle(
+        verifier,
+        SqlAlchemyUserRepository(db),
+        SqlAlchemyIdentityRepository(db),
+        create_session,
+        SystemClock(),
     )

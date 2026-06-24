@@ -17,18 +17,21 @@ from datetime import timedelta
 from travelmanager.identity.application.ports import (
     CodeGenerator,
     EmailSender,
+    GoogleTokenVerifier,
+    IdentityRepository,
     OtpRepository,
     SessionRepository,
     TokenGenerator,
     UserRepository,
 )
-from travelmanager.identity.domain.models import AuthSession, OtpCode, User
+from travelmanager.identity.domain.models import AuthIdentity, AuthSession, OtpCode, User
 from travelmanager.identity.domain.rules import hash_otp_code, hash_session_token, normalize_email
 from travelmanager.shared.clock import Clock
 from travelmanager.shared.errors import Unauthorized
 
 DEFAULT_SESSION_TTL = timedelta(days=30)
 OTP_TTL = timedelta(minutes=10)
+GOOGLE_PROVIDER = "google"
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,6 +196,70 @@ class VerifyOtp:
         elif user.email_verified_at is None:
             user.email_verified_at = now
             self.users.save(user)
+
+        _, token = self.create_session(user, user_agent=user_agent)
+        needs_onboarding = user.profile is None or user.profile.onboarded_at is None
+        return user, token, needs_onboarding
+
+
+@dataclass(frozen=True, slots=True)
+class SignInWithGoogle:
+    """Verifica o `id_token` do Google, resolve o usuário e cunha a sessão."""
+
+    verifier: GoogleTokenVerifier
+    users: UserRepository
+    identities: IdentityRepository
+    create_session: CreateSession
+    clock: Clock
+
+    def __call__(self, id_token: str, *, user_agent: str | None = None) -> tuple[User, str, bool]:
+        """Admite via Google e devolve `(usuário, token_em_claro, falta_onboarding)`.
+
+        Token válido com e-mail verificado: resolve o usuário pela chave natural
+        (e-mail; ADR-0004), criando-o se novo e carimbando `email_verified_at` (o
+        Google atesta a posse), registra o vínculo `(google, subject)` uma vez, e
+        reusa `CreateSession` para o mint. Token recusado ou e-mail não-verificado
+        levanta `Unauthorized` e **não** autentica.
+
+        O happy path aqui é o **usuário novo**; o caminho de vínculo a uma conta
+        e-mail pré-existente por outra porta é endurecido na fatia #195.
+
+        Args:
+            id_token: O JWT cru vindo da dança OAuth (repassado pelo BFF).
+            user_agent: User-Agent do cliente, repassado à sessão.
+
+        Returns:
+            O usuário resolvido, o token de sessão em claro e se ainda falta
+            onboarding (perfil ausente ou sem `onboarded_at`).
+
+        Raises:
+            Unauthorized: token inválido (assinatura/`aud`/`exp`) ou e-mail não
+                verificado pelo Google.
+        """
+        claims = self.verifier.verify(id_token)
+        if claims is None:
+            raise Unauthorized("token do Google inválido")
+        if not claims.email_verified:
+            raise Unauthorized("e-mail do Google não verificado")
+
+        now = self.clock.now()
+        identity = self.identities.get_by_provider_subject(GOOGLE_PROVIDER, claims.subject)
+        if identity is not None:
+            user = identity.user
+        else:
+            email = normalize_email(claims.email)
+            user = self.users.get_by_email(email)
+            if user is None:
+                user = User(email=email, email_verified_at=now)
+                self.users.save(user)
+            elif user.email_verified_at is None:
+                user.email_verified_at = now
+                self.users.save(user)
+            self.identities.save(
+                AuthIdentity(
+                    user=user, provider=GOOGLE_PROVIDER, subject=claims.subject, email=email
+                )
+            )
 
         _, token = self.create_session(user, user_agent=user_agent)
         needs_onboarding = user.profile is None or user.profile.onboarded_at is None

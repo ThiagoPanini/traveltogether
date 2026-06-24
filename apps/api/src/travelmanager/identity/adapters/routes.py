@@ -16,20 +16,23 @@ from travelmanager.identity.adapters.dependencies import (
     provide_request_otp,
     provide_resolve_session,
     provide_revoke_session,
+    provide_sign_in_with_google,
     provide_verify_otp,
 )
 from travelmanager.identity.adapters.schemas import (
+    GoogleVerifyIn,
     MeRead,
     OtpRequestIn,
     OtpVerifyIn,
-    OtpVerifyOut,
     ProfileRead,
+    SessionGrant,
     UserRead,
 )
 from travelmanager.identity.application.use_cases import (
     RequestOtp,
     ResolveSession,
     RevokeSession,
+    SignInWithGoogle,
     VerifyOtp,
 )
 from travelmanager.identity.domain.models import AuthSession
@@ -141,12 +144,12 @@ def otp_request(
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
-@router.post("/otp/verify", response_model=OtpVerifyOut)
+@router.post("/otp/verify", response_model=SessionGrant)
 def otp_verify(
     payload: OtpVerifyIn,
     verify_otp: Annotated[VerifyOtp, Depends(provide_verify_otp)],
     user_agent: Annotated[str | None, Header()] = None,
-) -> OtpVerifyOut:
+) -> SessionGrant:
     """Passo 2: valida o código e cunha a sessão (token devolvido ao BFF).
 
     Args:
@@ -155,13 +158,40 @@ def otp_verify(
         user_agent: User-Agent do cliente, repassado à sessão.
 
     Returns:
-        `OtpVerifyOut` com usuário, flag de onboarding e o token opaco de sessão.
+        `SessionGrant` com usuário, flag de onboarding e o token opaco de sessão.
 
     Raises:
         Unauthorized: código inexistente, errado, expirado ou já consumido (→ 401).
     """
     user, token, needs_onboarding = verify_otp(payload.email, payload.code, user_agent=user_agent)
-    return OtpVerifyOut(
+    return SessionGrant(
+        user=UserRead.model_validate(user),
+        needs_onboarding=needs_onboarding,
+        session_token=token,
+    )
+
+
+@router.post("/google", response_model=SessionGrant)
+def google_sign_in(
+    payload: GoogleVerifyIn,
+    sign_in: Annotated[SignInWithGoogle, Depends(provide_sign_in_with_google)],
+    user_agent: Annotated[str | None, Header()] = None,
+) -> SessionGrant:
+    """Verifica o `id_token` do Google e cunha a sessão (token devolvido ao BFF).
+
+    Args:
+        payload: Corpo com o `id_token` obtido na dança OAuth do web.
+        sign_in: Use-case que verifica a prova, resolve o usuário e reusa o mint.
+        user_agent: User-Agent do cliente, repassado à sessão.
+
+    Returns:
+        `SessionGrant` com usuário, flag de onboarding e o token opaco de sessão.
+
+    Raises:
+        Unauthorized: `id_token` inválido ou e-mail não verificado pelo Google (→ 401).
+    """
+    user, token, needs_onboarding = sign_in(payload.id_token, user_agent=user_agent)
+    return SessionGrant(
         user=UserRead.model_validate(user),
         needs_onboarding=needs_onboarding,
         session_token=token,

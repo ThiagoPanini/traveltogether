@@ -17,7 +17,8 @@ from travelmanager.identity.adapters.dependencies import session_pepper
 from travelmanager.identity.adapters.repository import SqlAlchemySessionRepository
 from travelmanager.identity.adapters.tokens import SecretsTokenGenerator
 from travelmanager.identity.application.use_cases import CreateSession
-from travelmanager.identity.domain.models import AuthSession, OtpCode, User
+from travelmanager.identity.domain.google import GoogleClaims
+from travelmanager.identity.domain.models import AuthIdentity, AuthSession, OtpCode, User
 from travelmanager.main import app
 from travelmanager.shared.clock import SystemClock
 from travelmanager.shared.db import get_db
@@ -133,6 +134,36 @@ class FakeUserRepository:
         self._by_email[user.email] = user
 
 
+class FakeIdentityRepository:
+    """`IdentityRepository` fake: vínculos de provedor externo em memória, sem DB."""
+
+    def __init__(self) -> None:
+        self.saved: list[AuthIdentity] = []
+        self._by_provider_subject: dict[tuple[str, str], AuthIdentity] = {}
+
+    def get_by_provider_subject(self, provider: str, subject: str) -> AuthIdentity | None:
+        return self._by_provider_subject.get((provider, subject))
+
+    def save(self, identity: AuthIdentity) -> None:
+        if identity not in self.saved:
+            self.saved.append(identity)
+        self._by_provider_subject[(identity.provider, identity.subject)] = identity
+
+
+class FakeGoogleVerifier:
+    """`GoogleTokenVerifier` fake: mapeia `id_token` cru → claims (ou `None`).
+
+    Sem crypto: o teste registra de antemão quais tokens são válidos e que claims
+    eles carregam; qualquer token desconhecido devolve `None` (recusado).
+    """
+
+    def __init__(self, claims_by_token: dict[str, GoogleClaims] | None = None) -> None:
+        self._claims_by_token = claims_by_token or {}
+
+    def verify(self, id_token: str) -> GoogleClaims | None:
+        return self._claims_by_token.get(id_token)
+
+
 class FakeCodeGenerator:
     """`CodeGenerator` fake: devolve um código previsível."""
 
@@ -181,6 +212,12 @@ def otps() -> FakeOtpRepository:
 def users() -> FakeUserRepository:
     """Repositório de usuários em memória."""
     return FakeUserRepository()
+
+
+@pytest.fixture
+def identities() -> FakeIdentityRepository:
+    """Repositório de vínculos de provedor externo em memória."""
+    return FakeIdentityRepository()
 
 
 @pytest.fixture

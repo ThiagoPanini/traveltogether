@@ -56,8 +56,15 @@ class OtpVerifyIn(BaseModel):
     code: str
 
 
-class OtpVerifyOut(BaseModel):
-    """Resposta de `/auth/otp/verify`: quem é + se falta onboarding + token de sessão.
+class GoogleVerifyIn(BaseModel):
+    """Corpo de `/auth/google`: o `id_token` que o BFF obteve na dança OAuth."""
+
+    id_token: str
+
+
+class SessionGrant(BaseModel):
+    """Sessão concedida: quem é + se falta onboarding + token opaco. Contrato comum a
+    `/auth/otp/verify` e `/auth/google` (método de entrada é indiferente ao BFF).
 
     O `session_token` é o opaco recém-cunhado: viaja **server-to-server** para o BFF,
     que o guarda no cookie httpOnly do Auth.js (ADR-0004) — nunca chega ao browser.

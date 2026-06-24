@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Wordmark } from "@/components/wordmark";
+import { isGoogleEnabled } from "@/lib/auth/google";
 import styles from "./entrar.module.css";
 import { SignInForm } from "./sign-in-form";
 
@@ -16,7 +17,7 @@ export default function EntrarPage() {
       <section className={styles.card}>
         <h1 className={styles.heading}>Entrar</h1>
         <p className={styles.sub}>Enviamos um código de embarque para o seu e-mail. Sem senha.</p>
-        <SignInForm />
+        <SignInForm googleEnabled={isGoogleEnabled()} />
       </section>
     </main>
   );

@@ -81,7 +81,7 @@ Card com borda tracejada (`line-dashed`), ícone mono decorativo, título, nota 
 | Tela | Container | Conteúdo |
 |---|---|---|
 | **Landing** | `max-width-wide` | Já implementada como landing pública — ver `as-built.md`. |
-| **Login** | `login-card` central, full-height | Tela de login OTP (e-mail → código) já implementada — ver `as-built.md`. Falta: "Continuar com Google" funcional (#191) e reenvio com cooldown (#194). |
+| **Login** | `login-card` central, full-height | Tela de login (OTP + Google) já implementada — ver `as-built.md`. Falta: reenvio com cooldown (#194). |
 | **Painel** | `max-width-panel` | Tabs/chips, resumo, progress strip, timeline de Trajetos + decisões pessoais, tripulação, "em breve". **Sem milhas/dinheiro.** |
 | **Rotas** | `max-width-wide`, grid `1.2fr / 1fr` | Paradas & Trajetos derivados + route option cards (esquerda); painel sticky com flight map + ticket panel (direita). Único lugar com dinheiro/pontos. |
 

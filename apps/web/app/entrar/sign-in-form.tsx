@@ -18,14 +18,16 @@ function formatRemaining(seconds: number): string {
 }
 
 /**
- * Login OTP em duas etapas (#190, bala-traçante): e-mail → código → `/app`.
+ * Login em duas etapas: e-mail → código → `/app`, com Google como alternativa.
  *
  * Passo 1 pede o código ao proxy do BFF (`/api/otp/request`, anti-enumeração na
  * API). Passo 2 entrega e-mail+código ao provedor `otp` do Auth.js, que verifica na
- * API interna e cunha a sessão (ADR-0004). "Continuar com Google" é placeholder até
- * a fatia #191. Endurecimento (cooldown, tentativas) é a fatia #194.
+ * API interna e cunha a sessão (ADR-0004). "Continuar com Google" dispara o provedor
+ * `google` do Auth.js (#191), que troca o `id_token` por uma sessão na API; quando o
+ * deploy não tem credencial Google (`googleEnabled` falso), o botão fica
+ * "indisponível". Endurecimento (cooldown, tentativas) é a fatia #194.
  */
-export function SignInForm() {
+export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -115,8 +117,14 @@ export function SignInForm() {
         <div className={styles.divisor}>
           <span className={`mono ${styles.divisorLabel}`}>ou</span>
         </div>
-        <button type="button" className={styles.google} disabled title="Em breve (#191)">
-          Continuar com Google
+        <button
+          type="button"
+          className={styles.google}
+          disabled={!googleEnabled}
+          title={googleEnabled ? undefined : "Indisponível neste ambiente"}
+          onClick={() => signIn("google", { callbackUrl: "/app" })}
+        >
+          {googleEnabled ? "Continuar com Google" : "Google indisponível"}
         </button>
       </form>
     );
