@@ -16,3 +16,4 @@ Decisões arquiteturais da reconstrução clean-room (2026-06-20): difíceis de 
 | [0010](0010-rebrand-travelmanager-e-url-panlabs.md) | Rebrand traveltogether → travelmanager e URL em panlabs.tech | Aceito |
 | [0011](0011-topologia-de-autenticacao.md) | Topologia de autenticação: API autoridade de identidade, web cliente OAuth/BFF | Aceito |
 | [0012](0012-camada-de-dados-sqlalchemy.md) | Camada de dados: SQLAlchemy 2.0 + Pydantic v2 (não SQLModel) | Aceito |
+| [0013](0013-arquitetura-hexagonal-pragmatica.md) | Arquitetura do backend: hexagonal pragmática, feature-first, layout híbrido | Aceito |
