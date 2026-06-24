@@ -3,11 +3,13 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Response
 from sqlalchemy import Engine
 
-from travelmanager.auth import router as auth_router
-from travelmanager.db import database_ready, get_engine_dep
+from travelmanager.identity import router as auth_router
+from travelmanager.shared.db import database_ready, get_engine_dep
+from travelmanager.shared.errors import install_error_handlers
 
 app = FastAPI(title="travel·manager API")
 
+install_error_handlers(app)
 app.include_router(auth_router)
 
 

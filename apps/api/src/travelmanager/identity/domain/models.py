@@ -1,17 +1,20 @@
-"""Modelos ORM de identidade (SQLAlchemy 2.0).
+"""Modelos ORM de identidade (SQLAlchemy 2.0) — as entidades do contexto.
 
-Persistência separada do contrato (ADR-0012): aqui só a forma das tabelas;
-os schemas Pydantic que viajam na API vivem em `schemas.py`. A topologia que
+No padrão pragmático (ADR-0013) o **modelo ORM é a entidade**: comportamento que
+fala sobre o próprio estado mora como método aqui (ex.: `AuthSession.is_valid_at`).
+Persistência separada do contrato (ADR-0012): aqui só a forma das tabelas; os
+schemas Pydantic que viajam na API vivem em `adapters/schemas.py`. A topologia que
 estreia estes modelos está em ADR-0011 — a API é a autoridade de identidade,
 e-mail é a chave natural, a sessão é opaca (guardada como hash).
 
-Modelos novos precisam continuar entrando em `alembic/env.py` (via `Base.metadata`).
+A `Base` mora em `shared/db.py`; o `alembic/env.py` importa este módulo para que as
+tabelas registrem em `Base.metadata`.
 """
 
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -23,11 +26,9 @@ from sqlalchemy import (
     Uuid,
     func,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class Base(DeclarativeBase):
-    """Base declarativa comum; `Base.metadata` é a fonte do autogenerate do Alembic."""
+from travelmanager.shared.db import Base
 
 
 def _uuid_pk() -> Mapped[uuid.UUID]:
@@ -36,6 +37,11 @@ def _uuid_pk() -> Mapped[uuid.UUID]:
 
 def _created_at() -> Mapped[datetime]:
     return mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+def _as_aware(moment: datetime) -> datetime:
+    """Normaliza para UTC-aware (SQLite devolve naive; Postgres já vem aware)."""
+    return moment if moment.tzinfo is not None else moment.replace(tzinfo=UTC)
 
 
 class User(Base):
@@ -103,6 +109,18 @@ class AuthSession(Base):
     created_at: Mapped[datetime] = _created_at()
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+    def is_valid_at(self, moment: datetime) -> bool:
+        """Diz se a sessão vale no instante dado.
+
+        Args:
+            moment: Instante de referência (timezone-aware).
+
+        Returns:
+            `True` quando não revogada e ainda não expirada; `False` caso
+            contrário.
+        """
+        return self.revoked_at is None and _as_aware(self.expires_at) > moment
 
 
 class OtpCode(Base):
