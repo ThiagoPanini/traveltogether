@@ -1,4 +1,4 @@
-"""Use-cases de sessão (ADR-0013): o "mint" que OTP e Google vão reusar (ADR-0011).
+"""Use-cases de sessão (ADR-0005): o "mint" que OTP e Google vão reusar (ADR-0004).
 
 Cada use-case é um `@dataclass(frozen=True, slots=True)` callable: os Ports entram
 como campos no composition-time, e a borda chama só `use_case(args)`. A política

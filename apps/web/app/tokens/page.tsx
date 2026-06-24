@@ -18,7 +18,7 @@ export default function TokensPage() {
       }}
     >
       <header>
-        <h1>Tokens — Tema B Noturno</h1>
+        <h1>Tokens — Noturno</h1>
         <p className="mono">Paleta + escala tipográfica · referência viva</p>
       </header>
 

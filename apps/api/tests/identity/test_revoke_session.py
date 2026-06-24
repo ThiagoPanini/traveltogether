@@ -1,4 +1,4 @@
-"""Use-case RevokeSession com fakes dos Ports (ADR-0013): o motor do logout.
+"""Use-case RevokeSession com fakes dos Ports (ADR-0005): o motor do logout.
 
 Revogar é escrita de segurança (kill-switch); o teste prova que o efeito foi
 **pedido para persistir**, não só mutado em memória.

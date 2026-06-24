@@ -1,10 +1,10 @@
 """Modelos ORM de identidade (SQLAlchemy 2.0) — as entidades do contexto.
 
-No padrão pragmático (ADR-0013) o **modelo ORM é a entidade**: comportamento que
+No padrão pragmático (ADR-0005) o **modelo ORM é a entidade**: comportamento que
 fala sobre o próprio estado mora como método aqui (ex.: `AuthSession.is_valid_at`).
-Persistência separada do contrato (ADR-0012): aqui só a forma das tabelas; os
+Persistência separada do contrato (ADR-0005): aqui só a forma das tabelas; os
 schemas Pydantic que viajam na API vivem em `adapters/schemas.py`. A topologia que
-estreia estes modelos está em ADR-0011 — a API é a autoridade de identidade,
+estreia estes modelos está em ADR-0004 — a API é a autoridade de identidade,
 e-mail é a chave natural, a sessão é opaca (guardada como hash).
 
 A `Base` mora em `shared/db.py`; o `alembic/env.py` importa este módulo para que as
@@ -72,7 +72,7 @@ class User(Base):
 
 
 class Profile(Base):
-    """Perfil 1:1 do Usuário; `onboarded_at` nulo enquanto falta onboarding (ADR-0006)."""
+    """Perfil 1:1 do Usuário; `onboarded_at` nulo enquanto falta onboarding (CONTEXT inv. 6)."""
 
     __tablename__ = "profiles"
 
@@ -93,7 +93,7 @@ class Profile(Base):
 
 
 class AuthSession(Base):
-    """Sessão opaca cunhada pela API: só o HMAC do token é persistido (ADR-0011)."""
+    """Sessão opaca cunhada pela API: só o HMAC do token é persistido (ADR-0004)."""
 
     __tablename__ = "sessions"
 

@@ -1,4 +1,4 @@
-// Catálogo dos tokens do Tema B · Noturno (fonte-da-verdade: docs/design/tokens.json).
+// Catálogo dos tokens do Noturno (fonte-da-verdade: docs/design/tokens.json).
 // Espelha os valores como CSS custom properties consumíveis em todo o app.
 
 export type ColorToken = { name: string; cssVar: string; value: string };

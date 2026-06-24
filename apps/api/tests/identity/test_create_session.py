@@ -1,4 +1,4 @@
-"""Use-case CreateSession com fakes dos Ports (ADR-0013): só o hash é persistido.
+"""Use-case CreateSession com fakes dos Ports (ADR-0005): só o hash é persistido.
 
 O token cru existe uma vez (no retorno); o repositório guarda a entidade com o
 HMAC. `then` afirma orquestração + efeito no Port.

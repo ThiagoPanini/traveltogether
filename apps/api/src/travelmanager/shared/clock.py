@@ -1,4 +1,4 @@
-"""Relógio como Port cross-contexto (ADR-0013).
+"""Relógio como Port cross-contexto (ADR-0005).
 
 O tempo é I/O não-determinístico: invertê-lo num Port deixa o use-case receber
 um `Clock` e os testes injetarem um relógio fixo (`FixedClock`) em vez de

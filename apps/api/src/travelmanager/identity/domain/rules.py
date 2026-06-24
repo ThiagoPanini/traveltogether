@@ -1,7 +1,7 @@
-"""Regras puras de identidade (ADR-0013): lógica sem uma linha de banco.
+"""Regras puras de identidade (ADR-0005): lógica sem uma linha de banco.
 
 O hash da sessão opaca é regra de domínio — `HMAC-SHA256(token, pepper)` em hex é
-o que de fato se persiste (ADR-0011). Sem fallback de pepper aqui: o pepper é
+o que de fato se persiste (ADR-0004). Sem fallback de pepper aqui: o pepper é
 injetado a partir do composition root (`adapters/dependencies.py`); o domínio não
 conhece configuração nem ambiente.
 """

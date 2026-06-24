@@ -17,7 +17,7 @@ import pulseStyles from "./pulse.module.css";
  * Camadas de scroll: continuação nativa abaixo da dobra. Revela, conforme o
  * usuário desce, o modelo de domínio por baixo do herói —
  * Parada → Trajeto → Rota → decisão por-pessoa → marca. Cada camada herda o
- * Tema B Noturno e os invariantes de CONTEXT.md. O movimento (reveal) vive em
+ * sistema Noturno e os invariantes de CONTEXT.md. O movimento (reveal) vive em
  * <Reveal>; reduced-motion é tratado lá e no módulo da estrela.
  */
 export function ScrollLayers() {

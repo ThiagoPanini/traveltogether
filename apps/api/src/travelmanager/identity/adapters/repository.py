@@ -1,4 +1,4 @@
-"""Adapter outbound: `SessionRepository` sobre SQLAlchemy (ADR-0013).
+"""Adapter outbound: `SessionRepository` sobre SQLAlchemy (ADR-0005).
 
 Satisfaz o Port `SessionRepository` **estruturalmente** (sem herdar). `save()`
 colapsa criação e mutação num só método: em SQLAlchemy ambos são `add` + `flush`

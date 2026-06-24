@@ -1,4 +1,4 @@
-"""Contrato de saída não vaza campo sensível (ADR-0012: persistência != contrato).
+"""Contrato de saída não vaza campo sensível (ADR-0005: persistência != contrato).
 
 Varre todo schema Pydantic do módulo de borda e garante que nenhum serializa
 `*_hash` nem `is_active` — campos que existem no ORM mas não podem viajar na API.

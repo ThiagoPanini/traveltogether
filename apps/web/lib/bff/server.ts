@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 
 /**
- * Plumbing do BFF (ADR-0011): repassa chamadas server-side para a API interna,
+ * Plumbing do BFF (ADR-0004): repassa chamadas server-side para a API interna,
  * anexando o token opaco da sessão como `Bearer`. A API nunca é pública — só a
  * rede interna alcança `INTERNAL_API_URL`.
  */

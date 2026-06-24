@@ -1,4 +1,4 @@
-"""Fixtures e fakes do contexto identity (ADR-0013).
+"""Fixtures e fakes do contexto identity (ADR-0005).
 
 Reúne o "given" compartilhado dos testes do contexto: o usuário-semente, o
 `TestClient` com `get_db` sobrescrito, o seam de minting de sessão (para os testes

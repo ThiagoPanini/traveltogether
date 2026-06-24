@@ -1,4 +1,4 @@
-"""Categorias semânticas de erro + handler HTTP central (ADR-0013).
+"""Categorias semânticas de erro + handler HTTP central (ADR-0005).
 
 O domínio fala **categorias** (`NotFound`, `Conflict`, `Invalid`, `Unauthorized`,
 `RateLimited`), nunca números HTTP — categorias transcendem o transporte (mapeiam

@@ -1,4 +1,4 @@
-"""Composition root do contexto identity (ADR-0013): um `provide_*` por use-case.
+"""Composition root do contexto identity (ADR-0005): um `provide_*` por use-case.
 
 Centralizar o wiring por contexto (não por rota): quando um use-case ganhar um
 Port novo, muda **um** provider, não N rotas. As rotas ficam declarativas

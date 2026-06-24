@@ -1,4 +1,4 @@
-"""Schemas Pydantic v2 — o contrato que viaja na API (ADR-0012; borda do contexto).
+"""Schemas Pydantic v2 — o contrato que viaja na API (ADR-0005; borda do contexto).
 
 Separados do ORM de propósito: aqui só campos que podem sair. Nunca expõem
 `token_hash`, `code_hash` nem `is_active` (kill-switch interno). A ponte
@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class ProfileRead(BaseModel):
-    """Perfil exposto: nome, país e cidade de origem (ADR-0006)."""
+    """Perfil exposto: nome, país e cidade de origem (CONTEXT inv. 6)."""
 
     model_config = ConfigDict(from_attributes=True)
 
