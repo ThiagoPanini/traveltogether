@@ -44,9 +44,7 @@ class TestDevEmailSender:
 
 
 class TestEmailSenderSelection:
-    def test_sem_resend_api_key_usa_transporte_dev(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_sem_resend_api_key_usa_transporte_dev(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # given: ambiente sem RESEND_API_KEY
         monkeypatch.delenv("RESEND_API_KEY", raising=False)
         # when:

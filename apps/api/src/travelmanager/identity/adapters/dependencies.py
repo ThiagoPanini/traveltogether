@@ -90,9 +90,7 @@ def provide_request_otp(
     email_sender: Annotated[EmailSender, Depends(provide_email_sender)],
 ) -> RequestOtp:
     """Monta o use-case `RequestOtp` para o request corrente."""
-    return RequestOtp(
-        SqlAlchemyOtpRepository(db), SystemClock(), codes, email_sender, otp_pepper()
-    )
+    return RequestOtp(SqlAlchemyOtpRepository(db), SystemClock(), codes, email_sender, otp_pepper())
 
 
 def provide_verify_otp(db: Annotated[Session, Depends(get_db)]) -> VerifyOtp:
