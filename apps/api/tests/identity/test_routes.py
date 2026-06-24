@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from travelmanager.models import Profile, User
+from travelmanager.identity.domain.models import Profile, User
 
 
 def _auth(token: str) -> dict[str, str]:

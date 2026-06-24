@@ -1,7 +1,12 @@
-"""Encanamento de dados: engine a partir de DATABASE_URL e checagem de readiness.
+"""Encanamento de dados cross-contexto: base declarativa, engine e unit-of-work.
 
-A Fase 0+1 não lê nem escreve dados de domínio; este módulo existe para provar
-conectividade (readiness) e dar à Fase 2 (identidade) um ponto de partida pronto.
+Infra ortogonal aos contextos (ADR-0013): a `Base` que todas as entidades ORM
+herdam, a engine derivada de `DATABASE_URL`, a checagem de readiness e o `get_db`
+— onde a transação do request nasce e morre.
+
+A fronteira transacional vive aqui: `repo.save()` faz `add` + `flush` (aflora
+erro de constraint dentro do use-case); o **único** commit/rollback acontece em
+`get_db` (request = unit-of-work). Use-case nunca commita.
 """
 
 import os
@@ -10,11 +15,20 @@ from functools import lru_cache
 
 from fastapi import HTTPException
 from sqlalchemy import Engine, create_engine, text
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+
+
+class Base(DeclarativeBase):
+    """Base declarativa comum; `Base.metadata` é a fonte do autogenerate do Alembic."""
 
 
 def get_database_url() -> str | None:
-    """URL de conexão configurada (None quando o app roda sem banco, ex.: liveness)."""
+    """URL de conexão configurada.
+
+    Returns:
+        A `DATABASE_URL` do ambiente, ou `None` quando o app roda sem banco
+        (ex.: liveness).
+    """
     return os.environ.get("DATABASE_URL")
 
 
@@ -23,6 +37,12 @@ def normalize_database_url(url: str) -> str:
 
     Sem isto, `postgresql://...` faz o SQLAlchemy buscar psycopg2 (ausente) e
     estourar na criação da engine. Aceita também o legado `postgres://`.
+
+    Args:
+        url: URL de conexão crua, possivelmente sem driver explícito.
+
+    Returns:
+        A mesma URL com o driver `psycopg` garantido quando aplicável.
     """
     if url.startswith("postgresql+"):
         return url
@@ -35,7 +55,12 @@ def normalize_database_url(url: str) -> str:
 
 @lru_cache
 def get_engine() -> Engine | None:
-    """Engine singleton. None quando DATABASE_URL ausente ou não construível."""
+    """Engine singleton.
+
+    Returns:
+        A engine construída a partir da `DATABASE_URL`, ou `None` quando ausente
+        ou não construível.
+    """
     url = get_database_url()
     if not url:
         return None
@@ -51,7 +76,15 @@ def get_engine_dep() -> Engine | None:
 
 
 def database_ready(engine: Engine | None) -> bool:
-    """True quando um `SELECT 1` responde pela engine; False se ausente ou inacessível."""
+    """Confirma conectividade com o banco.
+
+    Args:
+        engine: A engine a sondar (pode ser `None`).
+
+    Returns:
+        `True` quando um `SELECT 1` responde pela engine; `False` se ausente ou
+        inacessível.
+    """
     if engine is None:
         return False
     try:
@@ -64,7 +97,11 @@ def database_ready(engine: Engine | None) -> bool:
 
 @lru_cache
 def get_sessionmaker() -> sessionmaker[Session] | None:
-    """Fábrica de sessões ligada à engine; None quando não há banco configurado."""
+    """Fábrica de sessões ligada à engine.
+
+    Returns:
+        A `sessionmaker`, ou `None` quando não há banco configurado.
+    """
     engine = get_engine()
     if engine is None:
         return None
@@ -72,9 +109,16 @@ def get_sessionmaker() -> sessionmaker[Session] | None:
 
 
 def get_db() -> Iterator[Session]:
-    """Dependência FastAPI: sessão por-request, commit no sucesso, rollback no erro.
+    """Dependência FastAPI: sessão por-request; o request **é** a unit-of-work.
 
-    Sobrescrevível em testes via `app.dependency_overrides`.
+    Commit único no sucesso, rollback em qualquer falha. Sobrescrevível em testes
+    via `app.dependency_overrides`.
+
+    Yields:
+        A `Session` do request.
+
+    Raises:
+        HTTPException: 503 quando não há banco configurado.
     """
     factory = get_sessionmaker()
     if factory is None:

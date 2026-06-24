@@ -1,4 +1,4 @@
-"""Schemas Pydantic v2 — o contrato que viaja na API (ADR-0012).
+"""Schemas Pydantic v2 — o contrato que viaja na API (ADR-0012; borda do contexto).
 
 Separados do ORM de propósito: aqui só campos que podem sair. Nunca expõem
 `token_hash`, `code_hash` nem `is_active` (kill-switch interno). A ponte

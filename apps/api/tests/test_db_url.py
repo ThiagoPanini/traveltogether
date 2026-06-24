@@ -1,6 +1,6 @@
 import pytest
 
-from travelmanager.db import normalize_database_url
+from travelmanager.shared.db import normalize_database_url
 
 
 @pytest.mark.parametrize(
