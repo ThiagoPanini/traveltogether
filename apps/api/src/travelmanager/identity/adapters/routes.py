@@ -1,4 +1,4 @@
-"""Adapter inbound: rotas e dependência de sessão (ADR-0011/0013).
+"""Adapter inbound: rotas e dependência de sessão (ADR-0004/0005).
 
 A API admite contra o token opaco que o BFF repassa como `Bearer`. Aqui vivem a
 dependency `get_current_session` (validação + kill-switch `is_active`) e as rotas

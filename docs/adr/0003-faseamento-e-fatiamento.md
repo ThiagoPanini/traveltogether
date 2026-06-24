@@ -1,10 +1,10 @@
-# 0009 — Faseamento outside-in e fatiamento tracer-bullet
+# 0003 — Faseamento outside-in e fatiamento tracer-bullet
 
 **Status:** Aceito
 
 ## Contexto
 
-A reconstrução é do zero (reset clean-room). Era preciso decidir **como** materializar a fundação documental (`CONTEXT.md` + ADRs [0001](0001-criterio-e-fronteira-da-v1.md)–[0008](0008-sistema-visual-tema-b-noturno.md) + design Tema B) em software — sem construir tudo de uma vez e sem perder o controle da rota.
+A reconstrução é do zero (reset clean-room). Era preciso decidir **como** materializar a fundação documental (`CONTEXT.md` + ADRs [0001](0001-criterio-e-fronteira-da-v1.md)–[0006](0006-apostas-de-dominio.md) + design Noturno) em software — sem construir tudo de uma vez e sem perder o controle da rota.
 
 ## Decisão
 
@@ -14,7 +14,7 @@ A reconstrução é do zero (reset clean-room). Era preciso decidir **como** mat
 - **Fatia = tracer-bullet vertical** (atravessa schema→API→UI→testes), demoável sozinha. Preferir muitas fatias finas. Cada fatia = uma issue com `phase:N` + milestone da fase.
 - **Cadência:** o humano libera o fatiamento da **próxima** fase só depois da atual **entregar**; **dentro** da fase, o agente executa autônomo via `/tdd` (RED→GREEN→refactor), abrindo e mergeando PRs.
 - **AFK vs HITL:** fatia AFK = mergeável sem humano; HITL = depende de borda (secret/DNS/decisão). Preferir AFK.
-- **Roadmap vivo** em [`../roadmap.md`](../roadmap.md) (o quê/status); este ADR é o porquê.
+- **Mapa/status vivo** em **GitHub milestones + label `phase:N`** (o quê/status); este ADR é o porquê.
 
 ## Opções consideradas
 
@@ -24,8 +24,8 @@ A reconstrução é do zero (reset clean-room). Era preciso decidir **como** mat
 
 ## Consequências
 
-- O backlog cresce por fase, não de uma vez; o `roadmap.md` é o único arquivo a atualizar a cada fase.
-- Um agente novo descobre o plano por `CLAUDE.md` → `roadmap.md`, e segue estas regras pra fatiar a próxima fase.
+- O backlog cresce por fase, não de uma vez; o mapa/status vive em GitHub milestones + label `phase:N`, atualizado a cada fase.
+- Um agente novo descobre o plano por `CLAUDE.md` → milestones, e segue estas regras pra fatiar a próxima fase.
 - A Fase 0+1 (fundação + landing) foi a primeira fatiada — issues #172–#176.
 
 Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md).

@@ -1,4 +1,4 @@
-# 0013 — Arquitetura do backend: hexagonal pragmática, feature-first, layout híbrido
+# 0005 — Arquitetura do backend: hexagonal pragmática, feature-first, layout híbrido
 
 **Status:** Aceito
 
@@ -21,6 +21,13 @@ Existem skills genéricas (`hexagonal-architecture`, `python-project-structure`,
 - **Testes GWT.** Blocos `# given: / # when: / # then:`, classe-por-subject. Use-case testado com **fakes dos Ports** (sem DB); split por costura (domínio puro → use-case com fake → adapter SQLite → rota TestClient); marker `integration` só para Postgres. `Clock` Port + `FixedClock` no lugar de freezegun.
 - **Estilo.** Google-style docstrings (em pt-BR) em tudo; `__all__` só no seam do contexto; ruff + pyright continuam a fonte-da-verdade do estilo.
 
+## Substrato de persistência
+
+**Persistência em SQLAlchemy 2.0 (`DeclarativeBase` + `Mapped`/`mapped_column`); contrato da API em Pydantic v2 — separados.** O `CLAUDE.md` declarava "SQLModel", mas o código real já usava SQLAlchemy 2.0 puro e não havia modelo nenhum; cravamos isto e reconciliamos o doc. `target_metadata` passa a ser ligado em `alembic/env.py` (era `None`); modelos novos exigem registro lá antes do autogenerate.
+
+- **SQLModel** (casava com o doc) — rejeitado. A promessa "uma classe é tabela **e** schema" vaza justamente numa API de identidade, que **precisa** esconder campos sensíveis (`token_hash`, `code_hash`, `is_active`) e ter variantes `Create`/`Read`/`Update` — você escreve as classes extras de qualquer jeito, **acoplando** persistência ao contrato. Soma a isso arestas de tipagem com **pyright** (que está no gate) e o domínio rico que vem (Paradas/Trechos ordenados, `Pesquisa` cobrindo n Trechos, dinheiro **e/ou** pontos como value objects), que usa mapeamentos avançados first-class no SQLAlchemy, furando a abstração.
+- O custo é mais boilerplate (modelo ORM + schema Pydantic por entidade), aceito conscientemente: compra **desacoplamento** persistência↔transporte e **proteção** contra vazar campo sensível no contrato. A ponte ORM→schema é trivial (`model_validate(obj, from_attributes=True)`). Coerente com a aposta hexagonal acima, em que o **modelo ORM é a entidade** e Pydantic vive só na borda.
+
 ## Opções consideradas
 
 - **Hexagonal purista** (entidade de domínio pura + ORM adapter + DTO Pydantic, mapeamento triplo) — rejeitado: em FastAPI/SQLAlchemy o triplo-mapeamento vira boilerplate que ninguém mantém; a pureza luta contra o framework. **Service layer leve** (sem Ports) — rejeitado: perde testabilidade por fake e a inversão de dependência.
@@ -38,4 +45,4 @@ Existem skills genéricas (`hexagonal-architecture`, `python-project-structure`,
 - O acoplamento entidade↔ORM é o preço aceito da pragmática: se um dia trocar de ORM, a entidade vaza. Avaliado e aceito frente à longevidade real do projeto.
 - A migração de `Base` para `shared/` e dos modelos para `identity/domain/` exige reatar `alembic/env.py` (import dos modelos para registrarem em `target_metadata`).
 
-Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); topologia de auth em [0011](0011-topologia-de-autenticacao.md); camada de dados em [0012](0012-camada-de-dados-sqlalchemy.md); raciocínio completo em [`../notes/2026-06-24-grill-hexagonal-backend.md`](../notes/2026-06-24-grill-hexagonal-backend.md).
+Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); topologia de auth em [0004](0004-topologia-de-autenticacao.md); raciocínio completo em [`../notes/2026-06-24-grill-hexagonal-backend.md`](../notes/2026-06-24-grill-hexagonal-backend.md).

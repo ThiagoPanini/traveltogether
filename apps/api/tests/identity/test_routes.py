@@ -1,4 +1,4 @@
-"""Caracterização HTTP de `/auth/me` e `/auth/logout` (ADR-0011; refactor ADR-0013).
+"""Caracterização HTTP de `/auth/me` e `/auth/logout` (ADR-0004; refactor ADR-0005).
 
 Trava o comportamento observável de create/resolve/revoke de sessão visto pela
 **borda HTTP** — a superfície invariante ao refactor hexagonal. Estes testes

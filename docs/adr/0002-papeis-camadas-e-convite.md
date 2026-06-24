@@ -1,4 +1,4 @@
-# 0007 — Papéis, camadas de escrita e convite com aceite
+# 0002 — Papéis, camadas de escrita e convite com aceite
 
 **Status:** Aceito (o **canal** do convite ainda em aberto)
 
@@ -8,16 +8,10 @@ Quem pode mexer em quê, e como alguém entra numa Viagem? Precisávamos separar
 
 ## Decisão
 
-**Três camadas de escrita:**
-
-| Camada | O quê | Quem |
-|---|---|---|
-| **Backbone** | Paradas, datas, destino, membros | só **Organizador** |
-| **Exploração** | Rota, Trecho, Pesquisa | qualquer **Membro** |
-| **Plano pessoal** | Preferida, Comprada | só o **dono** |
+**Três camadas de escrita** — backbone (só Organizador), exploração (qualquer Membro), plano pessoal (só o dono); detalhe na invariante 9 do [`CONTEXT.md`](../../CONTEXT.md).
 
 - O **criador** da Viagem é o **primeiro Organizador**: modera (apaga qualquer Rota/Trecho/Pesquisa) e pode promover outros.
-- **Convite exige aceite explícito** — **ninguém entra sem aceitar** (consentimento). Sem adição instantânea. Se o convidado não tem conta, o convite espera o cadastro.
+- **Convite exige aceite explícito** — **ninguém entra sem aceitar** (consentimento, invariante 10). Sem adição instantânea. Se o convidado não tem conta, o convite espera o cadastro.
 
 ## Em aberto
 

@@ -1,8 +1,8 @@
-"""Adapter outbound: `TokenGenerator` sobre `secrets` (ADR-0013).
+"""Adapter outbound: `TokenGenerator` sobre `secrets` (ADR-0005).
 
 A geração de token é não-determinística como o relógio: atrás de um Port para que
 os testes possam injetar tokens previsíveis. O adapter default usa `secrets` para
-cunhar o token opaco que viaja no cookie/Bearer (ADR-0011).
+cunhar o token opaco que viaja no cookie/Bearer (ADR-0004).
 """
 
 import secrets

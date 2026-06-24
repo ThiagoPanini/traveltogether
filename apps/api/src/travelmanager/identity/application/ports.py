@@ -1,4 +1,4 @@
-"""Ports do contexto identity (ADR-0013): contratos que os use-cases consomem.
+"""Ports do contexto identity (ADR-0005): contratos que os use-cases consomem.
 
 `typing.Protocol` (estrutural, não `abc.ABC`): o adapter satisfaz o Port pela
 **forma**, sem importá-lo — a seta de dependência aponta só para baixo. pyright

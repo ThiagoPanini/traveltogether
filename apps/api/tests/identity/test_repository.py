@@ -1,4 +1,4 @@
-"""Adapter outbound SqlAlchemySessionRepository sobre SQLite real (ADR-0013).
+"""Adapter outbound SqlAlchemySessionRepository sobre SQLite real (ADR-0005).
 
 Costura de persistência: prova que `save` grava e `get_by_token_hash` lê de volta.
 """

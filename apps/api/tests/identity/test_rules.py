@@ -1,4 +1,4 @@
-"""Regras puras de identidade: hash da sessão + validade da entidade (ADR-0013).
+"""Regras puras de identidade: hash da sessão + validade da entidade (ADR-0005).
 
 Domínio puro, sem double e sem banco: o `then` afirma só a regra.
 """

@@ -1,6 +1,6 @@
 """identidade da Fase 2 (users, profiles, sessions, otp_codes, auth_identities)
 
-As 5 tabelas que sustentam o login (ADR-0011 / ADR-0012). Autogerada a partir
+As 5 tabelas que sustentam o login (ADR-0004 / ADR-0005). Autogerada a partir
 de `travelmanager.models` e aplicada limpo sobre o baseline.
 
 Revision ID: 0002_identidade

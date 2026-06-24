@@ -1,4 +1,4 @@
-"""Contexto de identidade: sessão opaca e rotas de auth (ADR-0011/0013).
+"""Contexto de identidade: sessão opaca e rotas de auth (ADR-0004/0005).
 
 Seam público do contexto — o único `__all__` da árvore (as camadas internas ficam
 sem curadoria de propósito). Exporta o router (montado em `main.py`) e os

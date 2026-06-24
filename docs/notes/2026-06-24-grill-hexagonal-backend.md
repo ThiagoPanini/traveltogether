@@ -2,7 +2,7 @@
 
 > **O que é esta nota.** O registro **rico** da sessão de grilling (`/grill-with-docs`) que
 > estabeleceu o padrão de backend do travelmanager. O `CLAUDE.md` (§Padrões de backend) carrega
-> a regra ratificada; o [ADR-0013](../adr/0013-arquitetura-hexagonal-pragmatica.md) carrega a
+> a regra ratificada; o [ADR-0005](../adr/0005-arquitetura-hexagonal-pragmatica.md) carrega a
 > decisão indexada. **Esta nota carrega o oceano** — cada opção, o steelman do lado perdedor, o
 > caminho rejeitado e por quê. Existe para (a) resgatar o _porquê-do-porquê_ quando a regra for
 > questionada, e (b) ser **matéria-prima de uma eventual skill de bolso `code-as-me`** (analogia ao
@@ -27,7 +27,7 @@
 | Q6 | Tradução de erro? | Categorias semânticas (sem nº HTTP) + 1 handler central; outbound traduz infra→domínio |
 | Q7 | Testes? | GWT (`# given:/when:/then:`), fakes de Port, split por costura, `FixedClock`>freezegun |
 | Q8 | Acionar as skills? | **Não** — destilar tudo no `CLAUDE.md`; "aplicar padrão" ≠ "invocar skill" |
-| Q9 | Onde mora o quê? | 3 artefatos: CLAUDE.md enxuto · ADR-0013 conciso · esta nota rica |
+| Q9 | Onde mora o quê? | 3 artefatos: CLAUDE.md enxuto · ADR-0005 conciso · esta nota rica |
 
 ---
 
@@ -55,7 +55,7 @@ fakes — mas auth é majoritariamente orquestração de I/O, e Python/FastAPI p
 **O steelman do lado rejeitado (a), e por que aceitamos o custo.** Se um dia trocar SQLAlchemy por
 outro ORM, (b) **vaza** — porque a entidade _é_ o ORM. Aceitamos esse acoplamento conscientemente: a
 probabilidade real de troca de ORM neste projeto não paga o imposto perpétuo do triplo-mapeamento. É
-o mesmo trade-off do [ADR-0012](../adr/0012-camada-de-dados-sqlalchemy.md) (rejeitar SQLModel para
+o mesmo trade-off do [ADR-0005](../adr/0005-arquitetura-hexagonal-pragmatica.md) (rejeitar SQLModel para
 **separar** persistência de contrato) levado à camada de aplicação.
 
 ---
@@ -503,11 +503,11 @@ contexto, então o hook seria redundante. Mecanismo = a própria prosa do `CLAUD
 | artefato | função | densidade |
 |---|---|---|
 | **`CLAUDE.md` §Padrões de backend** | regra que rege o dia-a-dia | enxuto, checklist |
-| **ADR-0013** | registro da decisão + consequências, indexado | conciso, com "alternativas" |
+| **ADR-0005** | registro da decisão + consequências, indexado | conciso, com "alternativas" |
 | **esta nota** | a discussão inteira (semente do `code-as-me`) | máxima riqueza |
 
 Por que ADR **e** nota: o ADR tem que ficar escaneável (referência indexada); a riqueza máxima
-estoura um ADR. O ADR aponta para a nota. Hierarquia: `CLAUDE.md` → ADR-0013 → esta nota (a mesma
+estoura um ADR. O ADR aponta para a nota. Hierarquia: `CLAUDE.md` → ADR-0005 → esta nota (a mesma
 3-camadas do Q8, com _nosso raciocínio_ na camada-fundo no lugar da skill — que era o ponto).
 
 **Sequência do refactor da #189 (decidida, execução em outra sessão).**

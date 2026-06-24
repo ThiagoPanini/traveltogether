@@ -1,4 +1,4 @@
-"""Registro dos modelos de identidade no metadata (autoridade de identidade, ADR-0011).
+"""Registro dos modelos de identidade no metadata (autoridade de identidade, ADR-0004).
 
 Garante que as 5 tabelas da Fase 2 nascem no mesmo `Base.metadata` (em
 `shared/db.py`) que o `alembic/env.py` consome para autogerar migrations.

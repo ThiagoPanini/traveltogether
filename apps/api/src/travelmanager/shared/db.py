@@ -1,6 +1,6 @@
 """Encanamento de dados cross-contexto: base declarativa, engine e unit-of-work.
 
-Infra ortogonal aos contextos (ADR-0013): a `Base` que todas as entidades ORM
+Infra ortogonal aos contextos (ADR-0005): a `Base` que todas as entidades ORM
 herdam, a engine derivada de `DATABASE_URL`, a checagem de readiness e o `get_db`
 — onde a transação do request nasce e morre.
 

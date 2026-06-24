@@ -24,12 +24,6 @@ A v1 é **profunda num único lugar — a pesquisa de translado aéreo — e cas
 
 - A barra dentro da viagem mostra **Painel + 3 cascas** (Roteiro · Orçamento · Ingressos), que contam o roadmap honesto: *decidir o translado → acertar contas → planejar os dias*.
 - O app não promete no topo o que não entrega.
-- A escolha das 3 cascas segue acoplamento ao núcleo (ver [0008](0008-sistema-visual-tema-b-noturno.md) e a discussão de Orçamento como degrau pós-MVP).
-
-## Nota — "em breve" durante o build-out (2026-06-23)
-
-A regra acima mira o **produto v1 acabado**: nada de menu/grade global prometendo features **não-v1** (Tarefas, Hospedagem, Mapa…). Ela **não** proíbe sinalizar, durante o faseamento, uma feature **v1 já comprometida** que ainda não foi construída.
-
-Caso concreto (Fase 2): com login **aberto**, o usuário aterrissa numa **home empty-state** antes de *Criar Viagem* existir (Fase 4). É honesto a home dizer **uma linha** — "criar viagem está chegando" — porque é feature v1 em obras, não vaporware. O sinal é **temporário** e some quando a feature aterrissa. O que continua proibido é virar isso num **menu global de "em breve"** (o componente `em-breve-card` já carrega essa invariante: só dentro de uma Viagem). Topologia do login em [0011](0011-topologia-de-autenticacao.md).
+- A escolha das 3 cascas segue acoplamento ao núcleo (ver [`docs/design/README.md`](../design/README.md) e a discussão de Orçamento como degrau pós-MVP).
 
 Linguagem em [`../../CONTEXT.md`](../../CONTEXT.md).

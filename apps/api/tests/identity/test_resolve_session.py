@@ -1,4 +1,4 @@
-"""Use-case ResolveSession com fakes dos Ports (ADR-0013).
+"""Use-case ResolveSession com fakes dos Ports (ADR-0005).
 
 `then` afirma o retorno E o efeito no Port (persistir `last_used_at`) — interação
 de Port é comportamento observável, não acoplamento a implementação.

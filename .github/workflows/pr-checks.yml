@@ -3,7 +3,7 @@ name: pr-checks
 # Portão 2 — gate real antes do merge na main.
 # Dispara no push das branches de trabalho (incluindo worktree/** geradas
 # pelo agente). open-pr abre PR para a main quando todos os checks ficam
-# verdes; merge continua humano (ADR-0006 / ADR-0005).
+# verdes; merge continua humano (ADR-0003).
 
 on:
   push:

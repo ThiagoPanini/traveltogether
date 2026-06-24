@@ -1,8 +1,6 @@
 # Contexto de Domínio — travelmanager
 
-Glossário e invariantes que definem a **linguagem comum** do projeto. É lido por humanos e por agentes de IA antes de qualquer trabalho substantivo. Mudar algo aqui é mudar o jeito de pensar o produto.
-
-> **Status:** escrito do zero na sessão de grilling de reinício (2026-06-20), a partir apenas dessa conversa. Decisões e seus porquês em [docs/adr/](docs/adr/README.md).
+Glossário e invariantes que definem a **linguagem comum** do projeto — lido por humanos e agentes antes de qualquer trabalho substantivo. Mudar algo aqui é mudar o jeito de pensar o produto. Decisões e porquês em [docs/adr/](docs/adr/README.md).
 
 ## Convenção de nomes
 
@@ -38,6 +36,7 @@ _Evite_: rota — o Trajeto é o *objetivo* ("chegar em NY"); a Rota é o *camin
 **Rota** (`Route`):
 Um caminho candidato que realiza um Trajeto: sequência **ordenada** de Trechos. Duas Rotas com as **mesmas pontas** são alternativas a comparar (ex.: "direto" `SP→NY` vs "via Miami" `SP→MIA→NY`).
 _Evite_: trajeto, conexão, "itinerário de voo".
+> **Âncora:** `SP→NY` tem duas **Rotas** do mesmo **Trajeto** — direto vs via-Miami; a via-Miami tem dois **Trechos** (`SP→MIA` e `MIA→NY`). Uma ida-e-volta é **uma** **Pesquisa** cobrindo dois Trechos; marcar **Preferida** nela resolve os dois.
 
 **Trecho** (`Segment`):
 Cada **pulo** de uma Rota, entre dois pontos, com um **Modo**. É uma **compra à parte**. Hoje, só o Trecho aéreo hospeda Pesquisas.
@@ -86,15 +85,7 @@ _Evite_: adição instantânea.
 
 ### Em breve (nomeados, ainda não construídos)
 
-**Roteiro** / **Item de Roteiro**, **Orçamento** (com rateio e hospedagem), **cotação de carro**, **atração/ingresso**, **comentário**. Reservados aqui só para a linguagem ficar estável — **não existem na v1**.
-
-## Ambiguidades sinalizadas
-
-- **"Rota"** estava sobrecarregada (caminho inteiro vs cada pulo). Resolvido: **Rota** = caminho inteiro; **Trecho** = cada pulo.
-- **"Conexão"** confunde. Resolvido: **Escala** = parada técnica dentro de um bilhete (campo da Pesquisa); **Trecho** = compra separada. O "Miami no meio" de uma Rota via-Miami é o **extremo entre dois Trechos** — nem escala, nem a Parada Miami.
-- **"Destino"** não é entidade: é a **última Parada**.
-- **"Escolhida / eleição"** não existe: a decisão é a **Preferida**, pessoal.
-- **"Origem da viagem"** não existe: a origem é do **Perfil** do Usuário.
+Termos reservados só para a linguagem ficar estável — **não existem na v1**: **Roteiro** / **Item de Roteiro**, **Orçamento**, **cotação de carro**, **atração/ingresso**, **comentário**.
 
 ## Invariantes
 
@@ -108,16 +99,3 @@ _Evite_: adição instantânea.
 8. Hoje só **Trecho aéreo** hospeda Pesquisa/Preferida. **Terrestre** é conector estrutural sem cotação registrável (o custo do carro entra no Orçamento — em breve).
 9. **Camadas de escrita:** backbone (paradas/datas/destino/membros) = só Organizador; exploração (Rota/Trecho/Pesquisa) = qualquer Membro; plano pessoal (Preferida/Comprada) = só o dono. O autor edita/apaga o que é seu; o Organizador modera.
 10. Ninguém entra numa Viagem sem **aceitar** um Convite.
-
-## Diálogo de exemplo
-
-> **Dev:** Pra chegar em NY, o grupo vai direto ou via Miami?
-> **Thiago:** Os dois são opções — duas **Rotas** do mesmo **Trajeto** `SP→NY`. A "via Miami" tem dois **Trechos**: `SP→MIA` e `MIA→NY`.
-> **Dev:** E um voo direto que para em Bogotá no caminho?
-> **Thiago:** Esse é um **Trecho** só, com uma **Escala** — um bilhete. Diferente da via-Miami, que são dois bilhetes (dois Trechos).
-> **Dev:** Achei uma ida-e-volta `SP↔MIA` em milhas. Cadastro como duas Pesquisas?
-> **Thiago:** Não — **uma** Pesquisa cobrindo o Trecho de ida (`SP→MIA`) e o de volta (`MIA→SP`). Se eu marco **Preferida**, resolvo os dois de uma vez.
-> **Dev:** E o grupo vota pra escolher?
-> **Thiago:** Não tem voto. Cada um marca a **sua** Preferida e depois **Comprada**. Você vê a minha, eu vejo a sua — a prova social é essa.
-> **Dev:** O carro Miami→Orlando?
-> **Thiago:** É um **Trecho terrestre** — existe pra rota não mentir, mas não hospeda Pesquisa ainda. Cotação de aluguel é em breve.
