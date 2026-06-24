@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { COUNTRIES } from "@/lib/countries";
 import styles from "./onboarding.module.css";
@@ -15,6 +16,7 @@ import styles from "./onboarding.module.css";
  */
 export function OnboardingForm({ defaultName = "" }: { defaultName?: string }) {
   const router = useRouter();
+  const { update } = useSession();
   const [displayName, setDisplayName] = useState(defaultName);
   const [originCity, setOriginCity] = useState("");
   const [country, setCountry] = useState("");
@@ -38,6 +40,9 @@ export function OnboardingForm({ defaultName = "" }: { defaultName?: string }) {
       if (!res.ok) {
         throw new Error("request failed");
       }
+      // O JWT carimbado no login ainda diz `needsOnboarding`; renova a sessão para
+      // que o middleware não devolva a área logada ao /onboarding (#193).
+      await update({ needsOnboarding: false });
       router.refresh();
       router.push("/app");
     } catch {

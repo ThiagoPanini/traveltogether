@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
   redirect,
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
+vi.mock("next-auth/react", () => ({ useSession: () => ({ update: vi.fn() }) }));
 
 import OnboardingPage from "./page";
 

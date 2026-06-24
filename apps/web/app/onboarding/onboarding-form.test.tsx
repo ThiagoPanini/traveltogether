@@ -1,9 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { push, refresh } = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
+const { push, refresh, update } = vi.hoisted(() => ({
+  push: vi.fn(),
+  refresh: vi.fn(),
+  update: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+vi.mock("next-auth/react", () => ({ useSession: () => ({ update }) }));
 
 import { OnboardingForm } from "./onboarding-form";
 
@@ -21,6 +26,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   push.mockReset();
   refresh.mockReset();
+  update.mockReset();
 });
 
 describe("OnboardingForm (perfil mínimo)", () => {
@@ -48,6 +54,17 @@ describe("OnboardingForm (perfil mínimo)", () => {
     });
 
     // navegou para a área logada
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
+  });
+
+  it("renova a sessão (needsOnboarding=false) antes de seguir, pra rota protegida não voltar pro onboarding", async () => {
+    render(<OnboardingForm defaultName="Maria" />);
+    preencher();
+    fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
+
+    // o JWT carimbado no login fica obsoleto após onboardar; renovar evita o
+    // ping-pong /app → /onboarding no middleware (#193).
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ needsOnboarding: false }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
   });
 

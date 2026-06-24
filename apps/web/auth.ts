@@ -79,10 +79,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.needsOnboarding = verified.needsOnboarding;
       return true;
     },
-    jwt: ({ token, user }) => {
+    jwt: ({ token, user, trigger, session }) => {
       if (user) {
         token.accessToken = user.accessToken;
         token.needsOnboarding = user.needsOnboarding;
+      }
+      // `update({ needsOnboarding })` do onboarding renova o token obsoleto do login
+      // (senão o middleware devolveria a área logada ao /onboarding — #193).
+      if (trigger === "update" && session && typeof session === "object") {
+        const next = (session as { needsOnboarding?: boolean }).needsOnboarding;
+        if (typeof next === "boolean") {
+          token.needsOnboarding = next;
+        }
       }
       return token;
     },
