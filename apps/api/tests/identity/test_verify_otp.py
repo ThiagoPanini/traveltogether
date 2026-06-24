@@ -17,6 +17,7 @@ from tests.identity.conftest import (
     FixedClock,
 )
 from travelmanager.identity.application.use_cases import (
+    MAX_OTP_ATTEMPTS,
     CreateSession,
     VerifyOtp,
 )
@@ -148,6 +149,69 @@ class TestVerifyOtpHappyPath:
         user, _, _ = verify("  Viajante@Example.COM ", _CODE)
         # then:
         assert user.email == "viajante@example.com"
+
+
+class TestVerifyOtpKillSwitch:
+    def test_conta_desativada_nao_loga(
+        self,
+        otps: FakeOtpRepository,
+        users: FakeUserRepository,
+        sessions: FakeSessionRepository,
+        clock: FixedClock,
+        tokens: FakeTokenGenerator,
+    ) -> None:
+        # given: conta existente com kill-switch acionado e um OTP ainda válido
+        inactive = User(email="viajante@example.com", email_verified_at=clock.now())
+        inactive.is_active = False
+        users.save(inactive)
+        _seed_otp(otps, expires_at=clock.now() + timedelta(minutes=5))
+        verify = _build_verify(otps, users, sessions, clock, tokens)
+        # when/then: o código está certo, mas a conta barrada não autentica (#194)
+        with pytest.raises(Unauthorized):
+            verify("viajante@example.com", _CODE)
+        assert sessions.saved == []
+
+
+class TestVerifyOtpMaxTentativas:
+    def test_sexta_tentativa_erra_e_invalida_o_codigo(
+        self,
+        otps: FakeOtpRepository,
+        users: FakeUserRepository,
+        sessions: FakeSessionRepository,
+        clock: FixedClock,
+        tokens: FakeTokenGenerator,
+    ) -> None:
+        # given: um OTP válido sob brute-force
+        _seed_otp(otps, expires_at=clock.now() + timedelta(minutes=5))
+        verify = _build_verify(otps, users, sessions, clock, tokens)
+        # when: esgota as tentativas erradas permitidas
+        for _ in range(MAX_OTP_ATTEMPTS):
+            with pytest.raises(Unauthorized):
+                verify("viajante@example.com", "000000")
+        # then: a tentativa seguinte, mesmo com o código certo, é barrada e o código
+        # fica invalidado (anti brute-force, #194)
+        with pytest.raises(Unauthorized):
+            verify("viajante@example.com", _CODE)
+        assert otps.get_active("viajante@example.com", clock.now()) is None
+
+    def test_codigo_certo_dentro_do_limite_ainda_loga(
+        self,
+        otps: FakeOtpRepository,
+        users: FakeUserRepository,
+        sessions: FakeSessionRepository,
+        clock: FixedClock,
+        tokens: FakeTokenGenerator,
+    ) -> None:
+        # given: um OTP válido e algumas tentativas erradas (abaixo do teto)
+        _seed_otp(otps, expires_at=clock.now() + timedelta(minutes=5))
+        verify = _build_verify(otps, users, sessions, clock, tokens)
+        for _ in range(MAX_OTP_ATTEMPTS - 1):
+            with pytest.raises(Unauthorized):
+                verify("viajante@example.com", "000000")
+        # when: acerta antes de estourar o limite
+        _, token, _ = verify("viajante@example.com", _CODE)
+        # then: ainda autentica (o usuário legítimo não fica trancado fora)
+        assert token
 
 
 class TestVerifyOtpRejeicao:

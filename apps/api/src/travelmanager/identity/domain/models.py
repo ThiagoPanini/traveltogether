@@ -20,6 +20,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -147,6 +148,24 @@ class OtpCode(Base):
             contrário.
         """
         return self.consumed_at is None and _as_aware(self.expires_at) > moment
+
+
+class RateEvent(Base):
+    """Evento de uso para rate-limit DB-backed (#194): hits por `(scope, key)` em janelas.
+
+    Sem Redis no stack (ADR-0004): a contagem de eventos numa janela decide o bloqueio.
+    `occurred_at` é o instante **lógico** do evento (vindo do `Clock`), gravado em
+    naive-UTC para que a contagem em janela seja uniforme entre o SQLite dos testes e o
+    Postgres. Append-only; varrer eventos velhos fica para manutenção futura.
+    """
+
+    __tablename__ = "rate_events"
+    __table_args__ = (Index("ix_rate_events_scope_key_time", "scope", "key", "occurred_at"),)
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    scope: Mapped[str] = mapped_column(String(40))
+    key: Mapped[str] = mapped_column(String(320))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=False))
 
 
 class AuthIdentity(Base):

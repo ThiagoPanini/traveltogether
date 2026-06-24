@@ -1,7 +1,8 @@
 """Registro dos modelos de identidade no metadata (autoridade de identidade, ADR-0004).
 
-Garante que as 5 tabelas da Fase 2 nascem no mesmo `Base.metadata` (em
-`shared/db.py`) que o `alembic/env.py` consome para autogerar migrations.
+Garante que as tabelas da Fase 2 nascem no mesmo `Base.metadata` (em `shared/db.py`)
+que o `alembic/env.py` consome para autogerar migrations — incluindo `rate_events`,
+o suporte do rate-limit DB-backed (#194).
 """
 
 from datetime import UTC, datetime, timedelta
@@ -41,14 +42,15 @@ class TestOtpCodeIsRedeemableAt:
         assert otp.is_redeemable_at(_NOW) is True
 
 
-def test_metadata_registra_as_cinco_tabelas() -> None:
-    # given/when/then: as 5 tabelas do contexto estão no metadata
+def test_metadata_registra_as_tabelas_do_contexto() -> None:
+    # given/when/then: as tabelas do contexto estão no metadata
     assert set(Base.metadata.tables) == {
         "users",
         "profiles",
         "sessions",
         "otp_codes",
         "auth_identities",
+        "rate_events",
     }
 
 

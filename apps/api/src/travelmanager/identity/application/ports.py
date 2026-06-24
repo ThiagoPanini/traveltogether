@@ -5,6 +5,7 @@
 verifica no ponto de uso (o retorno anotado dos `provide_*`).
 """
 
+import uuid
 from datetime import datetime
 from typing import Protocol
 
@@ -23,6 +24,18 @@ class SessionRepository(Protocol):
 
         Returns:
             A sessão correspondente, ou `None` se não houver.
+        """
+        ...
+
+    def active_for_user(self, user_id: uuid.UUID) -> list[AuthSession]:
+        """Lista as sessões não-revogadas de um usuário (alvo do logout global).
+
+        Args:
+            user_id: Dono das sessões.
+
+        Returns:
+            As sessões ainda não revogadas (expiradas ou não — revogar uma já
+            expirada é inócuo).
         """
         ...
 
@@ -137,6 +150,33 @@ class CodeGenerator(Protocol):
 
     def generate(self) -> str:
         """Cunha um código OTP de 6 dígitos numéricos (zeros à esquerda inclusos)."""
+        ...
+
+
+class RateLimiter(Protocol):
+    """Contador DB-backed para rate-limit em janelas (sem Redis no stack; #194)."""
+
+    def count_since(self, scope: str, key: str, since: datetime) -> int:
+        """Conta os eventos de `(scope, key)` ocorridos desde `since` (inclusive).
+
+        Args:
+            scope: Família do limite (ex.: `otp:email`, `otp:ip`, `otp:global`).
+            key: Identificador dentro do escopo (e-mail, IP, ou a chave global).
+            since: Início da janela (instante a partir do qual contar).
+
+        Returns:
+            Quantos eventos caíram na janela.
+        """
+        ...
+
+    def record(self, scope: str, key: str, at: datetime) -> None:
+        """Registra um evento de `(scope, key)` no instante lógico `at`.
+
+        Args:
+            scope: Família do limite.
+            key: Identificador dentro do escopo.
+            at: Instante lógico do evento (vindo do `Clock`).
+        """
         ...
 
 

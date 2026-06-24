@@ -10,12 +10,13 @@ fatias seguintes e reusam os use-cases de sessão.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 
 from travelmanager.identity.adapters.dependencies import (
     provide_complete_onboarding,
     provide_request_otp,
     provide_resolve_session,
+    provide_revoke_all_sessions,
     provide_revoke_session,
     provide_sign_in_with_google,
     provide_verify_otp,
@@ -34,6 +35,7 @@ from travelmanager.identity.application.use_cases import (
     CompleteOnboarding,
     RequestOtp,
     ResolveSession,
+    RevokeAllSessions,
     RevokeSession,
     SignInWithGoogle,
     VerifyOtp,
@@ -41,6 +43,24 @@ from travelmanager.identity.application.use_cases import (
 from travelmanager.identity.domain.models import AuthSession, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _client_ip(request: Request) -> str | None:
+    """Descobre o IP do cliente para o rate-limit por origem (#194).
+
+    A API é interna (ADR-0004): o BFF é quem fala com o cliente, então o IP real
+    chega no `X-Forwarded-For` (primeiro hop). Sem ele, cai no peer da conexão.
+
+    Args:
+        request: Request HTTP corrente.
+
+    Returns:
+        O IP do cliente, ou `None` se indeterminado.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
 
 
 def _bearer_token(authorization: str | None) -> str | None:
@@ -138,24 +158,50 @@ def logout(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+def logout_all(
+    session: CurrentSession,
+    revoke_all: Annotated[RevokeAllSessions, Depends(provide_revoke_all_sessions)],
+) -> Response:
+    """Logout global: revoga todas as sessões do usuário corrente (#194).
+
+    Derruba todos os dispositivos de uma vez; o token corrente também para de valer.
+
+    Args:
+        session: Sessão corrente resolvida pela dependency (identifica o usuário).
+        revoke_all: Use-case de revogação global.
+
+    Returns:
+        Resposta 204 sem corpo.
+    """
+    revoke_all(session.user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post("/otp/request", status_code=status.HTTP_202_ACCEPTED)
 def otp_request(
     payload: OtpRequestIn,
+    request: Request,
     request_otp: Annotated[RequestOtp, Depends(provide_request_otp)],
 ) -> Response:
     """Passo 1: emite um código OTP para o e-mail e dispara o transporte.
 
     Anti-enumeração (ADR-0004): responde sempre 202, exista ou não conta — não
-    revela quem já tem cadastro.
+    revela quem já tem cadastro. Rate-limit por e-mail/IP/global (#194): estourar
+    levanta `RateLimited` (→ 429) **sem** gerar código.
 
     Args:
         payload: Corpo com o e-mail.
-        request_otp: Use-case que gera, persiste e envia o código.
+        request: Request HTTP corrente (de onde sai o IP do cliente).
+        request_otp: Use-case que gera, persiste e envia o código sob rate-limit.
 
     Returns:
         Resposta 202 sem corpo (o código nunca trafega na resposta).
+
+    Raises:
+        RateLimited: cooldown ativo ou teto por e-mail/IP/global estourado (→ 429).
     """
-    request_otp(payload.email)
+    request_otp(payload.email, ip=_client_ip(request))
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 

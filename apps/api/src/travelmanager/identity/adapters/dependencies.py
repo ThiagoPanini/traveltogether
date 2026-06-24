@@ -21,6 +21,7 @@ from travelmanager.identity.adapters.google import GoogleIdTokenVerifier
 from travelmanager.identity.adapters.repository import (
     SqlAlchemyIdentityRepository,
     SqlAlchemyOtpRepository,
+    SqlAlchemyRateLimiter,
     SqlAlchemySessionRepository,
     SqlAlchemyUserRepository,
 )
@@ -29,12 +30,14 @@ from travelmanager.identity.application.ports import (
     CodeGenerator,
     EmailSender,
     GoogleTokenVerifier,
+    RateLimiter,
 )
 from travelmanager.identity.application.use_cases import (
     CompleteOnboarding,
     CreateSession,
     RequestOtp,
     ResolveSession,
+    RevokeAllSessions,
     RevokeSession,
     SignInWithGoogle,
     VerifyOtp,
@@ -106,13 +109,26 @@ def provide_revoke_session(db: Annotated[Session, Depends(get_db)]) -> RevokeSes
     return RevokeSession(SqlAlchemySessionRepository(db), SystemClock())
 
 
+def provide_revoke_all_sessions(db: Annotated[Session, Depends(get_db)]) -> RevokeAllSessions:
+    """Monta o use-case `RevokeAllSessions` (logout global) para o request corrente."""
+    return RevokeAllSessions(SqlAlchemySessionRepository(db), SystemClock())
+
+
+def provide_rate_limiter(db: Annotated[Session, Depends(get_db)]) -> RateLimiter:
+    """Limitador DB-backed do request corrente (sobrescrevível por um fake nos testes)."""
+    return SqlAlchemyRateLimiter(db)
+
+
 def provide_request_otp(
     db: Annotated[Session, Depends(get_db)],
     codes: Annotated[CodeGenerator, Depends(provide_code_generator)],
     email_sender: Annotated[EmailSender, Depends(provide_email_sender)],
+    rate_limiter: Annotated[RateLimiter, Depends(provide_rate_limiter)],
 ) -> RequestOtp:
-    """Monta o use-case `RequestOtp` para o request corrente."""
-    return RequestOtp(SqlAlchemyOtpRepository(db), SystemClock(), codes, email_sender, otp_pepper())
+    """Monta o use-case `RequestOtp` (com rate-limit) para o request corrente."""
+    return RequestOtp(
+        SqlAlchemyOtpRepository(db), SystemClock(), codes, email_sender, rate_limiter, otp_pepper()
+    )
 
 
 def provide_verify_otp(db: Annotated[Session, Depends(get_db)]) -> VerifyOtp:

@@ -119,3 +119,26 @@ class TestAuthLogout:
         resp = client.post("/auth/logout")
         # then:
         assert resp.status_code == 401
+
+
+class TestAuthLogoutAll:
+    def test_logout_all_derruba_todas_as_sessoes(
+        self, client: TestClient, user: User, mint_session: Callable[..., str]
+    ) -> None:
+        # given: o mesmo usuário logado em dois dispositivos
+        primeiro = mint_session(user)
+        segundo = mint_session(user)
+        assert client.get("/auth/me", headers=_auth(primeiro)).status_code == 200
+        # when: logout global a partir de um deles
+        resp = client.post("/auth/logout-all", headers=_auth(segundo))
+        # then: 204 e nenhum dos tokens valida mais (#194)
+        assert resp.status_code == 204
+        assert client.get("/auth/me", headers=_auth(primeiro)).status_code == 401
+        assert client.get("/auth/me", headers=_auth(segundo)).status_code == 401
+
+    def test_logout_all_sem_credencial_retorna_401(self, client: TestClient) -> None:
+        # given: requisição sem credencial
+        # when:
+        resp = client.post("/auth/logout-all")
+        # then:
+        assert resp.status_code == 401

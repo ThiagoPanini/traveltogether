@@ -8,6 +8,9 @@ import styles from "./entrar.module.css";
 
 const OTP_TTL_SECONDS = 600;
 const CODE_LENGTH = 6;
+// Cooldown de reenvio no cliente (#194): espelha o teto do servidor e evita o
+// disparo repetido que voltaria como 429.
+const RESEND_COOLDOWN_SECONDS = 30;
 
 type Step = "email" | "code";
 
@@ -27,8 +30,8 @@ function formatRemaining(seconds: number): string {
  * `/onboarding` antes da área logada (#192). "Continuar com Google" dispara o
  * provedor `google` do Auth.js (#191), que troca o `id_token` por uma sessão na API e
  * cai no `/onboarding` (que desvia quem já onboardou); sem credencial Google
- * (`googleEnabled` falso), o botão fica "indisponível". Endurecimento (cooldown,
- * tentativas) é a fatia #194.
+ * (`googleEnabled` falso), o botão fica "indisponível". O reenvio do código tem
+ * cooldown de 30s (#194), espelhando o teto do servidor.
  */
 export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter();
@@ -38,6 +41,7 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [remaining, setRemaining] = useState(OTP_TTL_SECONDS);
+  const [resendIn, setResendIn] = useState(0);
 
   useEffect(() => {
     if (step !== "code") {
@@ -45,28 +49,54 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
     }
     const id = setInterval(() => {
       setRemaining((value) => (value > 0 ? value - 1 : 0));
+      setResendIn((value) => (value > 0 ? value - 1 : 0));
     }, 1000);
     return () => clearInterval(id);
   }, [step]);
+
+  async function pedirCodigo(): Promise<boolean> {
+    const res = await fetch("/api/otp/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    return res.ok;
+  }
 
   async function handleRequest(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setPending(true);
     try {
-      const res = await fetch("/api/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) {
+      if (!(await pedirCodigo())) {
         throw new Error("request failed");
       }
       setCode("");
       setRemaining(OTP_TTL_SECONDS);
+      setResendIn(RESEND_COOLDOWN_SECONDS);
       setStep("code");
     } catch {
       setError("Não consegui enviar o código agora. Tente de novo.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleResend() {
+    if (resendIn > 0 || pending) {
+      return;
+    }
+    setError(null);
+    setPending(true);
+    try {
+      if (!(await pedirCodigo())) {
+        throw new Error("resend failed");
+      }
+      setCode("");
+      setRemaining(OTP_TTL_SECONDS);
+      setResendIn(RESEND_COOLDOWN_SECONDS);
+    } catch {
+      setError("Não consegui reenviar o código agora. Tente de novo.");
     } finally {
       setPending(false);
     }
@@ -156,6 +186,14 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
         disabled={pending || code.length < CODE_LENGTH}
       >
         Embarcar →
+      </button>
+      <button
+        type="button"
+        className={styles.ghost}
+        onClick={handleResend}
+        disabled={pending || resendIn > 0}
+      >
+        {resendIn > 0 ? `Reenviar em ${formatRemaining(resendIn)}` : "Reenviar código"}
       </button>
       <button type="button" className={styles.ghost} onClick={trocarEmail}>
         Trocar e-mail

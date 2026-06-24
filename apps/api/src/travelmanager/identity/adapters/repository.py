@@ -6,12 +6,24 @@ erro de constraint **dentro** do use-case (traduzível); a durabilidade fica par
 commit único em `get_db`.
 """
 
-from datetime import datetime
+import uuid
+from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from travelmanager.identity.domain.models import AuthIdentity, AuthSession, OtpCode, User
+from travelmanager.identity.domain.models import (
+    AuthIdentity,
+    AuthSession,
+    OtpCode,
+    RateEvent,
+    User,
+)
+
+
+def _naive_utc(moment: datetime) -> datetime:
+    """Converte para UTC naive (a forma gravada/comparada em `rate_events`)."""
+    return moment.astimezone(UTC).replace(tzinfo=None) if moment.tzinfo is not None else moment
 
 
 class SqlAlchemySessionRepository:
@@ -35,6 +47,23 @@ class SqlAlchemySessionRepository:
             A sessão correspondente, ou `None`.
         """
         return self._db.scalar(select(AuthSession).where(AuthSession.token_hash == token_hash))
+
+    def active_for_user(self, user_id: uuid.UUID) -> list[AuthSession]:
+        """Lista as sessões não-revogadas do usuário.
+
+        Args:
+            user_id: Dono das sessões.
+
+        Returns:
+            As sessões com `revoked_at IS NULL`.
+        """
+        return list(
+            self._db.scalars(
+                select(AuthSession).where(
+                    AuthSession.user_id == user_id, AuthSession.revoked_at.is_(None)
+                )
+            )
+        )
 
     def save(self, session: AuthSession) -> None:
         """Persiste a sessão: `add` + `flush` (sem commit).
@@ -117,6 +146,56 @@ class SqlAlchemyUserRepository:
             user: A entidade a persistir.
         """
         self._db.add(user)
+        self._db.flush()
+
+
+class SqlAlchemyRateLimiter:
+    """`RateLimiter` sobre SQLAlchemy: conta e registra eventos em `rate_events`.
+
+    Sem Redis no stack (#194): a janela é uma contagem `WHERE occurred_at >= since`.
+    Instantes são normalizados para UTC naive antes de gravar/comparar, para que a
+    contagem seja uniforme entre o SQLite dos testes e o Postgres.
+    """
+
+    def __init__(self, db: Session) -> None:
+        """Inicializa o limitador.
+
+        Args:
+            db: Sessão SQLAlchemy do request corrente.
+        """
+        self._db = db
+
+    def count_since(self, scope: str, key: str, since: datetime) -> int:
+        """Conta os eventos de `(scope, key)` desde `since`.
+
+        Args:
+            scope: Família do limite.
+            key: Identificador dentro do escopo.
+            since: Início da janela.
+
+        Returns:
+            Quantos eventos caíram na janela.
+        """
+        total = self._db.scalar(
+            select(func.count())
+            .select_from(RateEvent)
+            .where(
+                RateEvent.scope == scope,
+                RateEvent.key == key,
+                RateEvent.occurred_at >= _naive_utc(since),
+            )
+        )
+        return total or 0
+
+    def record(self, scope: str, key: str, at: datetime) -> None:
+        """Registra um evento de `(scope, key)`: `add` + `flush` (sem commit).
+
+        Args:
+            scope: Família do limite.
+            key: Identificador dentro do escopo.
+            at: Instante lógico do evento.
+        """
+        self._db.add(RateEvent(scope=scope, key=key, occurred_at=_naive_utc(at)))
         self._db.flush()
 
 

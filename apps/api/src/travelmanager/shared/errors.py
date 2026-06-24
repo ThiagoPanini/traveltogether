@@ -54,6 +54,8 @@ class Unauthorized(DomainError):
 class RateLimited(DomainError):
     """Operação barrada por throttling."""
 
+    code = "rate_limited"
+
 
 _STATUS: dict[type[DomainError], int] = {
     NotFound: 404,

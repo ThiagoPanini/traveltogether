@@ -6,6 +6,7 @@ de caracterização HTTP) e os **fakes dos Ports** (sem DB, sem transação) que
 testes de use-case consomem.
 """
 
+import uuid
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 
@@ -93,6 +94,9 @@ class FakeSessionRepository:
 
     def get_by_token_hash(self, token_hash: str) -> AuthSession | None:
         return self._by_hash.get(token_hash)
+
+    def active_for_user(self, user_id: uuid.UUID) -> list[AuthSession]:
+        return [s for s in self._by_hash.values() if s.user_id == user_id and s.revoked_at is None]
 
     def save(self, session: AuthSession) -> None:
         self.saved.append(session)
@@ -184,6 +188,27 @@ class FakeEmailSender:
         self.sent.append((email, code))
 
 
+class FakeRateLimiter:
+    """`RateLimiter` fake: conta eventos em memória; `force` finge contagens.
+
+    Por padrão conta os `record`ados de fato (cobre cooldown com `FixedClock`). Para
+    exercitar uma janela específica sem depender do relógio, `force[(scope, key)]`
+    sobrepõe a contagem daquele `(scope, key)`.
+    """
+
+    def __init__(self) -> None:
+        self.events: list[tuple[str, str, datetime]] = []
+        self.force: dict[tuple[str, str], int] = {}
+
+    def count_since(self, scope: str, key: str, since: datetime) -> int:
+        if (scope, key) in self.force:
+            return self.force[(scope, key)]
+        return sum(1 for s, k, at in self.events if s == scope and k == key and at >= since)
+
+    def record(self, scope: str, key: str, at: datetime) -> None:
+        self.events.append((scope, key, at))
+
+
 @pytest.fixture
 def clock() -> FixedClock:
     """Relógio fixo num instante UTC determinístico."""
@@ -230,3 +255,9 @@ def codes() -> FakeCodeGenerator:
 def email_sender() -> FakeEmailSender:
     """Transporte de e-mail que captura os envios."""
     return FakeEmailSender()
+
+
+@pytest.fixture
+def rate_limiter() -> FakeRateLimiter:
+    """Rate-limiter em memória (permissivo por padrão)."""
+    return FakeRateLimiter()

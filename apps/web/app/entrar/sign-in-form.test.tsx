@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { push, signIn, getSession } = vi.hoisted(() => ({
@@ -118,6 +118,50 @@ describe("SignInForm (login OTP, duas etapas)", () => {
 
     expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: /código de embarque/i })).not.toBeInTheDocument();
+  });
+
+  it("reenviar começa em cooldown (desabilitado) logo após pedir o código", async () => {
+    render(<SignInForm />);
+    fireEvent.change(screen.getByLabelText(/e-mail/i), {
+      target: { value: "viajante@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    await screen.findByRole("group", { name: /código de embarque/i });
+
+    // o reenvio nasce travado por um cooldown (#194) — anti-spam no cliente
+    expect(screen.getByRole("button", { name: /reenviar/i })).toBeDisabled();
+  });
+
+  it("passado o cooldown, 'reenviar' habilita e dispara novo pedido de OTP", async () => {
+    vi.useFakeTimers();
+    try {
+      render(<SignInForm />);
+      fireEvent.change(screen.getByLabelText(/e-mail/i), {
+        target: { value: "viajante@example.com" },
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+      });
+      expect(screen.getByRole("button", { name: /reenviar/i })).toBeDisabled();
+
+      // o cooldown escoa
+      act(() => {
+        vi.advanceTimersByTime(30_000);
+      });
+      const reenviar = screen.getByRole("button", { name: /reenviar código/i });
+      expect(reenviar).toBeEnabled();
+
+      // re-pede o código pelo mesmo proxy do BFF
+      await act(async () => {
+        fireEvent.click(reenviar);
+      });
+      const pedidos = vi
+        .mocked(fetch)
+        .mock.calls.filter(([url]) => String(url).includes("/api/otp/request"));
+      expect(pedidos.length).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("código recusado não navega e mostra erro", async () => {

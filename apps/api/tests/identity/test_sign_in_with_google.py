@@ -23,6 +23,7 @@ from travelmanager.identity.application.use_cases import (
     SignInWithGoogle,
 )
 from travelmanager.identity.domain.google import GoogleClaims
+from travelmanager.identity.domain.models import User
 from travelmanager.shared.errors import Unauthorized
 
 _TOKEN = "id-token-valido"
@@ -130,6 +131,26 @@ class TestSignInWithGoogleRejeicao:
             sign_in("token-forjado")
         assert sessions.saved == []
         assert users.saved == []
+        assert identities.saved == []
+
+    def test_conta_desativada_nao_loga(
+        self,
+        users: FakeUserRepository,
+        identities: FakeIdentityRepository,
+        sessions: FakeSessionRepository,
+        clock: FixedClock,
+        tokens: FakeTokenGenerator,
+    ) -> None:
+        # given: conta pré-existente (mesma chave natural) com kill-switch acionado
+        inactive = User(email="viajante@example.com", email_verified_at=clock.now())
+        inactive.is_active = False
+        users.save(inactive)
+        sign_in = _build_sign_in(_verifier(), users, identities, sessions, clock, tokens)
+        # when/then: Google atesta o e-mail, mas a conta barrada não autentica nem
+        # cria vínculo (#194)
+        with pytest.raises(Unauthorized):
+            sign_in(_TOKEN)
+        assert sessions.saved == []
         assert identities.saved == []
 
     def test_email_nao_verificado_nao_autentica(
