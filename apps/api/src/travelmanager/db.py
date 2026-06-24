@@ -5,9 +5,12 @@ conectividade (readiness) e dar à Fase 2 (identidade) um ponto de partida pront
 """
 
 import os
+from collections.abc import Iterator
 from functools import lru_cache
 
+from fastapi import HTTPException
 from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.orm import Session, sessionmaker
 
 
 def get_database_url() -> str | None:
@@ -57,3 +60,31 @@ def database_ready(engine: Engine | None) -> bool:
         return True
     except Exception:
         return False
+
+
+@lru_cache
+def get_sessionmaker() -> sessionmaker[Session] | None:
+    """Fábrica de sessões ligada à engine; None quando não há banco configurado."""
+    engine = get_engine()
+    if engine is None:
+        return None
+    return sessionmaker(engine, expire_on_commit=False)
+
+
+def get_db() -> Iterator[Session]:
+    """Dependência FastAPI: sessão por-request, commit no sucesso, rollback no erro.
+
+    Sobrescrevível em testes via `app.dependency_overrides`.
+    """
+    factory = get_sessionmaker()
+    if factory is None:
+        raise HTTPException(status_code=503, detail="banco indisponível")
+    db = factory()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
