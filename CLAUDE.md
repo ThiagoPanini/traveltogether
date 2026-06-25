@@ -12,12 +12,12 @@ App de organização de viagens em grupo (alma: compartilhar/decidir **Pesquisas
 
 ## Modo de implementação autônoma
 
-Disparado por "implementa as issues" (ou equivalente): colete as issues `status:ready-for-agent` abertas (sem `status:blocked`) do milestone da fase → um **git worktree por issue** → `/tdd` (RED→GREEN→refactor) → commit + push (Conventional Commits) → a esteira `pr-checks` abre o PR → **mergeie no verde** → encadeie até as issues acabarem, **parando só se o operador pedir** (ex.: compactar contexto). Fluxo completo em [`docs/agents/workflow.md`](docs/agents/workflow.md).
+Disparado por "implementa as issues" (ou equivalente): colete as issues `status:ready-for-agent` abertas (sem `status:blocked`) do milestone da fase → um **git worktree por issue** → skill /tdd (RED→GREEN→refactor) → commit + push (Conventional Commits) → a esteira `pr-checks` abre o PR → **mergeie no verde** → encadeie até as issues acabarem, **parando só se o operador pedir** (ex.: compactar contexto). Fluxo completo em [`docs/agents/workflow.md`](docs/agents/workflow.md).
 
 ## Fonte-da-verdade — leia antes de trabalho substantivo
 
 1. **`CONTEXT.md`** — glossário de domínio + invariantes (regras que sempre valem; código que as viola é bug).
-2. **`docs/adr/`** ([índice](docs/adr/README.md)) — decisões e seus porquês.
+2. **`docs/adr/`** ([índice](docs/adr/README.md)) — decisões e seus porquês. Não leia todos os ADRs, apenas saiba o que existe.
 3. **`docs/design/README.md`** — contrato vivo do sistema visual `Noturno`.
 
 ## Convenções (não negociáveis)
@@ -35,7 +35,7 @@ Disparado por "implementa as issues" (ou equivalente): colete as issues `status:
 
 ## Padrões de backend (hexagonal pragmática — ADR-0005)
 
-Ao tocar `apps/api/`, siga isto. **Não** engatilhe as skills `hexagonal-architecture` / `python-*` no dia-a-dia — são referência sob demanda; o padrão está destilado aqui.
+Ao tocar `apps/api/`, considere os itens abaixo:
 
 - **Layout:** contexto **feature-first** (`identity/`, depois `trips/`, `fares/`…) com 3 costuras `domain/ application/ adapters/`, **flat dentro** (subpasta só com 2+ adapters do mesmo lado). Infra cross-contexto em `shared/` (`db`, `clock`, `errors`).
 - **Idioma:** Ports = `typing.Protocol`. Use-case = `@dataclass(frozen=True, slots=True)` com `__call__`, Ports como campos. Wiring = `provide_*` em `adapters/dependencies.py` (um composition root por contexto; rotas só `Depends(provide_…)`).
