@@ -14,6 +14,12 @@ _log = logging.getLogger("travelmanager.otp")
 
 _RESEND_ENDPOINT = "https://api.resend.com/emails"
 _SUBJECT = "Seu código de embarque"
+# A API do Resend fica atrás do Cloudflare, que barra o User-Agent default do urllib
+# (`Python-urllib/X.Y`) com 403 (error 1010). Um UA próprio passa — sem isto o envio
+# real falhava em produção (#196).
+_USER_AGENT = "travelmanager-api"
+# Teto para a chamada de rede não pendurar o thread do request indefinidamente.
+_TIMEOUT_SECONDS = 10
 
 
 def _body(code: str) -> str:
@@ -63,7 +69,8 @@ class ResendEmailSender:
             headers={
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
+                "User-Agent": _USER_AGENT,
             },
             method="POST",
         )
-        urllib.request.urlopen(req).close()  # noqa: S310 — URL é constante interna
+        urllib.request.urlopen(req, timeout=_TIMEOUT_SECONDS).close()  # noqa: S310 — URL é constante interna

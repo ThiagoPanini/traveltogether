@@ -5,13 +5,15 @@ manda e-mail de verdade — registra o código no log, e é o que roda sem
 `RESEND_API_KEY` para não travar o desenvolvimento AFK.
 """
 
+import json
 import logging
+import urllib.request
 
 import pytest
 
 from travelmanager.identity.adapters.codes import SecretsCodeGenerator
 from travelmanager.identity.adapters.dependencies import provide_email_sender
-from travelmanager.identity.adapters.email import DevEmailSender
+from travelmanager.identity.adapters.email import DevEmailSender, ResendEmailSender
 
 
 class TestSecretsCodeGenerator:
@@ -41,6 +43,58 @@ class TestDevEmailSender:
         # then: código capturável no log (sem Resend)
         assert "246813" in caplog.text
         assert "viajante@example.com" in caplog.text
+
+
+class TestResendEmailSender:
+    def test_envia_com_user_agent_proprio(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # given: transporte Resend com a chamada de rede interceptada
+        capturado: dict[str, object] = {}
+
+        class _Resp:
+            def close(self) -> None: ...
+
+        def _fake_urlopen(req: urllib.request.Request, **kwargs: object) -> _Resp:
+            capturado["req"] = req
+            capturado["timeout"] = kwargs.get("timeout")
+            return _Resp()
+
+        monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
+        sender = ResendEmailSender("re_test", "no-reply@mail.panlabs.tech")
+        # when:
+        sender.send_code("viajante@example.com", "246813")
+        # then: User-Agent próprio — o default `Python-urllib` é barrado por
+        # Cloudflare (403, error 1010) na frente da API do Resend.
+        req = capturado["req"]
+        assert isinstance(req, urllib.request.Request)
+        user_agent = req.get_header("User-agent")
+        assert user_agent is not None
+        assert "python-urllib" not in user_agent.lower()
+
+    def test_envia_payload_e_timeout(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # given: transporte Resend com a chamada de rede interceptada
+        capturado: dict[str, object] = {}
+
+        class _Resp:
+            def close(self) -> None: ...
+
+        def _fake_urlopen(req: urllib.request.Request, **kwargs: object) -> _Resp:
+            capturado["req"] = req
+            capturado["timeout"] = kwargs.get("timeout")
+            return _Resp()
+
+        monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
+        sender = ResendEmailSender("re_test", "no-reply@mail.panlabs.tech")
+        # when:
+        sender.send_code("viajante@example.com", "246813")
+        # then: remetente/destinatário/código no corpo e timeout para não pendurar o request
+        req = capturado["req"]
+        assert isinstance(req, urllib.request.Request)
+        assert isinstance(req.data, bytes)
+        corpo = json.loads(req.data)
+        assert corpo["from"] == "no-reply@mail.panlabs.tech"
+        assert corpo["to"] == ["viajante@example.com"]
+        assert "246813" in corpo["text"]
+        assert isinstance(capturado["timeout"], (int, float))
 
 
 class TestEmailSenderSelection:
