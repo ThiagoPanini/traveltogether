@@ -45,4 +45,42 @@ describe("OtpInput (código de embarque)", () => {
     fireEvent.change(cells[0], { target: { value: "a" } });
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("colar 6 dígitos na primeira célula preenche o código inteiro", () => {
+    render(<Harness />);
+    const cells = screen.getAllByRole("textbox");
+    fireEvent.paste(cells[0], {
+      clipboardData: { getData: () => "246813" },
+    });
+    expect(screen.getByTestId("valor")).toHaveTextContent("246813");
+  });
+
+  it("colar dígitos no meio do código preenche a partir dali", () => {
+    render(<Harness />);
+    const cells = screen.getAllByRole("textbox");
+    // Parte dos dígitos já preenchidos via change para simular valor inicial
+    fireEvent.change(cells[0], { target: { value: "1" } });
+    fireEvent.change(cells[1], { target: { value: "2" } });
+    // Cola a partir da célula 2 (index 2)
+    fireEvent.paste(cells[2], {
+      clipboardData: { getData: () => "3456" },
+    });
+    expect(screen.getByTestId("valor")).toHaveTextContent("123456");
+  });
+
+  it("autofill (múltiplos dígitos na primeira célula) distribui o código", () => {
+    render(<Harness />);
+    const cells = screen.getAllByRole("textbox");
+    fireEvent.change(cells[0], { target: { value: "246813" } });
+    expect(screen.getByTestId("valor")).toHaveTextContent("246813");
+  });
+
+  it("colar ignora não-dígitos e extrai só números", () => {
+    render(<Harness />);
+    const cells = screen.getAllByRole("textbox");
+    fireEvent.paste(cells[0], {
+      clipboardData: { getData: () => "24 68-13" },
+    });
+    expect(screen.getByTestId("valor")).toHaveTextContent("246813");
+  });
 });

@@ -120,6 +120,24 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     expect(screen.queryByRole("group", { name: /código de embarque/i })).not.toBeInTheDocument();
   });
 
+  it("subtítulo do passo de e-mail usa tempo futuro ('Enviaremos')", () => {
+    render(<SignInForm />);
+    expect(screen.getByText(/enviaremos um código para sua entrada/i)).toBeInTheDocument();
+  });
+
+  it("temporizador de reenvio não exibe sufixo 's' durante o cooldown", async () => {
+    render(<SignInForm />);
+    fireEvent.change(screen.getByLabelText(/e-mail/i), {
+      target: { value: "viajante@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    await screen.findByRole("group", { name: /código de embarque/i });
+    // Imediatamente após pedir o código, o botão mostra o contador sem "s"
+    const reenviar = screen.getByRole("button", { name: /reenviar/i });
+    expect(reenviar.textContent).toMatch(/Reenviar em \d+$/);
+    expect(reenviar.textContent).not.toMatch(/\d+[sS]/);
+  });
+
   it("reenviar começa em cooldown (desabilitado) logo após pedir o código", async () => {
     render(<SignInForm />);
     fireEvent.change(screen.getByLabelText(/e-mail/i), {

@@ -160,7 +160,7 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
       <section className={styles.card}>
         <p className={styles.eyebrow}>Controle de embarque</p>
         <h1 className={styles.heading}>Apresente seu e-mail</h1>
-        <p className={styles.sub}>Enviamos um código de embarque. Sem senha.</p>
+        <p className={styles.sub}>Enviaremos um código para sua entrada</p>
         <form className={styles.form} onSubmit={handleRequest}>
           <label className={styles.field}>
             <span className={styles.label}>E-mail</span>
@@ -213,7 +213,7 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
               onClick={handleResend}
               disabled={pending || resendIn > 0}
             >
-              {resendIn > 0 ? `Reenviar em ${resendIn}s` : "Reenviar código"}
+              {resendIn > 0 ? `Reenviar em ${resendIn}` : "Reenviar código"}
             </button>
           </div>
           {error ? (

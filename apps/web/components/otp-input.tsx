@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, useRef } from "react";
+import { type ClipboardEvent, type KeyboardEvent, useRef } from "react";
 import styles from "./otp-input.module.css";
 
 const LENGTH = 6;
@@ -19,9 +19,10 @@ type OtpInputProps = {
 /**
  * Coleta o código de embarque de 6 dígitos no login (Fase 2; design `otp-input`).
  *
- * Seis células `maxlength=1` com `inputmode="numeric"` + `autocomplete="one-time-code"`
- * para casar com o autofill de OTP do sistema. Avança o foco ao digitar e retorna ao
- * apagar. Controlado: o pai detém o `value` e recebe a string remontada.
+ * Seis células com `inputmode="numeric"` + `autocomplete="one-time-code"` para casar
+ * com o autofill de OTP do sistema. Suporta colagem e autofill multi-dígito: ao
+ * receber vários dígitos, distribui pelas células e leva o foco à última preenchida.
+ * Controlado: o pai detém o `value` e recebe a string remontada.
  */
 export function OtpInput({
   value,
@@ -37,11 +38,18 @@ export function OtpInput({
   }
 
   function handleChange(index: number, raw: string) {
-    const digit = raw.replace(/\D/g, "").slice(-1);
-    if (!digit) {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) {
       return;
     }
-    onChange(replaceAt(index, digit));
+    if (digits.length > 1) {
+      // Autofill do SO despeja múltiplos dígitos na célula — distribui a partir de index.
+      const newCode = (value.slice(0, index) + digits).slice(0, LENGTH);
+      onChange(newCode);
+      refs.current[Math.min(index + digits.length - 1, LENGTH - 1)]?.focus();
+      return;
+    }
+    onChange(replaceAt(index, digits));
     refs.current[index + 1]?.focus();
   }
 
@@ -61,6 +69,17 @@ export function OtpInput({
     }
   }
 
+  function handlePaste(event: ClipboardEvent<HTMLInputElement>, index: number) {
+    event.preventDefault();
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, LENGTH);
+    if (!digits) {
+      return;
+    }
+    const newCode = (value.slice(0, index) + digits).slice(0, LENGTH);
+    onChange(newCode);
+    refs.current[Math.min(index + digits.length - 1, LENGTH - 1)]?.focus();
+  }
+
   return (
     <fieldset className={styles.group} aria-label={label} disabled={disabled}>
       <legend className={styles.legend}>{label}</legend>
@@ -76,11 +95,12 @@ export function OtpInput({
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
-            maxLength={1}
+            maxLength={LENGTH}
             value={chars[index] ?? ""}
             aria-label={`dígito ${index + 1}`}
             onChange={(event) => handleChange(index, event.target.value)}
             onKeyDown={(event) => handleKeyDown(index, event)}
+            onPaste={(event) => handlePaste(event, index)}
           />
         ))}
       </div>

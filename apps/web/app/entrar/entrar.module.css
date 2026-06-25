@@ -166,6 +166,10 @@
   cursor: pointer;
 }
 
+.resend:not(:disabled):hover {
+  transform: scale(1.04);
+}
+
 .resend:disabled {
   color: var(--text-faint);
   cursor: default;
