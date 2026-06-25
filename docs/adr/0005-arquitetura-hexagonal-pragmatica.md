@@ -6,7 +6,7 @@
 
 A Fase 2 trouxe o **primeiro código de backend com lógica real** (modelos de identidade, sessão opaca, rotas de auth — #189). Antes que a #190+ multiplique features (OTP, Google, onboarding, hardening, linking) e cada uma deposite mais código, era a hora de fixar um **padrão sustentável** — senão cada fatia inventa o seu, e o débito arquitetural compõe.
 
-Existem skills genéricas (`hexagonal-architecture`, `python-project-structure`, `python-code-style`, `python-testing-patterns`), mas são multi-linguagem e verbosas. Engatilhá-las a cada tarefa de backend **lota o contexto**; não engatilhá-las perde o padrão. A saída: **destilar as decisões aqui e no `CLAUDE.md`** — o padrão rege sem custo de contexto, e as skills não são mais acionadas no dia-a-dia. O raciocínio completo (cada opção, steelman e caminho rejeitado) está capturado em [`../notes/2026-06-24-grill-hexagonal-backend.md`](../notes/2026-06-24-grill-hexagonal-backend.md), semente de uma eventual skill de bolso `code-as-me`.
+Existem skills genéricas (`hexagonal-architecture`, `python-project-structure`, `python-code-style`, `python-testing-patterns`), mas são multi-linguagem e verbosas. Engatilhá-las a cada tarefa de backend **lota o contexto**; não engatilhá-las perde o padrão. A saída: **destilar as decisões aqui e no `CLAUDE.md`** — o padrão rege sem custo de contexto, e as skills não são mais acionadas no dia-a-dia.
 
 ## Decisão
 
@@ -45,4 +45,4 @@ Existem skills genéricas (`hexagonal-architecture`, `python-project-structure`,
 - O acoplamento entidade↔ORM é o preço aceito da pragmática: se um dia trocar de ORM, a entidade vaza. Avaliado e aceito frente à longevidade real do projeto.
 - A migração de `Base` para `shared/` e dos modelos para `identity/domain/` exige reatar `alembic/env.py` (import dos modelos para registrarem em `target_metadata`).
 
-Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); topologia de auth em [0004](0004-topologia-de-autenticacao.md); raciocínio completo em [`../notes/2026-06-24-grill-hexagonal-backend.md`](../notes/2026-06-24-grill-hexagonal-backend.md).
+Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); topologia de auth em [0004](0004-topologia-de-autenticacao.md).

@@ -6,7 +6,7 @@
 
 A Fase 2 traz o login. O **método** já estava decidido (e-mail com **OTP** ou **Google**); faltava a **topologia**: onde a autenticação vive, **como a API confia em quem chama**, e como a sessão nasce e morre.
 
-Uma restrição externa cravou parte da resposta. `panlabs.tech` é guarda-chuva de **vários** projetos (travelmanager é um subdomínio entre outros). Uma API pública seria `api.panlabs.tech` (ambíguo — de qual projeto?) ou `api.travelmanager.panlabs.tech` (subdomínio de **2 níveis**, que o **Universal SSL grátis do Cloudflare não cobre** — foi o que quebrou no domínio antigo). Ambas ruins → a API **fica interna** (já internalizada na rede `coolify` desde a faxina de 2026-06-23, sem rota pública). Como o callback do OAuth precisa de URL pública, **ele mora no web** (único host público).
+Uma restrição externa cravou parte da resposta. `panlabs.tech` é guarda-chuva de **vários** projetos (travelmanager é um subdomínio entre outros — substrato compartilhado em [0008](0008-substrato-compartilhado-e-deploy.md)). Uma API pública seria `api.panlabs.tech` (ambíguo — de qual projeto?) ou `api.travelmanager.panlabs.tech` (subdomínio de **2 níveis**, que o **Universal SSL grátis do Cloudflare não cobre** — foi o que quebrou no domínio antigo). Ambas ruins → a API **fica interna** (já internalizada na rede `coolify` desde a faxina de 2026-06-23, sem rota pública). Como o callback do OAuth precisa de URL pública, **ele mora no web** (único host público).
 
 ## Decisão
 
@@ -35,4 +35,4 @@ Uma restrição externa cravou parte da resposta. `panlabs.tech` é guarda-chuva
 - A `cidade de origem` do `Perfil` (ver [`CONTEXT.md`](../../CONTEXT.md), invariante 6: origem é do Perfil) é capturada no onboarding pós-login.
 - Caminho de upgrade limpo: allowlist/Convite e tabela de sessões já existem como pontos de extensão — entram sem mexer na topologia.
 
-Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); camada de dados em [0005](0005-arquitetura-hexagonal-pragmatica.md).
+Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); camada de dados em [0005](0005-arquitetura-hexagonal-pragmatica.md); substrato compartilhado em [0008](0008-substrato-compartilhado-e-deploy.md).

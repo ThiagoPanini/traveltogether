@@ -13,7 +13,7 @@ A reconstrução é do zero (reset clean-room). Era preciso decidir **como** mat
 - **Outside-in:** o visível primeiro (landing → login → painel → criar viagem → paradas/rotas → pesquisa). Navegabilidade e beleza são precondição de adoção ([0001](0001-criterio-e-fronteira-da-v1.md)).
 - **Fatia = tracer-bullet vertical** (atravessa schema→API→UI→testes), demoável sozinha. Preferir muitas fatias finas. Cada fatia = uma issue com `phase:N` + milestone da fase.
 - **Cadência:** o humano libera o fatiamento da **próxima** fase só depois da atual **entregar**; **dentro** da fase, o agente executa autônomo via `/tdd` (RED→GREEN→refactor), abrindo e mergeando PRs.
-- **AFK vs HITL:** fatia AFK = mergeável sem humano; HITL = depende de borda (secret/DNS/decisão). Preferir AFK.
+- **AFK vs HITL:** a fronteira do que o agente faz sozinho é de **capacidade/acesso, não de reversibilidade** — definida no [0007](0007-autonomia-total-do-agente.md) (os 4 casos). AFK é a norma; HITL = cair num dos 4 casos (segredo de terceiro, lock-out/acesso, recriar substrato, tocar outro projeto). DNS, deploy e segredo auto-gerável são AFK.
 - **Mapa/status vivo** em **GitHub milestones + label `phase:N`** (o quê/status); este ADR é o porquê.
 
 ## Opções consideradas
@@ -28,4 +28,4 @@ A reconstrução é do zero (reset clean-room). Era preciso decidir **como** mat
 - Um agente novo descobre o plano por `CLAUDE.md` → milestones, e segue estas regras pra fatiar a próxima fase.
 - A Fase 0+1 (fundação + landing) foi a primeira fatiada — issues #172–#176.
 
-Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md).
+Linguagem e invariantes em [`../../CONTEXT.md`](../../CONTEXT.md); fronteira de autonomia em [0007](0007-autonomia-total-do-agente.md).
