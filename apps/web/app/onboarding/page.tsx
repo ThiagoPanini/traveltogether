@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/wordmark";
 import { apiFetch } from "@/lib/bff/server";
 import styles from "./onboarding.module.css";
 import { OnboardingForm } from "./onboarding-form";
+import { SessionBoundary } from "./session-boundary";
 
 export const metadata: Metadata = {
   title: "Quase lá · travel·manager",
@@ -48,7 +49,9 @@ export default async function OnboardingPage() {
       <section className={styles.card}>
         <h1 className={styles.heading}>Quase lá</h1>
         <p className={styles.sub}>Só o essencial para personalizar suas viagens.</p>
-        <OnboardingForm defaultName={defaultName} />
+        <SessionBoundary session={session}>
+          <OnboardingForm defaultName={defaultName} />
+        </SessionBoundary>
       </section>
     </main>
   );

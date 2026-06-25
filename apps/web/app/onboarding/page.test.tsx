@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { auth, apiFetch, redirect } = vi.hoisted(() => ({
   auth: vi.fn(),
@@ -15,7 +15,11 @@ vi.mock("next/navigation", () => ({
   redirect,
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
-vi.mock("next-auth/react", () => ({ useSession: () => ({ update: vi.fn() }) }));
+
+// `next-auth/react` NÃO é mockado de propósito: o `OnboardingForm` usa `useSession`,
+// que estoura sem o contexto do `SessionProvider`. Renderizar a página de verdade
+// prova que ela embrulha o form na fronteira de sessão (regressão do crash
+// client-side do go-live #196).
 
 import OnboardingPage from "./page";
 
@@ -26,7 +30,21 @@ function meResponse(body: unknown): Response {
   });
 }
 
+beforeEach(() => {
+  // O `SessionProvider` real pode sondar a sessão ao montar; um stub evita rede no jsdom.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    ),
+  );
+});
+
 afterEach(() => {
+  vi.unstubAllGlobals();
   auth.mockReset();
   apiFetch.mockReset();
   redirect.mockClear();
