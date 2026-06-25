@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { isGoogleEnabled } from "@/lib/auth/google";
 import styles from "./entrar.module.css";
@@ -9,16 +10,24 @@ export const metadata: Metadata = {
   description: "Entre com seu código de embarque ou com o Google.",
 };
 
-/** Tela de login (ADR-0004): login-card central com o fluxo OTP em duas etapas. */
+/**
+ * Tela de login (ADR-0004): cabeçalho de "controle de embarque" + login-card central
+ * com o fluxo OTP em duas etapas, fiel ao protótipo do sistema visual Noturno.
+ */
 export default function EntrarPage() {
   return (
     <main className={styles.screen}>
-      <Wordmark />
-      <section className={styles.card}>
-        <h1 className={styles.heading}>Entrar</h1>
-        <p className={styles.sub}>Enviamos um código de embarque para o seu e-mail. Sem senha.</p>
-        <SignInForm googleEnabled={isGoogleEnabled()} />
-      </section>
+      <header className={styles.header}>
+        <Link href="/" className={styles.brand} aria-label="Voltar à página inicial">
+          <Wordmark size={19} />
+        </Link>
+        <span className={styles.tagline}>controle de embarque</span>
+      </header>
+      <div className={styles.main}>
+        <div className={styles.cardWrap}>
+          <SignInForm googleEnabled={isGoogleEnabled()} />
+        </div>
+      </div>
     </main>
   );
 }

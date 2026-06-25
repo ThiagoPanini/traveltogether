@@ -7,17 +7,19 @@
 }
 
 .legend {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
   padding: 0;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-faint);
 }
 
 .cells {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .cell {
@@ -25,8 +27,8 @@
   width: 100%;
   text-align: center;
   font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--accent);
   background: var(--fill-subtle);
   border: var(--border-hairline) solid var(--line-dashed);

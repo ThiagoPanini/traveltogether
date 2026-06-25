@@ -63,7 +63,7 @@ export function OtpInput({
 
   return (
     <fieldset className={styles.group} aria-label={label} disabled={disabled}>
-      <legend className={`mono ${styles.legend}`}>{label}</legend>
+      <legend className={styles.legend}>{label}</legend>
       <div className={styles.cells}>
         {Array.from({ length: LENGTH }, (_, index) => (
           <input
