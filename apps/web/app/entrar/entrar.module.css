@@ -1,39 +1,91 @@
-/* Tela de login (Noturno): login-card central com o fluxo OTP em duas etapas. */
+/* Tela de login (Noturno): "controle de embarque" — cabeçalho, login-card central e
+   rodapé, fiel ao protótipo do sistema visual (`.claude/design`, tela `login`). */
 
 .screen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Cabeçalho: marca à esquerda (volta à landing) + selo "controle de embarque". A
+   régua inferior acompanha o vão de 1040px, como no protótipo. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: var(--max-width-wide);
+  margin: 0 auto;
+  padding: 24px var(--page-gutter);
+  border-bottom: var(--border-hairline) solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tagline {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Área central: login-card ancorado no meio do vão restante. */
+.main {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  padding: 48px var(--page-gutter);
+  padding: 30px var(--page-gutter) 110px;
+}
+
+.cardWrap {
+  width: 100%;
+  max-width: var(--login-card);
 }
 
 .card {
-  width: 100%;
-  max-width: 380px;
   background: var(--surface);
   border: var(--border-hairline) solid var(--line);
-  border-radius: 14px;
-  padding: 32px 28px;
+  border-radius: var(--radius-lg);
+  padding: 34px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--accent);
 }
 
 .heading {
-  font-size: 26px;
-  margin: 0 0 4px;
+  font-size: 34px;
+  text-align: center;
+  margin: 10px 0 6px;
 }
 
 .sub {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
+  text-align: center;
   margin: 0 0 24px;
+}
+
+.subEmail {
+  color: var(--text-body);
+  font-weight: 600;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 
 .field {
@@ -43,18 +95,20 @@
 }
 
 .label {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-faint);
 }
 
 .input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 13px 14px;
   font-size: 15px;
   color: var(--text-bright);
   background: var(--fill-subtle);
-  border: var(--border-hairline) solid var(--line);
+  border: var(--border-hairline) solid var(--line-dashed);
   border-radius: var(--radius-btn);
 }
 
@@ -63,15 +117,70 @@
   border-color: var(--accent);
 }
 
+/* Linha tempo-de-vida + reenvio, logo abaixo das células (protótipo). */
+.ttlRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.ttl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ttlDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: var(--accent);
+}
+
+.ttlTime {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  color: var(--accent);
+}
+
+.alerta .ttlDot {
+  background: var(--accent-alert);
+}
+
+.alerta .ttlTime {
+  color: var(--accent-alert);
+}
+
+.resend {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.resend:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
 .primary {
   width: 100%;
-  padding: 12px 16px;
+  margin-top: 20px;
+  padding: 14px;
   font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--bg-root);
+  color: var(--on-accent);
   background: var(--accent);
   border: 0;
   border-radius: var(--radius-btn);
@@ -87,8 +196,8 @@
   display: flex;
   align-items: center;
   text-align: center;
-  gap: 12px;
-  color: var(--text-faintest);
+  gap: 14px;
+  margin: 20px 0;
 }
 
 .divisor::before,
@@ -99,17 +208,28 @@
 }
 
 .divisorLabel {
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  padding: 12px 16px;
-  font-size: 14px;
-  color: var(--text-muted);
+  padding: 13px;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-body);
   background: transparent;
-  border: var(--border-hairline) solid var(--line-strong);
+  border: var(--border-hairline) solid var(--line-dashed);
   border-radius: var(--radius-btn);
   cursor: pointer;
 }
@@ -119,29 +239,31 @@
   cursor: not-allowed;
 }
 
-.ghost {
-  width: 100%;
-  padding: 8px;
-  font-size: 13px;
-  color: var(--text-faint);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.contador {
-  margin: 2px 0 0;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--text-faint);
-}
-
-.contadorAlerta {
-  color: var(--accent-alert);
+.googleG {
+  font-weight: 700;
 }
 
 .error {
-  margin: 0;
+  margin: 14px 0 0;
   font-size: 13px;
+  text-align: center;
   color: var(--accent-alert);
+}
+
+/* Rodapé fora do card: ação de trocar e-mail, como caption mono no protótipo. */
+.footer {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.footerLink {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }

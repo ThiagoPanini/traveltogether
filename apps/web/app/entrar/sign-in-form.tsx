@@ -32,6 +32,10 @@ function formatRemaining(seconds: number): string {
  * cai no `/onboarding` (que desvia quem já onboardou); sem credencial Google
  * (`googleEnabled` falso), o botão fica "indisponível". O reenvio do código tem
  * cooldown de 30s (#194), espelhando o teto do servidor.
+ *
+ * Visual fiel ao protótipo Noturno (tela `login`): card com eyebrow "controle de
+ * embarque", título e subtítulo centrados, células do código, linha de expiração com
+ * ponto + reenvio, "Embarcar", divisor "ou" e Google.
  */
 export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter();
@@ -124,80 +128,115 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
     setError(null);
   }
 
+  const divisor = (
+    <div className={styles.divisor}>
+      <span className={styles.divisorLabel}>ou</span>
+    </div>
+  );
+
+  const googleButton = (
+    <button
+      type="button"
+      className={styles.google}
+      disabled={!googleEnabled}
+      title={googleEnabled ? undefined : "Indisponível neste ambiente"}
+      onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
+    >
+      {googleEnabled ? (
+        <>
+          <span className={styles.googleG} aria-hidden="true">
+            G
+          </span>
+          Continuar com Google
+        </>
+      ) : (
+        "Google indisponível"
+      )}
+    </button>
+  );
+
   if (step === "email") {
     return (
-      <form className={styles.form} onSubmit={handleRequest}>
-        <label className={styles.field}>
-          <span className={`mono ${styles.label}`}>E-mail</span>
-          <input
-            type="email"
-            name="email"
-            required
-            autoComplete="email"
-            inputMode="email"
-            className={styles.input}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="voce@email.com"
-          />
-        </label>
-        {error ? (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        ) : null}
-        <button type="submit" className={styles.primary} disabled={pending || !email}>
-          Continuar
-        </button>
-        <div className={styles.divisor}>
-          <span className={`mono ${styles.divisorLabel}`}>ou</span>
-        </div>
-        <button
-          type="button"
-          className={styles.google}
-          disabled={!googleEnabled}
-          title={googleEnabled ? undefined : "Indisponível neste ambiente"}
-          onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
-        >
-          {googleEnabled ? "Continuar com Google" : "Google indisponível"}
-        </button>
-      </form>
+      <section className={styles.card}>
+        <p className={styles.eyebrow}>Controle de embarque</p>
+        <h1 className={styles.heading}>Apresente seu e-mail</h1>
+        <p className={styles.sub}>Enviamos um código de embarque. Sem senha.</p>
+        <form className={styles.form} onSubmit={handleRequest}>
+          <label className={styles.field}>
+            <span className={styles.label}>E-mail</span>
+            <input
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+              inputMode="email"
+              className={styles.input}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="voce@email.com"
+            />
+          </label>
+          {error ? (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          ) : null}
+          <button type="submit" className={styles.primary} disabled={pending || !email}>
+            Continuar
+          </button>
+          {divisor}
+          {googleButton}
+        </form>
+      </section>
     );
   }
 
   const alerta = remaining < 60;
   return (
-    <form className={styles.form} onSubmit={handleVerify}>
-      <OtpInput value={code} onChange={setCode} disabled={pending} />
-      <p
-        className={`mono ${styles.contador} ${alerta ? styles.contadorAlerta : ""}`}
-        aria-live="polite"
-      >
-        Expira em {formatRemaining(remaining)}
-      </p>
-      {error ? (
-        <p className={styles.error} role="alert">
-          {error}
+    <>
+      <section className={styles.card}>
+        <p className={styles.eyebrow}>Controle de embarque</p>
+        <h1 className={styles.heading}>Apresente seu código</h1>
+        <p className={styles.sub}>
+          Enviamos 6 dígitos para <span className={styles.subEmail}>{email}</span>
         </p>
-      ) : null}
-      <button
-        type="submit"
-        className={styles.primary}
-        disabled={pending || code.length < CODE_LENGTH}
-      >
-        Embarcar →
-      </button>
-      <button
-        type="button"
-        className={styles.ghost}
-        onClick={handleResend}
-        disabled={pending || resendIn > 0}
-      >
-        {resendIn > 0 ? `Reenviar em ${formatRemaining(resendIn)}` : "Reenviar código"}
-      </button>
-      <button type="button" className={styles.ghost} onClick={trocarEmail}>
-        Trocar e-mail
-      </button>
-    </form>
+        <form className={styles.form} onSubmit={handleVerify}>
+          <OtpInput value={code} onChange={setCode} disabled={pending} />
+          <div className={`${styles.ttlRow} ${alerta ? styles.alerta : ""}`}>
+            <span className={styles.ttl} aria-live="polite">
+              <span className={styles.ttlDot} aria-hidden="true" />
+              Expira em <span className={styles.ttlTime}>{formatRemaining(remaining)}</span>
+            </span>
+            <button
+              type="button"
+              className={styles.resend}
+              onClick={handleResend}
+              disabled={pending || resendIn > 0}
+            >
+              {resendIn > 0 ? `Reenviar em ${resendIn}s` : "Reenviar código"}
+            </button>
+          </div>
+          {error ? (
+            <p className={styles.error} role="alert">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            className={styles.primary}
+            disabled={pending || code.length < CODE_LENGTH}
+          >
+            Embarcar →
+          </button>
+          {divisor}
+          {googleButton}
+        </form>
+      </section>
+      <div className={styles.footer}>
+        <button type="button" className={styles.footerLink} onClick={trocarEmail}>
+          trocar e-mail
+        </button>
+      </div>
+    </>
   );
 }
