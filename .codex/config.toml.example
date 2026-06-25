@@ -14,7 +14,7 @@ startup_timeout_sec = 30
 default_tools_approval_mode = "prompt"
 
 [mcp_servers.coolify.env]
-COOLIFY_BASE_URL = "https://vps.thiagopanini.dev"
+COOLIFY_BASE_URL = "https://vps.panlabs.tech"
 COOLIFY_ACCESS_TOKEN = "<COLE_O_TOKEN_DO_COOLIFY>"
 
 [mcp_servers.cloudflare]
