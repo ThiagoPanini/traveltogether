@@ -25,4 +25,7 @@ RUN uv sync --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
-CMD ["uvicorn", "travelmanager.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Aplica as migrations pendentes e então sobe a API. Sem isso, um banco novo nasce
+# sem schema (a imagem só rodava o uvicorn) — a causa do go-live #196 travar. O `exec`
+# entrega o processo (e os sinais) ao uvicorn como PID 1.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn travelmanager.main:app --host 0.0.0.0 --port 8000"]
