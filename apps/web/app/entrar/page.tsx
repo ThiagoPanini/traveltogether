@@ -5,6 +5,11 @@ import { isGoogleEnabled } from "@/lib/auth/google";
 import styles from "./entrar.module.css";
 import { SignInForm } from "./sign-in-form";
 
+// Os env do Google são runtime-only (não buildtime). Sem force-dynamic a página
+// seria pré-renderizada estática e assaria googleEnabled=false para sempre — o
+// botão jamais habilitaria mesmo com os env presentes em produção.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Entrar · travel·manager",
   description: "Entre com seu código de embarque ou com o Google.",
