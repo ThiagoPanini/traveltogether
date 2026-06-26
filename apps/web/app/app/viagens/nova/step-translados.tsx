@@ -2,7 +2,8 @@
 
 import { Fragment, useState } from "react";
 import type { TransferDraft } from "@/lib/trips/draft";
-import { isTransferDefined, TRANSFER_TYPES, transferLabel } from "@/lib/trips/transfers";
+import { isTransferDefined, transferLabel } from "@/lib/trips/transfers";
+import { TransferIcon } from "./transfer-icons";
 import { TransferModal } from "./transfer-modal";
 import styles from "./wizard.module.css";
 import type { StepProps } from "./wizard-types";
@@ -11,86 +12,85 @@ import { originLabel } from "./wizard-types";
 /** Qual conector está com o modal aberto. */
 type OpenLeg = { type: "entry" } | { type: "stop"; id: string; index: number } | null;
 
-function glyphFor(transfer: TransferDraft | null): string | null {
-  if (!transfer || transfer.kind === "undecided" || transfer.kind === "other") return null;
-  return TRANSFER_TYPES.find((t) => t.kind === transfer.kind)?.glyph ?? null;
-}
-
 /**
- * Passo 3 — Translados (intenção; ADR-0009). O conector entre cards começa cinza
- * (indefinido) e clicar abre o modal de tipos. O 1º salto é a ida pessoal do criador
- * (entry_transfer, "sua ida · por pessoa", conta no total). A 1ª parada não tem salto
- * compartilhado — o salto que chega nela é a ponta pessoal.
+ * Passo 3 — Translados (intenção; ADR-0009). Entre cada par de cidades há um **anel**
+ * clicável: cinza tracejado quando indefinido, terracota preenchido quando há proposta.
+ * O 1º salto é a ida pessoal do criador (entry_transfer, "sua ida · por pessoa", conta
+ * no total). A 1ª parada não tem salto compartilhado — quem chega nela é a ponta pessoal.
  */
 export function StepTranslados({ draft, dispatch, origin }: StepProps) {
   const [open, setOpen] = useState<OpenLeg>(null);
   const { stops } = draft;
   const total = stops.length; // 1 ida pessoal + (stops.length - 1) saltos compartilhados
+  const defined =
+    (isTransferDefined(draft.entryTransfer) ? 1 : 0) +
+    stops.slice(1).filter((s) => isTransferDefined(s.desiredTransfer)).length;
 
   function Connector({
     transfer,
-    legLabel,
-    endpoints,
+    info,
     personal,
     onOpen,
   }: {
     transfer: TransferDraft | null;
-    legLabel: string;
-    endpoints: string;
+    info: string;
     personal?: boolean;
     onOpen: () => void;
   }) {
-    const defined = isTransferDefined(transfer);
-    const glyph = glyphFor(transfer);
+    const isDefined = isTransferDefined(transfer);
     return (
-      <li className={styles.connector}>
-        <span className={styles.connectorRail}>
-          <span
-            className={`${styles.connectorLine} ${defined ? styles.connectorLineDefined : ""}`}
-            aria-hidden="true"
-          />
-        </span>
+      <div className={styles.legConn}>
         <button
           type="button"
-          className={`${styles.hop} ${defined ? styles.hopDefined : ""} ${personal ? styles.hopPersonal : ""}`}
+          className={`${styles.legRing} ${isDefined ? styles.legRingDefined : ""} ${
+            personal ? styles.legRingPersonal : ""
+          }`}
           onClick={onOpen}
         >
-          {glyph ? (
-            <span className={styles.hopGlyph} aria-hidden="true">
-              {glyph}
-            </span>
-          ) : null}
-          <span className={styles.hopLabel}>
-            {defined ? transferLabel(transfer) : "Definir translado"}
-          </span>
-          <span className={styles.hopMeta}>
-            {personal ? `${legLabel} · sua ida · por pessoa` : `${legLabel} · ${endpoints}`}
-          </span>
+          <TransferIcon transfer={transfer} size={20} />
         </button>
-      </li>
+        <span className={styles.legInfo}>
+          <span className={styles.legMode}>
+            {isDefined ? transferLabel(transfer) : "Definir translado"}
+          </span>
+          <span className={styles.legTrajeto}>{info}</span>
+        </span>
+      </div>
     );
   }
 
   return (
-    <div>
-      <p className={styles.eyebrow}>Passo 3 · Translados</p>
-      <h1 className={styles.title}>Como vencer cada salto?</h1>
-      <p className={styles.lede}>
-        Proponha um translado por trajeto — é só uma sugestão pra semear a conversa. Cada pessoa
-        pesquisa e decide a sua depois. Sua ida (de casa até a 1ª parada) é pessoal e conta no
-        total.
-      </p>
+    <div className={styles.single}>
+      <header className={styles.sectionHead}>
+        <p className={styles.eyebrow}>Passo 03 · Translados</p>
+        <h1 className={styles.title}>Como vencer cada salto?</h1>
+        <p className={styles.lede}>
+          Proponha um translado por trajeto — é só uma sugestão pra semear a conversa. Cada pessoa
+          pesquisa e decide a sua depois. Sua ida (de casa até a 1ª parada) é pessoal e conta no
+          total.
+        </p>
+      </header>
 
-      <ul className={styles.trail}>
-        <li className={styles.node}>
-          <span className={styles.rail}>
-            <span className={`${styles.dot} ${styles.dotOrigin}`} aria-hidden="true" />
+      <div className={styles.legProgress}>
+        <span className={styles.legProgressTrack} aria-hidden="true">
+          <span
+            className={styles.legProgressFill}
+            style={{ width: `${total > 0 ? (defined / total) * 100 : 0}%` }}
+          />
+        </span>
+        <span className={styles.legProgressText}>
+          {defined} de {total} trajetos definidos
+        </span>
+      </div>
+
+      <div className={styles.legPanel}>
+        <div className={styles.legNode}>
+          <span className={`${styles.legDot} ${styles.legDotOrigin}`} aria-hidden="true" />
+          <span className={styles.legNodeBody}>
+            <span className={styles.legNodeTag}>Origem · você</span>
+            <span className={styles.legNodeCity}>{originLabel(origin)}</span>
           </span>
-          <div className={`${styles.card} ${styles.cardFixed}`}>
-            <span className={`${styles.kicker} ${styles.kickerAccent}`}>Origem · Você</span>
-            <span className={styles.cityName}>{originLabel(origin)}</span>
-          </div>
-        </li>
+        </div>
 
         {stops.map((stop, i) => {
           const isDest = i === stops.length - 1;
@@ -102,35 +102,36 @@ export function StepTranslados({ draft, dispatch, origin }: StepProps) {
             <Fragment key={stop.id}>
               <Connector
                 transfer={transfer}
-                legLabel={`Trajeto ${i + 1} de ${total}`}
-                endpoints={`${fromCity} → ${toCity}`}
+                info={
+                  personal
+                    ? `Trajeto ${i + 1} de ${total} · sua ida · por pessoa`
+                    : `Trajeto ${i + 1} de ${total} · ${fromCity} → ${toCity}`
+                }
                 personal={personal}
                 onOpen={() =>
                   setOpen(personal ? { type: "entry" } : { type: "stop", id: stop.id, index: i })
                 }
               />
-              <li className={styles.node}>
-                <span className={styles.rail}>
-                  <span
-                    className={`${styles.dot} ${isDest ? styles.dotDest : ""}`}
-                    aria-hidden="true"
-                  />
-                </span>
-                <div className={`${styles.card} ${styles.cardFixed}`}>
-                  <span className={styles.kicker}>
+              <div className={styles.legNode}>
+                <span
+                  className={`${styles.legDot} ${isDest ? styles.legDotDest : ""}`}
+                  aria-hidden="true"
+                />
+                <span className={styles.legNodeBody}>
+                  <span className={styles.legNodeTag}>
                     {isDest ? "Destino final" : `Parada ${i + 1}`}
                   </span>
                   <span
-                    className={`${styles.cityName} ${stop.city.trim() ? "" : styles.cityMuted}`}
+                    className={`${styles.legNodeCity} ${stop.city.trim() ? "" : styles.cityMuted}`}
                   >
                     {toCity}
                   </span>
-                </div>
-              </li>
+                </span>
+              </div>
             </Fragment>
           );
         })}
-      </ul>
+      </div>
 
       {open ? (
         <TransferModal

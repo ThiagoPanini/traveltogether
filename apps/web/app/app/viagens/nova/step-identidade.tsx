@@ -13,12 +13,14 @@ import type { StepProps } from "./wizard-types";
  */
 export function StepIdentidade({ draft, dispatch, origin }: StepProps) {
   return (
-    <div>
-      <p className={styles.eyebrow}>Passo 4 · Identidade</p>
-      <h1 className={styles.title}>Dê um nome à viagem</h1>
-      <p className={styles.lede}>
-        Um nome que o grupo reconheça de cara — e, se quiser, uma frase pra dar o tom.
-      </p>
+    <div className={styles.single}>
+      <header className={styles.sectionHead}>
+        <p className={styles.eyebrow}>Passo 04 · Identidade</p>
+        <h1 className={styles.title}>Dê um nome à viagem</h1>
+        <p className={styles.lede}>
+          Um nome que o grupo reconheça de cara — e, se quiser, uma frase pra dar o tom.
+        </p>
+      </header>
 
       <div className={styles.fields}>
         <label className={styles.field} htmlFor="identity-name">
@@ -53,10 +55,15 @@ export function StepIdentidade({ draft, dispatch, origin }: StepProps) {
         </label>
       </div>
 
-      <p className={styles.label} style={{ marginTop: 8, marginBottom: 8 }}>
-        Sua rota
-      </p>
-      <RouteBand origin={origin} stops={draft.stops} entryTransfer={draft.entryTransfer} animate />
+      <div className={styles.bandBlock}>
+        <span className={styles.bandCaption}>Sua rota</span>
+        <RouteBand
+          origin={origin}
+          stops={draft.stops}
+          entryTransfer={draft.entryTransfer}
+          animate
+        />
+      </div>
     </div>
   );
 }

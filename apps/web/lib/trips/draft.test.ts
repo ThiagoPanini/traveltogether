@@ -122,6 +122,41 @@ describe("tripDraftReducer — paradas (rota)", () => {
     expect(next.stops).toHaveLength(3);
   });
 
+  it("'insertStop' encaixa uma parada já preenchida no gap (cidade/país) e renormaliza", () => {
+    // given: destino "Roma"
+    const draft = run({ type: "setDestination", city: "Roma", country: "IT" });
+    // when: insere Florença logo após a origem (gap 0)
+    const next = tripDraftReducer(draft, {
+      type: "insertStop",
+      index: 0,
+      city: "Florença",
+      country: "IT",
+    });
+    // then: vira a parada do meio (índice 0), destino intacto, índice 0 sem salto compartilhado
+    expect(next.stops).toHaveLength(2);
+    expect(getMiddleStops(next)[0].city).toBe("Florença");
+    expect(getMiddleStops(next)[0].country).toBe("IT");
+    expect(getDestination(next).city).toBe("Roma");
+    expect(next.stops[0].desiredTransfer).toBeNull();
+    expect(next.stops[1].desiredTransfer).toEqual({ kind: "undecided" });
+  });
+
+  it("'insertStop' nunca encaixa depois do destino (índice clampado)", () => {
+    // given: só o destino
+    const draft = run({ type: "setDestination", city: "Lisboa", country: "PT" });
+    // when: tenta inserir num índice grande
+    const next = tripDraftReducer(draft, {
+      type: "insertStop",
+      index: 99,
+      city: "Porto",
+      country: "PT",
+    });
+    // then: a nova parada entra antes do destino, que segue sendo a última
+    expect(next.stops).toHaveLength(2);
+    expect(getMiddleStops(next)[0].city).toBe("Porto");
+    expect(getDestination(next).city).toBe("Lisboa");
+  });
+
   it("a 1ª parada nunca carrega translado compartilhado (null), demais nascem undecided", () => {
     // when
     const draft = run({ type: "addStop" }, { type: "addStop" });
