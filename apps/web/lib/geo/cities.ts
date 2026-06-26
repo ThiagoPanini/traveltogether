@@ -68,3 +68,22 @@ export async function searchCities(country: string, query: string): Promise<City
     .filter((c) => stripAccents(c.asciiName).includes(q) || stripAccents(c.name).includes(q))
     .slice(0, MAX_RESULTS);
 }
+
+/**
+ * Resolve uma cidade textual para coordenadas do GeoNames dentro de um país.
+ *
+ * O casamento é exato depois de normalizar caixa e acentos para evitar plotar uma
+ * sugestão parcial errada. É uma geocodificação best-effort exclusiva do cliente.
+ */
+export async function findCity(country: string, city: string): Promise<CityEntry | null> {
+  const normalized = stripAccents(city.trim());
+  if (!normalized) return null;
+  const candidates = await searchCities(country, city);
+  return (
+    candidates.find(
+      (candidate) =>
+        stripAccents(candidate.name) === normalized ||
+        stripAccents(candidate.asciiName) === normalized,
+    ) ?? null
+  );
+}

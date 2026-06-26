@@ -56,6 +56,7 @@
   --max-width-panel: 1000px;
   --hero-max: 720px;
   --login-card: 400px;
+  --map-panel-height: 460px;
 
   /* Sombra */
   --shadow-switcher: 0 8px 26px rgba(0, 0, 0, 0.4);

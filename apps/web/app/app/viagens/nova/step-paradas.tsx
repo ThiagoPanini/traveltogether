@@ -174,6 +174,7 @@ export function StepParadas({ draft, dispatch, origin }: StepProps) {
         stops={draft.stops}
         entryTransfer={draft.entryTransfer}
         caption={draft.stops.length > 1 ? "Rota no mapa" : dest.city.trim() || "Mundo todo"}
+        plotOrigin
       />
     </div>
   );

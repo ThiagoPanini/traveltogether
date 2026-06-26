@@ -17,7 +17,7 @@
 | Texto | `text-bright`, `text-body`, `text-muted`, `text-mono`, `text-faint`, `text-faintest` | Hierarquia de leitura e metadados. |
 | Acento/semântica | `accent`, `accent-alert`, `on-accent`, `success`, `warning`, bordas alpha | Marca, CTA, status e alerta de expiração. |
 | Forma | `radius-*`, `border-*` | Raios, pílulas, hairline e acento lateral. |
-| Layout | `page-gutter`, `max-width-wide`, `max-width-panel`, `hero-max`, `login-card` | Containers e larguras de tela. |
+| Layout | `page-gutter`, `max-width-wide`, `max-width-panel`, `hero-max`, `login-card`, `map-panel-height` | Containers, larguras de tela e altura fixa do mapa da criação. |
 | Sombra | `shadow-switcher` | Switcher inferior projetado. |
 
 ### Nome vivo

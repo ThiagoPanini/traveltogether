@@ -68,6 +68,10 @@ Status pills usam sempre cor **e** borda real (`pill()` por tom: success / warni
 
 `apps/web/app/globals.css` declara todos os tokens em `:root` (espelho de `tokens.json`), um reset enxuto, e os defaults de tipografia: `body` em Public Sans `15px`, `h1–h6` em Saira uppercase, `.mono`/`code` em Spline Sans Mono uppercase, links em `accent`, selection `accent` sobre `bg-root`. `apps/web/app/layout.tsx` injeta as três famílias por `next/font` e define `html lang="pt-BR"`.
 
+## Mapa da criação de viagem
+
+`apps/web/app/app/viagens/nova/route-map.tsx` mantém uma instância client-only de jsVectorMap nos passos 1–2. O estado inicial mostra o globo; a escolha do país anima o zoom e aplica contorno terracota tracejado; a escolha da cidade anima novo foco e posiciona pinos HTML pela projeção `coordsToPoint`. No passo 2, a origem textual do Perfil é procurada de forma best-effort no recorte GeoNames do país e só entra no mapa quando há casamento exato normalizado; essa coordenada não é persistida. O painel tem altura fixa por `--map-panel-height`, e SSR, jsdom ou falha de carregamento mantêm a rota vertical como fallback.
+
 ## Acessibilidade do que existe
 
 - **Idioma**: `html lang="pt-BR"`.

@@ -341,7 +341,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  min-height: 380px;
+  height: var(--map-panel-height);
   padding: 20px;
   border: var(--border-hairline) solid var(--line);
   border-radius: var(--radius-lg);
@@ -373,7 +373,7 @@
 .mapWrap {
   position: relative;
   flex: 1 1 auto;
-  min-height: 260px;
+  min-height: 0;
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--bg-canvas);
@@ -383,6 +383,102 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.mapPins {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mapPin {
+  position: absolute;
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transform-origin: bottom center;
+  transition: opacity 0.18s ease;
+}
+
+.mapPinTag {
+  display: block;
+  margin-bottom: 6px;
+  padding: 3px 6px;
+  transform: rotate(-4deg);
+  border: var(--border-hairline) solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-canvas) 86%, transparent);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--bg-root) 72%, transparent);
+  color: var(--text-bright);
+  font-family: var(--font-mono), monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mapPinHead {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 15px;
+  height: 15px;
+  margin: 0 auto;
+  border: var(--border-outline) solid var(--text-bright);
+  border-radius: var(--radius-circle);
+  background: radial-gradient(circle at 34% 30%, var(--text-bright), var(--accent) 62%);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--bg-root) 72%, transparent);
+}
+
+.mapPinHeadDest {
+  width: 18px;
+  height: 18px;
+}
+
+.mapPinHeadOrigin {
+  background: radial-gradient(circle at 34% 30%, var(--text-bright), var(--success) 62%);
+}
+
+.mapPinStem {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 2px;
+  height: 13px;
+  margin: -2px auto 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 46%, var(--bg-root)));
+}
+
+.mapPinStemOrigin {
+  background: linear-gradient(
+    var(--success),
+    color-mix(in srgb, var(--success) 46%, var(--bg-root))
+  );
+}
+
+.countryOutline {
+  fill: var(--fill-accent) !important;
+  stroke: var(--accent) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 5 4 !important;
+  vector-effect: non-scaling-stroke;
+  animation: countryMarch 0.8s linear infinite;
+}
+
+@keyframes countryMarch {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countryOutline,
+  .mapPin {
+    animation: none;
+    transition: none;
+  }
 }
 
 .mapFallback {

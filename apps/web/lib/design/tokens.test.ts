@@ -23,4 +23,8 @@ describe("tokens do Noturno em globals.css", () => {
       expect(globalsCss).toContain(`var(${fontVar})`);
     }
   });
+
+  it("define altura fixa do painel do mapa da criação", () => {
+    expect(globalsCss).toContain("--map-panel-height: 460px");
+  });
 });
