@@ -7,6 +7,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 // Substitui searchCities para não depender de import() dinâmico em jsdom.
 vi.mock("@/lib/geo/cities", () => ({
+  findCity: vi.fn(async () => null),
   searchCities: vi.fn(async (_country: string, query: string) => {
     const all = [
       { name: "Roma", asciiName: "Roma", lat: 41.9, lng: 12.5, population: 2318895 },

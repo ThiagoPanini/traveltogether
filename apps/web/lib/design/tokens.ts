@@ -55,6 +55,7 @@ export const allCssVars: string[] = [
   "--max-width-panel",
   "--hero-max",
   "--login-card",
+  "--map-panel-height",
   "--shadow-switcher",
 ];
 
