@@ -39,16 +39,25 @@ _Evite_: trajeto, conexão, "itinerário de voo".
 > **Âncora:** `SP→NY` tem duas **Rotas** do mesmo **Trajeto** — direto vs via-Miami; a via-Miami tem dois **Trechos** (`SP→MIA` e `MIA→NY`). Uma ida-e-volta é **uma** **Pesquisa** cobrindo dois Trechos; marcar **Preferida** nela resolve os dois.
 
 **Trecho** (`Segment`):
-Cada **pulo** de uma Rota, entre dois pontos, com um **Modo**. É uma **compra à parte**. Hoje, só o Trecho aéreo hospeda Pesquisas.
+Cada **pulo** de uma Rota, entre dois pontos, com um **tipo de translado** (e o **Modo** derivado dele). É uma **compra à parte**. **Qualquer tipo** hospeda Pesquisas (os que têm o que cotar — ver inv. 8).
 _Evite_: voo, perna, escala, conexão, segmento.
 
 **Modo** (`mode`):
-Atributo do Trecho: **aéreo** ou **terrestre**. Aéreo hospeda Pesquisa; terrestre (carro/ônibus) é conector estrutural (cotação + rateio = em breve).
+Atributo **derivado** do **tipo de translado** do Trecho: **aéreo** (tipo = avião) ou **terrestre** (os demais tipos). Já **não** decide quem hospeda Pesquisa — qualquer tipo hospeda (inv. 8); marca só o que é **específico de aéreo**: IATA, milhas, escala (inv. 3 e 7).
+_Evite_: usar Modo como "o meio de transporte" — esse papel é do **tipo de translado**.
+
+**Tipo de translado** (`transfer_kind`):
+O **meio** concreto de vencer um salto — atributo de **primeira classe**: avião · carro alugado · carro próprio · ônibus · trem · van/transfer · a pé · **outro** (texto livre) · **em discussão** (indefinido). Refina o Modo (avião→aéreo; o resto→terrestre) e é o **eixo da comparação multi-modal** (avião vs. carro vs. trem) na Pesquisa. Tipos sem o que cotar (a pé, carro próprio) não hospedam Pesquisa de preço.
+_Evite_: "modo" como sinônimo (Modo é o rótulo grosso derivado); inventar tipo fora da lista — use **outro**.
+
+**Translado desejado** (`desired_transfer`):
+Na **criação** da Viagem, o tipo de translado **proposto** para um salto — só **proposta**, não compromisso. Nos saltos **compartilhados** (parada→parada) é a proposta do Organizador pro grupo; nas **pontas** (casa↔parada, por-pessoa — inv. 6) é proposta **pessoal**: o **criador propõe a própria ponta já na criação**, os demais ao entrar. **Hint** que **semeia** a exploração (não um Trecho); nasce **em discussão**, e a consolidação real é **por-pessoa**, via Pesquisa.
+_Evite_: confundir com **Modo** (realizado, no Trecho) ou com **Pesquisa** (cotação).
 
 ### A pesquisa e a decisão
 
 **Pesquisa** (`FareQuote`) — também "pesquisa de translado" / "pesquisa de passagem":
-Cotação que um Membro encontrou e cadastrou, cobrindo **um ou mais Trechos aéreos** (vários quando é um bilhete único de ida-e-volta). Carrega o **preço do bilhete inteiro**, em dinheiro e/ou pontos. É o artefato que se "compartilha".
+Cotação que um Membro encontrou e cadastrou, cobrindo **um ou mais Trechos** de **qualquer tipo de translado** (vários quando é um bilhete único de ida-e-volta). Carrega o **preço do item inteiro** (bilhete, diária, serviço), em dinheiro e/ou pontos. É o artefato que se "compartilha".
 _Evite_: proposta, opção, cotação (solta), voo (como entidade).
 
 **Escala** (`stops`):
@@ -79,23 +88,27 @@ _Evite_: admin.
 **Membro** (`Member`):
 Papel com a camada de **exploração** (criar Rota, Trecho, Pesquisa) e o **plano pessoal** (Preferida/Comprada). Não mexe no backbone.
 
+**Participação** (`Membership`):
+O **elo** entre um Usuário e uma Viagem, carregando o **papel** dele ali (Organizador ou Membro). Nasce **na criação** (o criador, como Organizador) ou **no aceite** de um Convite. É por ela que a Viagem aparece pra pessoa e que o papel libera as camadas de escrita (inv. 9).
+_Evite_: confundir com **Membro** (o papel) ou com **Convite** (intenção ainda não aceita).
+
 **Convite** (`Invitation`):
-Intenção, criada por um Organizador, de incluir um e-mail. Vira Membership **só com aceite** in-app. Se o convidado não tem conta, o Convite espera o cadastro.
+Intenção, criada por um Organizador, de incluir um e-mail **com um papel** (Membro por default; pode ser Organizador). Vira Participação **só com aceite** in-app. Se o convidado não tem conta, o Convite espera o cadastro.
 _Evite_: adição instantânea.
 
 ### Em breve (nomeados, ainda não construídos)
 
-Termos reservados só para a linguagem ficar estável — **não existem na v1**: **Roteiro** / **Item de Roteiro**, **Orçamento**, **cotação de carro**, **atração/ingresso**, **comentário**.
+Termos reservados só para a linguagem ficar estável — **não existem na v1**: **Roteiro** / **Item de Roteiro**, **Orçamento**, **atração/ingresso**, **comentário**.
 
 ## Invariantes
 
 1. Uma **Rota** é uma sequência ordenada de **Trechos** entre as duas pontas de um **Trajeto**; Trechos não se compartilham entre Rotas. Duas Rotas com as mesmas pontas são alternativas. **Multi-pulo vale na v1.**
-2. Uma **Pesquisa** cobre **um ou mais** Trechos **aéreos**; ida-e-volta cobre dois (possivelmente em Trajetos distintos). O preço é o do bilhete inteiro e entra **uma vez** em qualquer soma — não se divide preço por Trecho.
-3. **Escala** é campo da Pesquisa, nunca um Trecho. "Dois Trechos" vs "um Trecho com escala" = **duas compras vs uma compra**.
+2. Uma **Pesquisa** cobre **um ou mais** Trechos de **qualquer tipo**; ida-e-volta cobre dois (possivelmente em Trajetos distintos). O preço é o do **item inteiro** e entra **uma vez** em qualquer soma — não se divide preço por Trecho. Per-pessoa vs. por-veículo é dimensão da Pesquisa, comparada **visualmente** (inv. 5); rateio automático é do Orçamento (em breve).
+3. **Escala** é campo da Pesquisa (específica do tipo **avião**), nunca um Trecho. "Dois Trechos" vs "um Trecho com escala" = **duas compras vs uma compra**.
 4. A decisão é **por-pessoa**: cada Usuário tem no máximo uma **Preferida** por Trecho aéreo; marcar uma Pesquisa multi resolve todos os Trechos cobertos. **Não há eleição de grupo.**
 5. **Não há conversão** entre unidades (moeda↔moeda, pontos↔dinheiro). A comparação é **visual**, dentro da mesma unidade. O app não computa "a mais barata" cruzando unidades.
 6. **Origem é do Perfil**, não da Viagem. Trajetos de ponta (casa↔parada) agrupam por origem; Trajetos do meio (parada↔parada) são compartilhados por todos.
 7. **Aeroportos** vivem no Trecho/Pesquisa (GRU, MIA…), **nunca** na Parada (que é cidade). O esqueleto é em nível de cidade; sigla só aparece quando há Trecho/Pesquisa.
-8. Hoje só **Trecho aéreo** hospeda Pesquisa/Preferida. **Terrestre** é conector estrutural sem cotação registrável (o custo do carro entra no Orçamento — em breve).
+8. **Qualquer tipo de translado** hospeda Pesquisa/Preferida — a comparação é **multi-modal** (avião vs. carro vs. trem…), sempre **visual** e na mesma unidade (inv. 5); o app não elege vencedor. O **Modo** (derivado: aéreo/terrestre) marca só o **específico de aéreo** (IATA, milhas, escala). Tipos sem o que cotar (a pé, carro próprio) não hospedam Pesquisa; o **rateio automático** de custo por-veículo é do Orçamento (em breve).
 9. **Camadas de escrita:** backbone (paradas/datas/destino/membros) = só Organizador; exploração (Rota/Trecho/Pesquisa) = qualquer Membro; plano pessoal (Preferida/Comprada) = só o dono. O autor edita/apaga o que é seu; o Organizador modera.
 10. Ninguém entra numa Viagem sem **aceitar** um Convite.

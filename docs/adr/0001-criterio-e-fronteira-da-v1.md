@@ -1,6 +1,6 @@
 # 0001 — Critério e fronteira da v1
 
-**Status:** Aceito
+**Status:** Aceito · **emendado por [ADR-0009](0009-translado-multimodal.md)** (o "lugar profundo" deixa de ser só-aéreo e passa a translado multi-modal) **e [ADR-0010](0010-mapa-esquematico-vetorial.md)** (geografia estilizada vetorial entra na criação; mapa real segue fora)
 
 ## Contexto
 

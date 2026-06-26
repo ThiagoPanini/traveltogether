@@ -1,6 +1,6 @@
 # 0002 — Papéis, camadas de escrita e convite com aceite
 
-**Status:** Aceito (o **canal** do convite ainda em aberto)
+**Status:** Aceito
 
 ## Contexto
 
@@ -12,10 +12,11 @@ Quem pode mexer em quê, e como alguém entra numa Viagem? Precisávamos separar
 
 - O **criador** da Viagem é o **primeiro Organizador**: modera (apaga qualquer Rota/Trecho/Pesquisa) e pode promover outros.
 - **Convite exige aceite explícito** — **ninguém entra sem aceitar** (consentimento, invariante 10). Sem adição instantânea. Se o convidado não tem conta, o convite espera o cadastro.
+- O **Convite carrega o papel** que vigora no aceite — **Membro por default**, podendo já ser **Organizador** (o criador atribui ao convidar). Papéis são **reversíveis** depois (promover/rebaixar), então definir no convite é conveniência, não trava.
 
-## Em aberto
+## Canal (resolvido)
 
-O **canal** do convite — **e-mail nominal com aceite in-app** vs **link compartilhável de entrada** — ainda não está cravado. Ambos preservam a invariante do consentimento; a decisão é de fricção vs rastreabilidade. A definir antes de implementar o fluxo.
+O canal é **e-mail nominal com aceite in-app**. O Organizador convida por **e-mail** — que é a **chave** do Convite e por isso funciona mesmo sem conta (o convite espera o cadastro e casa pelo e-mail no login) — e o convidado **aceita in-app**. O **link compartilhável de entrada fica fora da v1** (possível futuro). Pesou **rastreabilidade e consentimento nominal** acima da fricção-zero do link; o convite **cego** (não vaza nome/cidade de quem ainda não aceitou) respeita a invariante 10 e evita enumeração.
 
 ## Opções consideradas
 
