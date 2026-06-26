@@ -25,14 +25,19 @@ class DomainError(Exception):
 
     code = "domain_error"
 
-    def __init__(self, detail: str) -> None:
-        """Inicializa o erro com a mensagem humana.
+    def __init__(self, detail: str, *, code: str | None = None) -> None:
+        """Inicializa o erro com a mensagem humana e, opcionalmente, um `code` estável.
 
         Args:
             detail: Mensagem em pt-BR exibível ao usuário.
+            code: Identificador estável específico (sobrepõe o `code` da categoria)
+                quando o web precisa ramificar copy num caso particular — ex.:
+                `trip_name_required`, `invitation_exists`. Sem ele, vale o da classe.
         """
         super().__init__(detail)
         self.detail = detail
+        if code is not None:
+            self.code = code
 
 
 class NotFound(DomainError):
@@ -48,7 +53,13 @@ class Invalid(DomainError):
 
 
 class Unauthorized(DomainError):
-    """Falta autorização para a operação."""
+    """Falta autenticação para a operação (quem é você?)."""
+
+
+class Forbidden(DomainError):
+    """Autenticado, mas sem permissão para esta operação (ex.: não-Organizador)."""
+
+    code = "forbidden"
 
 
 class RateLimited(DomainError):
@@ -57,11 +68,14 @@ class RateLimited(DomainError):
     code = "rate_limited"
 
 
+# Ordem importa: subclasses antes das bases não se aplica aqui (categorias são irmãs),
+# mas o handler usa `isinstance` — categorias distintas não se sobrepõem.
 _STATUS: dict[type[DomainError], int] = {
     NotFound: 404,
     Conflict: 409,
     Invalid: 422,
     Unauthorized: 401,
+    Forbidden: 403,
     RateLimited: 429,
 }
 

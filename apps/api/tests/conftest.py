@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 import travelmanager.identity.domain.models  # noqa: F401 — registra as tabelas em Base.metadata
+import travelmanager.trips.domain.models  # noqa: F401 — idem, para o contexto trips
 from travelmanager.shared.db import Base
 
 

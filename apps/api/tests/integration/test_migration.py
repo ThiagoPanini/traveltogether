@@ -27,6 +27,7 @@ def database_url() -> str:
 
 
 IDENTITY_TABLES = {"users", "profiles", "sessions", "otp_codes", "auth_identities"}
+TRIPS_TABLES = {"trips", "stops", "memberships", "invitations"}
 
 
 def test_baseline_upgrade_and_readiness(database_url: str) -> None:
@@ -45,3 +46,4 @@ def test_baseline_upgrade_and_readiness(database_url: str) -> None:
     tables = set(inspect(engine).get_table_names())
     assert "alembic_version" in tables
     assert IDENTITY_TABLES <= tables
+    assert TRIPS_TABLES <= tables

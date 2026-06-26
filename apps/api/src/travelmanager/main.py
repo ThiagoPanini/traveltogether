@@ -6,11 +6,13 @@ from sqlalchemy import Engine
 from travelmanager.identity import router as auth_router
 from travelmanager.shared.db import database_ready, get_engine_dep
 from travelmanager.shared.errors import install_error_handlers
+from travelmanager.trips import router as trips_router
 
 app = FastAPI(title="travel·manager API")
 
 install_error_handlers(app)
 app.include_router(auth_router)
+app.include_router(trips_router)
 
 
 @app.get("/health")

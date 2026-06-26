@@ -7,6 +7,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 import travelmanager.identity.domain.models  # noqa: F401 — registra as tabelas em Base.metadata
+import travelmanager.trips.domain.models  # noqa: F401 — idem, para o contexto trips (ADR-0011)
 from travelmanager.shared.db import Base, normalize_database_url
 
 config = context.config

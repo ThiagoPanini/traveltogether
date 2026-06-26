@@ -43,15 +43,15 @@ class TestOtpCodeIsRedeemableAt:
 
 
 def test_metadata_registra_as_tabelas_do_contexto() -> None:
-    # given/when/then: as tabelas do contexto estão no metadata
-    assert set(Base.metadata.tables) == {
+    # given/when/then: as tabelas do contexto estão no metadata (global, multi-contexto)
+    assert {
         "users",
         "profiles",
         "sessions",
         "otp_codes",
         "auth_identities",
         "rate_events",
-    }
+    } <= set(Base.metadata.tables)
 
 
 def test_users_tem_email_unico() -> None:

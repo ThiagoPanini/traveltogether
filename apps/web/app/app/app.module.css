@@ -133,15 +133,10 @@
   color: var(--text-faint);
 }
 
-.ctaWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
 .cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
   padding: 14px 28px;
   font-family: var(--font-display), "Saira Condensed", sans-serif;
   font-size: 16px;
@@ -152,14 +147,187 @@
   background: var(--accent);
   border: 0;
   border-radius: var(--radius-btn);
-  cursor: not-allowed;
-  opacity: 0.45;
+  cursor: pointer;
 }
 
-.soon {
+.cta:hover {
+  filter: brightness(1.06);
+}
+
+/* Lista de viagens */
+
+.list {
+  flex: 1;
+  width: 100%;
+  max-width: var(--max-width-wide);
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.listHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.listTitle {
+  font-size: 32px;
+  margin: 0;
+  color: var(--text-bright);
+}
+
+.ctaInline {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-accent);
+  background: var(--accent);
+  border-radius: var(--radius-btn);
+}
+
+.ctaInline:hover {
+  filter: brightness(1.06);
+}
+
+.trips {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.tripCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  color: inherit;
+}
+
+.tripCard:hover {
+  border-color: var(--accent-border);
+}
+
+.tripKicker {
   font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-faint);
+}
+
+.tripName {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-bright);
+}
+
+.tripDest {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.tripMeta {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  margin-top: 4px;
+}
+
+/* Convites pendentes */
+
+.invites {
+  width: 100%;
+  max-width: var(--max-width-wide);
+  margin: 24px auto 0;
+}
+
+.invitesTitle {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+
+.inviteList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inviteCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: var(--border-hairline) solid var(--accent-border);
+  border-radius: var(--radius-card);
+}
+
+.inviteInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.inviteTrip {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-bright);
+}
+
+.inviteMeta {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.acceptBtn {
+  padding: 10px 18px;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+}
+
+.acceptBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inviteError {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--accent-alert);
 }
