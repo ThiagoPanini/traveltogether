@@ -175,6 +175,7 @@ export type TripDraftAction =
   | { type: "setDestination"; city: string; country: string | null }
   | { type: "setStopLocation"; id: string; city: string; country: string | null }
   | { type: "addStop"; index?: number }
+  | { type: "insertStop"; index: number; city: string; country: string | null }
   | { type: "removeStop"; id: string }
   | { type: "moveStop"; id: string; direction: "up" | "down" }
   | { type: "setStopDate"; id: string; date: string | null }
@@ -239,6 +240,20 @@ export function tripDraftReducer(draft: TripDraft, action: TripDraftAction): Tri
       const index = Math.max(0, Math.min(rawIndex, maxIndex));
       const stops = [...draft.stops];
       stops.splice(index, 0, blankStop());
+      return { ...draft, stops: normalizeStops(stops) };
+    }
+
+    case "insertStop": {
+      // Encaixa uma parada **já preenchida** num gap (passo 2: + circular → busca de
+      // cidade). Mesma régua do `addStop` (nunca depois do destino), mas com cidade/país.
+      const maxIndex = draft.stops.length - 1;
+      const index = Math.max(0, Math.min(action.index, maxIndex));
+      const stops = [...draft.stops];
+      stops.splice(index, 0, {
+        ...blankStop(),
+        city: action.city,
+        country: action.country,
+      });
       return { ...draft, stops: normalizeStops(stops) };
     }
 

@@ -1,8 +1,10 @@
 "use client";
 
+import { CircleHelp } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { TransferDraft } from "@/lib/trips/draft";
 import { TRANSFER_TYPES } from "@/lib/trips/transfers";
+import { TransferIcon } from "./transfer-icons";
 import styles from "./wizard.module.css";
 
 type TransferModalProps = {
@@ -98,7 +100,7 @@ export function TransferModal({
               onClick={() => onSelect({ kind: type.kind })}
             >
               <span className={styles.typeGlyph} aria-hidden="true">
-                {type.glyph}
+                <TransferIcon transfer={{ kind: type.kind }} size={22} />
               </span>
               <span className={styles.typeName}>{type.label}</span>
               <span className={styles.typeNote}>
@@ -135,7 +137,7 @@ export function TransferModal({
             className={styles.ghostWide}
             onClick={() => onSelect({ kind: "undecided" })}
           >
-            Ainda em discussão
+            <CircleHelp size={16} strokeWidth={1.5} aria-hidden="true" /> Ainda em discussão
           </button>
           <button type="button" className={styles.ghostWide} onClick={onClose}>
             Fechar

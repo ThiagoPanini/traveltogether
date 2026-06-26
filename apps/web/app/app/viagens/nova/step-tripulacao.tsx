@@ -1,13 +1,16 @@
 "use client";
 
+import { Mail, UserPlus } from "lucide-react";
 import { useState } from "react";
 import type { InviteRole } from "@/lib/trips/draft";
+import { RoleIcon } from "./transfer-icons";
 import styles from "./wizard.module.css";
 import type { StepProps } from "./wizard-types";
+import { originLabel } from "./wizard-types";
 
-const ROLES: { value: InviteRole; label: string; glyph: string }[] = [
-  { value: "member", label: "Membro", glyph: "○" },
-  { value: "organizer", label: "Organizador", glyph: "✦" },
+const ROLES: { value: InviteRole; label: string }[] = [
+  { value: "member", label: "Membro" },
+  { value: "organizer", label: "Organizador" },
 ];
 
 function looksLikeEmail(value: string): boolean {
@@ -15,13 +18,14 @@ function looksLikeEmail(value: string): boolean {
 }
 
 /**
- * Passo 5 — Tripulação (convidar; convite cego — ADR-0002). Campo de e-mail + adicionar
- * → card pendente que mostra **só** o e-mail ecoado + "pendente" + toggle de papel
- * [Membro | Organizador] (default Membro), distinguido por ícone além de cor. Sem
- * nenhum dado de perfil; o bloco rico (nome/avatar/cidade) só aparece após o aceite.
+ * Passo 5 — Tripulação (convidar; convite cego — ADR-0002). Recap da viagem + card
+ * "você · organizador" (deriva do Perfil) + campo de e-mail com o papel escolhido
+ * **antes** de adicionar. Cada convite vira um card pendente que mostra **só** o e-mail
+ * ecoado + "pendente" + toggle de papel — nenhum dado de perfil até o aceite.
  */
-export function StepTripulacao({ draft, dispatch }: StepProps) {
+export function StepTripulacao({ draft, dispatch, origin }: StepProps) {
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<InviteRole>("member");
   const [touched, setTouched] = useState(false);
 
   function add() {
@@ -29,21 +33,45 @@ export function StepTripulacao({ draft, dispatch }: StepProps) {
       setTouched(true);
       return;
     }
-    dispatch({ type: "addInvite", email });
+    dispatch({ type: "addInvite", email, role });
     setEmail("");
     setTouched(false);
   }
 
   const invalid = touched && !looksLikeEmail(email);
+  const cities = draft.stops.length + 1;
+  const legs = draft.stops.length;
+  const route = [originLabel(origin), ...draft.stops.map((s) => s.city.trim() || "—")].join(" → ");
 
   return (
-    <div>
-      <p className={styles.eyebrow}>Passo 5 · Tripulação</p>
-      <h1 className={styles.title}>Quem embarca com vocês?</h1>
-      <p className={styles.lede}>
-        Convide por e-mail. O convite é cego: a pessoa só entra ao aceitar, com o papel que você
-        escolher. Você pode convidar depois também — ninguém precisa estar aqui agora.
-      </p>
+    <div className={styles.single}>
+      <header className={styles.sectionHead}>
+        <p className={styles.eyebrow}>Passo 05 · Tripulação</p>
+        <h1 className={styles.title}>Quem embarca com vocês?</h1>
+        <p className={styles.lede}>
+          Convide por e-mail. O convite é cego: a pessoa só entra ao aceitar, com o papel que você
+          escolher. Você pode convidar depois também — ninguém precisa estar aqui agora.
+        </p>
+      </header>
+
+      <div className={styles.recap}>
+        <span className={styles.recapName}>{draft.name.trim() || "Sua viagem"}</span>
+        <span className={styles.recapRoute}>{route}</span>
+        <span className={styles.recapMeta}>
+          {cities} cidades · {legs} trajetos
+        </span>
+      </div>
+
+      <div className={styles.youCard}>
+        <span className={styles.youAvatar} aria-hidden="true">
+          <RoleIcon kind="organizer" size={16} />
+        </span>
+        <span className={styles.youBody}>
+          <span className={styles.youName}>Você</span>
+          <span className={styles.youMeta}>{originLabel(origin)} · criou a viagem</span>
+        </span>
+        <span className={styles.youBadge}>Organizador</span>
+      </div>
 
       <form
         className={styles.inviteForm}
@@ -54,18 +82,43 @@ export function StepTripulacao({ draft, dispatch }: StepProps) {
       >
         <label className={styles.field} htmlFor="invite-email">
           <span className={styles.label}>E-mail do convidado</span>
-          <input
-            id="invite-email"
-            type="email"
-            className={styles.input}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="pessoa@exemplo.com"
-            aria-invalid={invalid}
-          />
+          <div className={styles.inviteInputWrap}>
+            <Mail
+              className={styles.inviteInputIcon}
+              size={16}
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            <input
+              id="invite-email"
+              type="email"
+              className={`${styles.input} ${styles.inviteInput}`}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="pessoa@exemplo.com"
+              aria-invalid={invalid}
+            />
+          </div>
         </label>
+        <fieldset className={styles.roleToggle} aria-label="Papel do convidado">
+          {ROLES.map((r) => {
+            const active = role === r.value;
+            return (
+              <button
+                key={r.value}
+                type="button"
+                className={`${styles.roleBtn} ${active ? styles.roleBtnActive : ""}`}
+                aria-pressed={active}
+                onClick={() => setRole(r.value)}
+              >
+                <RoleIcon kind={r.value} size={14} />
+                {r.label}
+              </button>
+            );
+          })}
+        </fieldset>
         <button type="submit" className={styles.secondary}>
-          Adicionar
+          <UserPlus size={16} strokeWidth={1.5} aria-hidden="true" /> Adicionar
         </button>
       </form>
       {invalid ? (
@@ -86,22 +139,20 @@ export function StepTripulacao({ draft, dispatch }: StepProps) {
                 <span className={styles.invitePending}>Pendente</span>
               </span>
               <fieldset className={styles.roleToggle} aria-label={`Papel de ${invite.email}`}>
-                {ROLES.map((role) => {
-                  const active = invite.role === role.value;
+                {ROLES.map((r) => {
+                  const active = invite.role === r.value;
                   return (
                     <button
-                      key={role.value}
+                      key={r.value}
                       type="button"
                       className={`${styles.roleBtn} ${active ? styles.roleBtnActive : ""}`}
                       aria-pressed={active}
                       onClick={() =>
-                        dispatch({ type: "setInviteRole", email: invite.email, role: role.value })
+                        dispatch({ type: "setInviteRole", email: invite.email, role: r.value })
                       }
                     >
-                      <span className={styles.roleGlyph} aria-hidden="true">
-                        {role.glyph}
-                      </span>
-                      {role.label}
+                      <RoleIcon kind={r.value} size={14} />
+                      {r.label}
                     </button>
                   );
                 })}

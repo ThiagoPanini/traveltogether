@@ -1,81 +1,72 @@
 "use client";
 
+import { Plane } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
-import { getDestination, NAME_MAX } from "@/lib/trips/draft";
+import { getDestination } from "@/lib/trips/draft";
+import { CityPicker } from "./city-picker";
+import { RouteAside } from "./route-aside";
 import styles from "./wizard.module.css";
 import type { StepProps } from "./wizard-types";
 
+function countryName(code: string | null): string {
+  return COUNTRIES.find((c) => c.code === code)?.name ?? "";
+}
+
 /**
- * Passo 1 — Destino. País via `<select>` (COUNTRIES) + cidade texto livre (ADR-0006;
- * combobox GeoNames é enhancement fora de escopo) + nome da viagem. Grava na parada de
- * destino (a última) e no nome do rascunho.
+ * Passo 1 — Destino. País (combobox que filtra por nome) → cidade **gated** pelo país,
+ * reusando o seam `searchCities` (ADR-0006) com escape hatch. Grava na parada de
+ * destino (a última). O nome da viagem saiu daqui — agora mora no passo 4 (Identidade).
  */
-export function StepDestino({ draft, dispatch }: StepProps) {
+export function StepDestino({ draft, dispatch, origin }: StepProps) {
   const dest = getDestination(draft);
+  const city = dest.city.trim();
 
   return (
-    <div>
-      <p className={styles.eyebrow}>Passo 1 · Destino</p>
-      <h1 className={styles.title}>Para onde o grupo vai?</h1>
-      <p className={styles.lede}>
-        Escolha o país e a cidade do destino. A origem é a sua — vem do seu Perfil, não da viagem.
-      </p>
+    <div className={styles.split}>
+      <div className={styles.splitLeft}>
+        <header className={styles.sectionHead}>
+          <p className={styles.eyebrow}>Passo 01 · Destino</p>
+          <h1 className={styles.title}>Qual o destino final da viagem?</h1>
+          <p className={styles.lede}>
+            Selecione o país e a cidade final dessa viagem. Ao longo das próximas etapas, novas
+            opções serão mostradas para customização da viagem.
+          </p>
+        </header>
 
-      <div className={styles.fields}>
-        <label className={styles.field} htmlFor="trip-country">
-          <span className={styles.label}>País do destino</span>
-          <select
-            id="trip-country"
-            className={styles.select}
-            value={dest.country ?? ""}
-            onChange={(event) =>
-              dispatch({
-                type: "setDestination",
-                city: dest.city,
-                country: event.target.value || null,
-              })
+        <div className={styles.fields}>
+          <CityPicker
+            country={dest.country}
+            city={dest.city}
+            onCountry={(code) => dispatch({ type: "setDestination", city: "", country: code })}
+            onCity={(value) =>
+              dispatch({ type: "setDestination", city: value, country: dest.country })
             }
-          >
-            <option value="">Selecione o país</option>
-            {COUNTRIES.map((country) => (
-              <option key={country.code} value={country.code}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className={styles.field} htmlFor="trip-city">
-          <span className={styles.label}>Cidade do destino</span>
-          <input
-            id="trip-city"
-            type="text"
-            className={styles.input}
-            value={dest.city}
-            onChange={(event) =>
-              dispatch({
-                type: "setDestination",
-                city: event.target.value,
-                country: dest.country,
-              })
-            }
-            placeholder="Ex.: Nova York"
+            countryLabel="País do destino"
+            cityLabel="Cidade do destino"
+            countryPlaceholder="Buscar país"
+            cityPlaceholder="Buscar cidade no destino"
           />
-        </label>
+        </div>
 
-        <label className={styles.field} htmlFor="trip-name">
-          <span className={styles.label}>Nome da viagem</span>
-          <input
-            id="trip-name"
-            type="text"
-            className={styles.input}
-            maxLength={NAME_MAX}
-            value={draft.name}
-            onChange={(event) => dispatch({ type: "setName", name: event.target.value })}
-            placeholder="Ex.: Costa Leste"
-          />
-        </label>
+        {city ? (
+          <div className={styles.destCard}>
+            <Plane className={styles.destCardIcon} size={22} strokeWidth={1.5} aria-hidden="true" />
+            <span className={styles.destCardBody}>
+              <span className={styles.destCardCity}>{city}</span>
+              <span className={styles.destCardMeta}>
+                Destino final · {countryName(dest.country) || "—"}
+              </span>
+            </span>
+          </div>
+        ) : null}
       </div>
+
+      <RouteAside
+        origin={origin}
+        stops={draft.stops}
+        entryTransfer={draft.entryTransfer}
+        caption={city || "Mundo todo"}
+      />
     </div>
   );
 }
