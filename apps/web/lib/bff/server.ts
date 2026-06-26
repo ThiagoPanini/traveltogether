@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { internalApiUrl } from "@/lib/bff/url";
+import type { InviteRole, TripCreateIn } from "@/lib/trips/draft";
 
 /**
  * Plumbing do BFF (ADR-0004): repassa chamadas server-side para a API interna,
@@ -10,6 +11,10 @@ import { internalApiUrl } from "@/lib/bff/url";
 // Reexportado para não quebrar quem importa `internalApiUrl` daqui; a fonte é
 // `@/lib/bff/url` (sem dependência de NextAuth — ver módulo).
 export { internalApiUrl };
+
+// `mirrorJson` mora em `@/lib/bff/mirror` (puro, sem `@/auth`); reexportado aqui por
+// conveniência de quem já importa o plumbing do BFF deste módulo.
+export { mirrorJson } from "@/lib/bff/mirror";
 
 /** Cabeçalhos com `Authorization: Bearer <token>` quando há token de sessão. */
 export function withBearer(headers: HeadersInit | undefined, token: string | null): Headers {
@@ -47,5 +52,36 @@ export async function completeOnboarding(payload: ProfilePayload): Promise<Respo
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  });
+}
+
+/** Cria a Viagem (criação atômica — ADR-0011); devolve a resposta crua (`TripBackbone`). */
+export async function createTrip(payload: TripCreateIn): Promise<Response> {
+  return apiFetch("/trips", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Aceita um Convite pendente; vira Participação com o papel do Convite (ADR-0002). */
+export async function acceptInvitation(id: string): Promise<Response> {
+  return apiFetch(`/invitations/${encodeURIComponent(id)}/accept`, { method: "POST" });
+}
+
+/** Revoga um Convite pendente (Organizador); libera o e-mail pra re-convite. */
+export async function revokeInvitation(id: string): Promise<Response> {
+  return apiFetch(`/invitations/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+/** Convida alguém para uma Viagem já criada (Organizador). */
+export async function inviteToTrip(
+  tripId: string,
+  body: { email: string; role: InviteRole },
+): Promise<Response> {
+  return apiFetch(`/trips/${encodeURIComponent(tripId)}/invitations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 }

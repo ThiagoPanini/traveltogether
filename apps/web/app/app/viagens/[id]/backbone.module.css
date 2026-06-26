@@ -1,0 +1,277 @@
+/* Tela de backbone da viagem (Noturno) — esqueleto read-only (Fase 3). */
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px var(--page-gutter) 48px;
+  gap: 24px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: var(--border-hairline) solid var(--line);
+}
+
+.back {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.roleTag {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: var(--border-hairline) solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+
+.shell {
+  width: 100%;
+  max-width: var(--max-width-panel);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+.name {
+  font-size: 44px;
+  margin: 0 0 8px;
+  color: var(--text-bright);
+}
+
+.description {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 56ch;
+}
+
+.sectionTitle {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 0 14px;
+}
+
+.trail {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.leg {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 30px;
+}
+
+.legLine {
+  justify-self: center;
+  width: var(--border-outline);
+  height: 100%;
+  min-height: 30px;
+  background: repeating-linear-gradient(var(--line-dashed) 0 5px, transparent 5px 10px);
+}
+
+.legLineDefined {
+  background: repeating-linear-gradient(var(--accent) 0 5px, transparent 5px 10px);
+}
+
+.legLabel {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.legMeta {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  margin-left: 8px;
+}
+
+.stop {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.dot {
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-circle);
+  border: var(--border-outline) solid var(--line-strong);
+  background: var(--bg-canvas);
+}
+
+.dotOrigin {
+  border-color: var(--accent);
+  background: var(--fill-accent);
+}
+
+.dotDest {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.stopBody {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.kicker {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.kickerAccent {
+  color: var(--accent);
+}
+
+.city {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-bright);
+}
+
+.stopMeta {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  margin-left: auto;
+}
+
+.crew {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-circle);
+  background: var(--fill-accent);
+  border: var(--border-hairline) solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.avatarBlind {
+  background: transparent;
+  border: var(--border-hairline) dashed var(--line-dashed);
+  color: var(--text-faintest);
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.memberName {
+  font-size: 14px;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberCity {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.badge {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+
+.badgeOrganizer {
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.badgePending {
+  color: var(--warning);
+  border-color: var(--warning-border);
+}
+
+.legend {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  border-left: var(--border-accent-edge) solid var(--accent-border);
+  padding: 4px 0 4px 14px;
+  margin: 4px 0 0;
+}
