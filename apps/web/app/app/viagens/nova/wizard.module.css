@@ -273,8 +273,11 @@
 }
 
 .nameInput {
+  font-family: var(--font-display), sans-serif;
   font-size: 20px;
   font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .textarea {
@@ -1048,37 +1051,6 @@
 
 /* ---- Passo 5 · tripulação ---- */
 
-.recap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 18px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--bg-inset);
-}
-
-.recapName {
-  font-family: var(--font-display), sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--text-bright);
-}
-
-.recapRoute {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.recapMeta {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
 .youCard {
   display: flex;
   align-items: center;
@@ -1142,7 +1114,7 @@
 }
 
 .inviteForm .field {
-  flex: 1 1 220px;
+  flex: 1 1 360px;
 }
 
 .inviteInputWrap {
@@ -1258,7 +1230,7 @@
   width: 30px;
   height: 30px;
   flex-shrink: 0;
-  border: none;
+  border: var(--border-hairline) solid var(--line);
   border-radius: var(--radius-circle);
   background: transparent;
   font-size: 18px;
@@ -1405,54 +1377,7 @@
   border-bottom: none;
 }
 
-.kicker {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  min-width: 92px;
-}
-
 .summaryMeta {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.legList {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-}
-
-.legRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: var(--border-hairline) solid var(--line-muted);
-}
-
-.legRow:last-child {
-  border-bottom: none;
-}
-
-.legRowIcon {
-  display: flex;
-  flex-shrink: 0;
-  color: var(--accent);
-}
-
-.legRowCities {
-  flex: 1;
-  font-size: 14px;
-  color: var(--text-body);
-}
-
-.legRowMode {
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.06em;

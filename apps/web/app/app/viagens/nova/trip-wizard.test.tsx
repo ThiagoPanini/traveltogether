@@ -204,6 +204,9 @@ describe("TripWizard — tripulação (passo 5)", () => {
     advance(); // -> 4
     advance(); // -> 5
 
+    expect(screen.queryByText("Sua viagem")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Papel do convidado" })).not.toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText(/e-mail do convidado/i), {
       target: { value: "ana@exemplo.com" },
     });
@@ -221,6 +224,42 @@ describe("TripWizard — tripulação (passo 5)", () => {
       "aria-pressed",
       "true",
     );
+  });
+});
+
+describe("TripWizard — identidade e resumo (passos 4 e 6)", () => {
+  it("preserva casing do nome e resume nome, descrição, convidados e tripulação", async () => {
+    // given: viagem nomeada com um Convite
+    render(<TripWizard origin={origin} />);
+    await pickDestino("Roma");
+    advance(); // -> 2
+    advance(); // -> 3
+    advance(); // -> 4
+    const name = screen.getByLabelText(/nome da viagem/i);
+    fireEvent.change(name, { target: { value: "Costa Leste" } });
+    fireEvent.change(screen.getByLabelText(/descrição/i), {
+      target: { value: "Duas semanas sem pressa." },
+    });
+    expect(name).toHaveValue("Costa Leste");
+    advance(); // -> 5
+    fireEvent.change(screen.getByLabelText(/e-mail do convidado/i), {
+      target: { value: "ana@exemplo.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /adicionar/i }));
+
+    // when: chega ao resumo
+    advance(); // -> 6
+
+    // then: topo preserva conteúdo e resumo contém só Tripulação
+    expect(screen.getByRole("heading", { level: 2, name: "Costa Leste" })).toBeInTheDocument();
+    expect(screen.getByText("Duas semanas sem pressa.")).toBeInTheDocument();
+    expect(screen.queryByText("Trechos aéreos")).not.toBeInTheDocument();
+    const invitedLabel = screen.getByText("Pessoas convidadas");
+    expect(within(invitedLabel.parentElement as HTMLElement).getByText("1")).toBeInTheDocument();
+    const summary = screen.getByRole("region", { name: "Resumo da viagem" });
+    expect(within(summary).getByText("Tripulação")).toBeInTheDocument();
+    expect(within(summary).queryByText("Rota")).not.toBeInTheDocument();
+    expect(within(summary).queryByText("Translados")).not.toBeInTheDocument();
   });
 });
 

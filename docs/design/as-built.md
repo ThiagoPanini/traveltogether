@@ -78,6 +78,10 @@ No passo 2, os cards da trilha vertical exibem ponto por papel, cidade em Saira 
 
 `apps/web/app/app/viagens/nova/transfer-trail.tsx` apresenta o passo 3 como faixa horizontal de origem → Paradas → destino. Cada nó combina kicker de papel, ponto semântico, cidade em Saira e país em mono; os anéis clicáveis de 44px ficam entre nós, tracejados quando indefinidos e sólidos em terracota quando há proposta. A faixa usa overflow horizontal para itinerários longos. O modal oferece os tipos concretos e “Em discussão” na mesma grade, texto livre com “Aplicar” inline e fechamento visual apenas pelo X do cabeçalho; o aviso de que translados são propostas, não compras, vive neste passo e não no resumo.
 
+## Identidade, Tripulação e resumo da criação
+
+No passo 4, o input do nome usa Saira uppercase apenas por CSS; o rascunho e o payload preservam exatamente o casing digitado. O passo 5 não repete o resumo da viagem: mostra o criador Organizador, uma linha larga de e-mail + adicionar e os cards dos Convites. Cada Convite nasce Membro e pode virar Organizador no toggle do próprio card; a remoção usa botão circular com contorno sutil. O passo 6 põe nome, descrição opcional e `RouteBand` no topo, seguido dos indicadores Cidades, Trajetos e Pessoas convidadas; abaixo, mantém apenas Tripulação, sem repetir Rota ou Translados.
+
 ## Acessibilidade do que existe
 
 - **Idioma**: `html lang="pt-BR"`.

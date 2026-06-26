@@ -18,14 +18,12 @@ function looksLikeEmail(value: string): boolean {
 }
 
 /**
- * Passo 5 — Tripulação (convidar; convite cego — ADR-0002). Recap da viagem + card
- * "você · organizador" (deriva do Perfil) + campo de e-mail com o papel escolhido
- * **antes** de adicionar. Cada convite vira um card pendente que mostra **só** o e-mail
- * ecoado + "pendente" + toggle de papel — nenhum dado de perfil até o aceite.
+ * Passo 5 — Tripulação (convidar; convite cego — ADR-0002). Card "você · organizador"
+ * (deriva do Perfil) + campo de e-mail. Convites nascem Membro; o papel é ajustado só
+ * no card pendente, que mostra apenas e-mail + status até o aceite.
  */
 export function StepTripulacao({ draft, dispatch, origin }: StepProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<InviteRole>("member");
   const [touched, setTouched] = useState(false);
 
   function add() {
@@ -33,34 +31,22 @@ export function StepTripulacao({ draft, dispatch, origin }: StepProps) {
       setTouched(true);
       return;
     }
-    dispatch({ type: "addInvite", email, role });
+    dispatch({ type: "addInvite", email });
     setEmail("");
     setTouched(false);
   }
 
   const invalid = touched && !looksLikeEmail(email);
-  const cities = draft.stops.length + 1;
-  const legs = draft.stops.length;
-  const route = [originLabel(origin), ...draft.stops.map((s) => s.city.trim() || "—")].join(" → ");
-
   return (
     <div className={styles.single}>
       <header className={styles.sectionHead}>
         <p className={styles.eyebrow}>Passo 05 · Tripulação</p>
         <h1 className={styles.title}>Quem embarca com vocês?</h1>
         <p className={styles.lede}>
-          Convide por e-mail. O convite é cego: a pessoa só entra ao aceitar, com o papel que você
-          escolher. Você pode convidar depois também — ninguém precisa estar aqui agora.
+          Convide por e-mail. Todo Convite nasce como Membro; ajuste o papel no card depois de
+          adicionar. A pessoa só entra ao aceitar, e você também pode convidar depois.
         </p>
       </header>
-
-      <div className={styles.recap}>
-        <span className={styles.recapName}>{draft.name.trim() || "Sua viagem"}</span>
-        <span className={styles.recapRoute}>{route}</span>
-        <span className={styles.recapMeta}>
-          {cities} cidades · {legs} trajetos
-        </span>
-      </div>
 
       <div className={styles.youCard}>
         <span className={styles.youAvatar} aria-hidden="true">
@@ -100,23 +86,6 @@ export function StepTripulacao({ draft, dispatch, origin }: StepProps) {
             />
           </div>
         </label>
-        <fieldset className={styles.roleToggle} aria-label="Papel do convidado">
-          {ROLES.map((r) => {
-            const active = role === r.value;
-            return (
-              <button
-                key={r.value}
-                type="button"
-                className={`${styles.roleBtn} ${active ? styles.roleBtnActive : ""}`}
-                aria-pressed={active}
-                onClick={() => setRole(r.value)}
-              >
-                <RoleIcon kind={r.value} size={14} />
-                {r.label}
-              </button>
-            );
-          })}
-        </fieldset>
         <button type="submit" className={styles.secondary}>
           <UserPlus size={16} strokeWidth={1.5} aria-hidden="true" /> Adicionar
         </button>
