@@ -26,21 +26,9 @@ Modo noturno **quente** (azuis petróleo profundos + cremes, não cinza puro), e
 
 Cada peça abaixo usa apenas tokens (`design-spec.md`). Estados nunca dependem só de cor; foco sempre visível; `span onClick` do protótipo vira controle semântico (`a` para navegação, `button` para comando).
 
-### Painel da Viagem
+### Exploração persistida no servidor
 
-Container `max-width-panel`. Header com tabs/chips, resumo da viagem, contador de dias, progress strip e grid `1.5fr / 1fr`: coluna principal = timeline de Trajetos com decisões pessoais; rail = tripulação + cards "em breve". **Sem milhas/dinheiro** (inv. 5). Cascas V1: Roteiro, Orçamento, Ingressos.
-
-**Recorte v1 honesto (Painel sobre o esqueleto — resolvido em grill 26/06).** O Painel é construído sobre o `TripBackboneRead` (`GET /trips/{id}`), **sem mudança de backend**, e mora em `/app/viagens/[id]` (enriquecendo a vista crua atual). Como a exploração (Rota/Trecho/Pesquisa/Preferida) ainda não existe ([ADR-0011](../adr/0011-modelo-de-dados-criacao-de-viagem.md)), as peças que dependem dela viram **estados-semente honestos**, não dados falsos:
-
-- **Timeline de Trajetos (coluna principal):** derivada em helper TS puro a partir do `TripBackboneRead` — *sua ida* (casa→1ª parada, `entry_transfer`, por-pessoa) + Trajetos compartilhados (`stops[i].desired_transfer`) + *sua volta* (semente muted "emerge na pesquisa", por-pessoa; a volta não é modelada — só-ida). Cada linha mantém o card com left-accent, mas preenchido com o **translado proposto**, não votos. Status pill = 2 estados: *proposto: [tipo]* (accent) ou *em discussão* (warning); ponta = *sua ida* / *sua volta*. CTA "pesquisa de translado · em breve" desabilitado (Rotas ainda não existe). Zero voto/preço/opção.
-- **Progress strip:** mede *translados propostos* — "X de Y trajetos compartilhados com translado proposto · Z%" + contador "N em discussão" (warning). Forward-compat: quando a Pesquisa/Preferida chegar, a mesma barra passa a contar *decididos* (a intenção original do protótipo) sem relayout.
-- **Herói:** eyebrow só com a **partida** ("parte 14 set 2026") + contador "dias p/ embarque" (de `departure_date`, null-safe → "datas a definir"). **Sem data-fim** (não modelada). Subtítulo = paradas em ordem · "N viajantes" (`crew.members.length`).
-- **Tripulação (rail):** membros aceitos com papel (*organiza* / *membro*); subgrupo muted "Aguardando aceite" com os Convites pendentes, **só pro Organizador** (convite cego, [ADR-0002](../adr/0002-papeis-camadas-e-convite.md)). Sem *votou* / *falta votar*.
-- **Chrome (fiel ao protótipo, por escolha do dono):** tabs do topo = Painel ativo + Roteiro/Orçamento/Ingressos "em breve" (desabilitadas); os cards "em breve" do rail repetem essas cascas (redundância aceita por fidelidade); bottom switcher **mantido**, reconciliado pra nav de vista de app — Painel ativo + Rotas "em breve" (Landing/Login saem, não são vistas autenticadas). Marca `travelmanager`.
-
-### Timeline leg
-
-Grid `58px / 20px / 1fr` (data mono · dot de status · conteúdo). Conteúdo: título Saira, status pill, subcódigo mono e decision card opcional embutido. Implementação distingue Trajeto (salto derivado) de Trecho (pulo/compra); IATA só quando o item fala de Trecho/Pesquisa. Pode ser `ol`/`li`; o dot é decorativo se a pill comunica o estado. Sem preço.
+O Painel da Viagem, a timeline acionável e o wizard local de Pesquisa já foram construídos e vivem em [`as-built.md`](as-built.md). O passo projetado é substituir o storage local por entidades reais de Rota/Trecho/Pesquisa, preservar as fichas existentes na mesma anatomia e liberar Preferida → Comprada por-pessoa sem transformar a escolha em decisão de grupo.
 
 ### Decision card
 
@@ -84,7 +72,7 @@ Card com borda tracejada (`line-dashed`), ícone mono decorativo, título, nota 
 
 ## Fluxo de telas
 
-**Landing → Login → Onboarding → Painel de bordo → Painel da Viagem → Rotas.**
+**Landing → Login → Onboarding → Painel de bordo → Painel da Viagem → wizard de Pesquisa; tela Rotas segue projetada.**
 
 | Tela | Container | Conteúdo |
 |---|---|---|
@@ -92,7 +80,7 @@ Card com borda tracejada (`line-dashed`), ícone mono decorativo, título, nota 
 | **Login** | `login-card` central, full-height | Tela de login (OTP + Google) já implementada, com reenvio sob cooldown de 30s (#194) — ver `as-built.md`. |
 | **Onboarding** | `login-card` central, full-height | Perfil mínimo (nome + cidade de origem + país) pós-1ª auth, já implementado — ver `as-built.md`. |
 | **Painel de bordo** | menu lateral + canvas fluido | Home do usuário (`/app`) já implementada com radar esquemático, métricas reais, Convites, Participações e empty-state guiado — ver `as-built.md`. **Sem milhas/dinheiro.** |
-| **Painel da Viagem** | `max-width-panel` | Home de uma Viagem (`/app/viagens/[id]`) já implementada com tabs/chips, resumo, progress strip de translados propostos, timeline de Trajetos, Tripulação e cascas "em breve" — ver `as-built.md`. **Sem milhas/dinheiro.** |
+| **Painel da Viagem** | `max-width-panel` | Home de uma Viagem (`/app/viagens/[id]`) já implementada com timeline acionável e wizard de Pesquisa local — ver `as-built.md`. O Painel não exibe valores; dinheiro/pontos vivem no takeover da Pesquisa. |
 | **Rotas** | `max-width-wide`, grid `1.2fr / 1fr` | Paradas & Trajetos derivados + route option cards (esquerda); painel sticky com flight map + ticket panel (direita). Único lugar com dinheiro/pontos. |
 
 Navegação entre telas do app autenticado pelo bottom switcher (quando existir).
