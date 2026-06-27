@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./app.module.css";
@@ -15,9 +16,8 @@ export type PendingInvitation = {
 const ROLE_LABEL = { member: "Membro", organizer: "Organizador" } as const;
 
 /**
- * Convites pendentes do usuário logado (#230). Mutação do client → route handler
- * `/api/invitations/{id}/accept` → API. Ao aceitar, a Participação nasce com o papel
- * do Convite (ADR-0002) e a viagem passa a aparecer; revalida com `router.refresh`.
+ * Convites pendentes do usuário logado. A Participação só nasce após o aceite;
+ * ao concluir, o painel é revalidado para a nova Viagem entrar no radar.
  */
 export function PendingInvitations({ invitations }: { invitations: PendingInvitation[] }) {
   const router = useRouter();
@@ -38,8 +38,19 @@ export function PendingInvitations({ invitations }: { invitations: PendingInvita
   }
 
   return (
-    <section className={styles.invites} aria-label="Convites pendentes">
-      <h2 className={styles.invitesTitle}>Convites pendentes</h2>
+    <section id="convites" className={styles.invites} aria-labelledby="invites-title">
+      <div className={styles.invitesIntro}>
+        <span className={styles.inviteIcon} aria-hidden="true">
+          <Mail size={20} strokeWidth={1.7} />
+        </span>
+        <div>
+          <p className={styles.invitesKicker}>Chamada para embarque</p>
+          <h2 id="invites-title">
+            {invitations.length} {invitations.length === 1 ? "Convite espera" : "Convites esperam"}{" "}
+            seu aceite
+          </h2>
+        </div>
+      </div>
       <ul className={styles.inviteList}>
         {invitations.map((invite) => (
           <li key={invite.id} className={styles.inviteCard}>
@@ -47,7 +58,7 @@ export function PendingInvitations({ invitations }: { invitations: PendingInvita
               <span className={styles.inviteTrip}>{invite.trip_name}</span>
               <span className={styles.inviteMeta}>
                 {ROLE_LABEL[invite.role]}
-                {invite.invited_by_name ? ` · de ${invite.invited_by_name}` : ""}
+                {invite.invited_by_name ? ` · convite de ${invite.invited_by_name}` : ""}
               </span>
             </span>
             <button
@@ -56,7 +67,8 @@ export function PendingInvitations({ invitations }: { invitations: PendingInvita
               disabled={pendingId === invite.id}
               onClick={() => accept(invite.id)}
             >
-              {pendingId === invite.id ? "Aceitando…" : "Aceitar"}
+              {pendingId === invite.id ? "Aceitando…" : "Aceitar e embarcar"}
+              <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
             </button>
           </li>
         ))}

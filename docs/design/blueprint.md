@@ -84,14 +84,15 @@ Card com borda tracejada (`line-dashed`), ícone mono decorativo, título, nota 
 
 ## Fluxo de telas
 
-**Landing → Login → Onboarding → Painel → Rotas.**
+**Landing → Login → Onboarding → Painel de bordo → Painel da Viagem → Rotas.**
 
 | Tela | Container | Conteúdo |
 |---|---|---|
 | **Landing** | `max-width-wide` | Já implementada como landing pública — ver `as-built.md`. |
 | **Login** | `login-card` central, full-height | Tela de login (OTP + Google) já implementada, com reenvio sob cooldown de 30s (#194) — ver `as-built.md`. |
 | **Onboarding** | `login-card` central, full-height | Perfil mínimo (nome + cidade de origem + país) pós-1ª auth, já implementado — ver `as-built.md`. |
-| **Painel** | `max-width-panel` | Home empty-state (`/app`) + proteção de rota + logout já implementados — ver `as-built.md`. A shell rica abaixo é Fase 3: Tabs/chips, resumo, progress strip, timeline de Trajetos + decisões pessoais, tripulação, "em breve". **Sem milhas/dinheiro.** |
+| **Painel de bordo** | menu lateral + canvas fluido | Home do usuário (`/app`) já implementada com radar esquemático, métricas reais, Convites, Participações e empty-state guiado — ver `as-built.md`. **Sem milhas/dinheiro.** |
+| **Painel da Viagem** | `max-width-panel` | Home de uma Viagem (`/app/viagens/[id]`) já implementada com tabs/chips, resumo, progress strip de translados propostos, timeline de Trajetos, Tripulação e cascas "em breve" — ver `as-built.md`. **Sem milhas/dinheiro.** |
 | **Rotas** | `max-width-wide`, grid `1.2fr / 1fr` | Paradas & Trajetos derivados + route option cards (esquerda); painel sticky com flight map + ticket panel (direita). Único lugar com dinheiro/pontos. |
 
 Navegação entre telas do app autenticado pelo bottom switcher (quando existir).

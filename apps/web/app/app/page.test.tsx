@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -46,15 +46,15 @@ afterEach(() => {
   apiFetch.mockReset();
 });
 
-describe("/app (home da Fase 3)", () => {
-  it("sem viagens, mostra o empty-state e o CTA 'Criar viagem' linkando pro wizard", async () => {
+describe("/app (painel de bordo)", () => {
+  it("sem viagens, mostra o empty-state guiado e o CTA da primeira viagem", async () => {
     auth.mockResolvedValue({ user: { name: "Maria" } });
     mockApi({ profile: { display_name: "Maria", origin_city: "São Paulo" }, trips: [] });
 
     render(await AppHome());
 
-    expect(screen.getByRole("heading", { name: /nenhuma viagem ainda/i })).toBeInTheDocument();
-    const cta = screen.getByRole("link", { name: /criar viagem/i });
+    expect(screen.getByRole("heading", { name: /nenhuma viagem no radar/i })).toBeInTheDocument();
+    const cta = screen.getByRole("link", { name: /criar primeira viagem/i });
     expect(cta).toHaveAttribute("href", "/app/viagens/nova");
   });
 
@@ -64,8 +64,9 @@ describe("/app (home da Fase 3)", () => {
 
     render(await AppHome());
 
-    expect(screen.getByText("Maria Souza")).toBeInTheDocument();
-    expect(screen.getByText("Curitiba")).toBeInTheDocument();
+    const menu = screen.getByRole("complementary", { name: /menu principal/i });
+    expect(within(menu).getByText("Maria Souza")).toBeInTheDocument();
+    expect(within(menu).getByText("Curitiba")).toBeInTheDocument();
   });
 
   it("exibe avatar com a inicial maiúscula do nome", async () => {
@@ -95,7 +96,7 @@ describe("/app (home da Fase 3)", () => {
     expect(screen.getByText("viajante")).toBeInTheDocument();
   });
 
-  it("lista as viagens que participo com link pro backbone", async () => {
+  it("lista as viagens que participo em cartões com link pro painel da viagem", async () => {
     auth.mockResolvedValue({ user: { name: "Maria" } });
     mockApi({
       profile: { display_name: "Maria", origin_city: "São Paulo" },
@@ -112,12 +113,49 @@ describe("/app (home da Fase 3)", () => {
 
     render(await AppHome());
 
-    expect(screen.getByText("Costa Leste")).toBeInTheDocument();
-    expect(screen.getByText("Nova York")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /costa leste/i })).toHaveAttribute(
-      "href",
-      "/app/viagens/t1",
-    );
+    const trip = screen.getByRole("link", { name: /costa leste/i });
+    expect(within(trip).getByText("Costa Leste")).toBeInTheDocument();
+    expect(within(trip).getAllByText("Nova York")).not.toHaveLength(0);
+    expect(trip).toHaveAttribute("href", "/app/viagens/t1");
+  });
+
+  it("resume viagens, paradas, papel de Organizador e convites com dados reais", async () => {
+    auth.mockResolvedValue({ user: { name: "Maria" } });
+    mockApi({
+      profile: { display_name: "Maria", origin_city: "São Paulo" },
+      trips: [
+        {
+          id: "t1",
+          name: "Costa Leste",
+          destination_city: "Nova York",
+          stop_count: 3,
+          my_role: "organizer",
+        },
+        {
+          id: "t2",
+          name: "Sul",
+          destination_city: "Bariloche",
+          stop_count: 2,
+          my_role: "member",
+        },
+      ],
+      invitations: [
+        {
+          id: "i1",
+          trip_id: "t9",
+          trip_name: "Road Trip",
+          role: "member",
+          invited_by_name: "Ana",
+        },
+      ],
+    });
+
+    render(await AppHome());
+
+    const metrics = screen.getByLabelText("Resumo do painel");
+    expect(within(metrics).getByText("02")).toBeInTheDocument();
+    expect(within(metrics).getByText("05")).toBeInTheDocument();
+    expect(within(metrics).getAllByText("01")).toHaveLength(2);
   });
 
   it("mostra os convites pendentes com botão de aceitar", async () => {
