@@ -6,10 +6,12 @@ import { CrewRow } from "@/components/crew-row";
 import { EmBreveCard } from "@/components/em-breve-card";
 import { ProgressStrip } from "@/components/progress-strip";
 import { TabChip } from "@/components/tab-chip";
+import { TrajetoRow } from "@/components/trajeto-row";
 import { Wordmark } from "@/components/wordmark";
 import { apiFetch } from "@/lib/bff/server";
 import {
   departureCountdown,
+  deriveTrajetos,
   formatTripDate,
   summarizeSharedTransfers,
   type TripBackbone,
@@ -31,8 +33,8 @@ const SOON_SHELLS = [
  * Painel da Viagem — a home de _uma_ viagem, sobre o `TripBackboneRead` (`GET /trips/{id}`,
  * 404 → `notFound`, não vaza existência — ADR-0011). Server component honesto: só dado real.
  * Header + tabs · herói (partida + contagem de embarque) · avanço dos translados propostos ·
- * tripulação (papel + convites cegos só para o Organizador) · cascas "em breve". A linha do
- * tempo dos Trajetos entra na fatia seguinte (PR B).
+ * linha do tempo dos Trajetos (sua ida + compartilhados + sua volta-semente) · tripulação
+ * (papel + convites cegos só para o Organizador) · cascas "em breve".
  */
 export default async function ViagemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,6 +51,7 @@ export default async function ViagemPage({ params }: { params: Promise<{ id: str
   const travelers = trip.crew.members.length;
   const route = trip.stops.map((stop) => stop.city).join(" → ");
   const progress = summarizeSharedTransfers(trip.stops);
+  const trajetos = deriveTrajetos(trip);
   const isOrganizer = trip.my_role === "organizer";
   // Convite cego (ADR-0002): só o Organizador vê os pendentes — não vaze e-mail a membro.
   const pending = isOrganizer ? trip.crew.pending_invitations : [];
@@ -105,10 +108,11 @@ export default async function ViagemPage({ params }: { params: Promise<{ id: str
         <div className={styles.grid}>
           <section>
             <h2 className={styles.colLabel}>Linha do tempo · seus trajetos</h2>
-            <p className={styles.timelineSeed}>
-              Os Trajetos da viagem — sua ida, os saltos compartilhados e sua volta — aparecem aqui
-              em breve, cada um com o translado proposto.
-            </p>
+            <ol className={styles.timeline}>
+              {trajetos.map((trajeto, i) => (
+                <TrajetoRow key={`${trajeto.kind}-${i}`} trajeto={trajeto} />
+              ))}
+            </ol>
           </section>
 
           <aside>

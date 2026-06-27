@@ -8,7 +8,7 @@
  */
 
 import type { TransferKind } from "./draft";
-import { isTransferDefined } from "./transfers";
+import { isTransferDefined, transferLabel } from "./transfers";
 
 /** Translado proposto no payload (snake-case `other_text`); `null` = sem proposta. */
 export type TransferOut = { kind: TransferKind; other_text: string | null } | null;
@@ -159,4 +159,90 @@ export function summarizeSharedTransfers(stops: StopRead[]): TransferProgress {
     }
   }
   return { proposed, total, open: total - proposed };
+}
+
+/** Natureza de um Trajeto derivado: ponta de ida, salto compartilhado ou semente de volta. */
+export type TrajetoKind = "ida" | "shared" | "volta-seed";
+
+/**
+ * Um Trajeto da linha do tempo do Painel — o salto a vencer entre dois lugares
+ * consecutivos (CONTEXT "Trajeto"), **derivado** da ordem das Paradas e da origem do Perfil.
+ * Não hospeda preço; `transfer` é só a **proposta** (hint), nunca um Trecho.
+ */
+export type Trajeto = {
+  kind: TrajetoKind;
+  /** Cidade de partida do salto. */
+  from: string;
+  /** Cidade de chegada do salto. */
+  to: string;
+  /** Translado proposto do salto (por-pessoa nas pontas; do grupo nos compartilhados). */
+  transfer: TransferOut;
+  /** Data de chegada em `to`, quando há; `null` na volta-semente. */
+  date: string | null;
+};
+
+/**
+ * Deriva a linha do tempo de Trajetos a partir do esqueleto, do ponto de vista de quem vê:
+ * **sua ida** (casa→1ª parada, `entry_transfer`, por-pessoa) + os **compartilhados**
+ * (parada[i-1]→parada[i], `desired_transfer`) + **sua volta-semente** (destino→casa, não
+ * modelada — só-ida — então sem translado nem data). Lista vazia se não houver paradas
+ * (defensivo; o backbone real sempre traz ≥1).
+ */
+export function deriveTrajetos(trip: TripBackbone): Trajeto[] {
+  const { stops, origin, entry_transfer } = trip;
+  if (stops.length === 0) {
+    return [];
+  }
+  const originCity = origin.city?.trim() || "Sua cidade";
+  const trajetos: Trajeto[] = [
+    {
+      kind: "ida",
+      from: originCity,
+      to: stops[0].city,
+      transfer: entry_transfer,
+      date: stops[0].arrival_date,
+    },
+  ];
+  for (let i = 1; i < stops.length; i += 1) {
+    trajetos.push({
+      kind: "shared",
+      from: stops[i - 1].city,
+      to: stops[i].city,
+      transfer: stops[i].desired_transfer,
+      date: stops[i].arrival_date,
+    });
+  }
+  trajetos.push({
+    kind: "volta-seed",
+    from: stops[stops.length - 1].city,
+    to: originCity,
+    transfer: null,
+    date: null,
+  });
+  return trajetos;
+}
+
+/** Tom da pílula de estado de um Trajeto (subconjunto dos tons da `StatusPill`). */
+export type TrajetoTone = "accent" | "warning" | "muted";
+
+/**
+ * Estado de um Trajeto pra pílula: a volta-semente é `muted` ("emerge na pesquisa"); um
+ * salto com translado concreto é `accent` ("proposto: {tipo}"); indefinido (`undecided`/nulo)
+ * é `warning` ("em discussão"). Zero voto/preço — é só a proposta (CONTEXT inv. 4 e 5).
+ */
+export function trajetoStatus(trajeto: Trajeto): { tone: TrajetoTone; label: string } {
+  if (trajeto.kind === "volta-seed") {
+    return { tone: "muted", label: "emerge na pesquisa" };
+  }
+  // `transfer &&` estreita o tipo (isTransferDefined é boolean, não type-guard) pra acessar
+  // `.kind`/`.other_text` sem reabrir a definição de "definido" — reusa isTransferDefined.
+  const transfer = trajeto.transfer;
+  if (transfer && isTransferDefined(transfer)) {
+    const label = transferLabel({
+      kind: transfer.kind,
+      otherText: transfer.other_text ?? undefined,
+    });
+    return { tone: "accent", label: `proposto: ${label}` };
+  }
+  return { tone: "warning", label: "em discussão" };
 }

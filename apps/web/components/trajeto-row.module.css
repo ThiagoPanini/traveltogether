@@ -1,0 +1,123 @@
+.row {
+  display: grid;
+  grid-template-columns: 64px 18px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 18px 0;
+  border-top: var(--border-hairline) solid var(--line);
+}
+
+.date {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-top: 3px;
+}
+
+.rail {
+  display: flex;
+  justify-content: center;
+  padding-top: 5px;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: var(--radius-circle);
+  border: var(--border-outline) solid var(--line-strong);
+  background: var(--bg-canvas);
+}
+
+.accent {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.warning {
+  border-color: var(--warning);
+  background: var(--warning);
+}
+
+.muted {
+  border-color: var(--line-strong);
+  background: transparent;
+}
+
+.body {
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-bright);
+}
+
+.arrow {
+  color: var(--text-faint);
+}
+
+.kicker {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 4px 0 0;
+}
+
+.card {
+  margin-top: 13px;
+  background: var(--surface);
+  border: var(--border-hairline) solid var(--line);
+  border-left: var(--border-accent-edge) solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 13px 16px;
+}
+
+.cardAccent {
+  border-left-color: var(--accent-border);
+}
+
+.cardWarning {
+  border-left-color: var(--warning-border);
+}
+
+.prompt {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+.cta {
+  display: inline-block;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+}
+
+.seed {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-faint);
+  line-height: 1.5;
+  border-left: var(--border-accent-edge) solid var(--line-dashed);
+  padding-left: 14px;
+}

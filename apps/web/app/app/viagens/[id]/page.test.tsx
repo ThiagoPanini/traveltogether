@@ -189,6 +189,28 @@ describe("Painel da viagem — tripulação", () => {
   });
 });
 
+describe("Painel da viagem — linha do tempo", () => {
+  it("deriva sua ida + compartilhados + sua volta-semente, com as pílulas de estado", async () => {
+    apiFetch.mockResolvedValue(ok(backbone));
+    render(await ViagemPage(ctx("t1")));
+
+    const section = screen.getByRole("heading", { name: /linha do tempo/i }).closest("section");
+    expect(section).not.toBeNull();
+    const tl = within(section as HTMLElement);
+    // sua ida (avião) · compartilhado proposto (trem) · compartilhado em discussão · volta-semente
+    expect(tl.getByText("sua ida")).toBeInTheDocument();
+    expect(tl.getByText("proposto: Avião")).toBeInTheDocument();
+    expect(tl.getByText("proposto: Trem")).toBeInTheDocument();
+    expect(tl.getByText("em discussão")).toBeInTheDocument();
+    expect(tl.getByText("sua volta")).toBeInTheDocument();
+    expect(tl.getByText("emerge na pesquisa")).toBeInTheDocument();
+    // a composição derivação→render chega na linha: a nota da volta-semente (conteúdo único)
+    expect(tl.getByText(/a volta emerge quando alguém pesquisar/i)).toBeInTheDocument();
+    // as pontas/compartilhados oferecem o CTA desabilitado; a volta-semente não
+    expect(tl.getAllByText(/pesquisa de translado · em breve/i).length).toBe(3);
+  });
+});
+
 describe("Painel da viagem — cascas e 404", () => {
   it("mostra os cards 'em breve' (Roteiro/Orçamento/Ingressos)", async () => {
     apiFetch.mockResolvedValue(ok(backbone));

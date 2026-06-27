@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   daysUntilDeparture,
   departureCountdown,
+  deriveTrajetos,
   formatTripDate,
   type StopRead,
   summarizeSharedTransfers,
+  type TripBackbone,
+  trajetoStatus,
 } from "./backbone";
 
 /** Parada mínima para os cenários de translado compartilhado. */
@@ -15,6 +18,22 @@ function stop(partial: Partial<StopRead> & { position: number }): StopRead {
     country: "BR",
     arrival_date: null,
     desired_transfer: null,
+    ...partial,
+  };
+}
+
+/** Backbone mínimo para a derivação de Trajetos. */
+function backbone(partial: Partial<TripBackbone>): TripBackbone {
+  return {
+    id: "t",
+    name: "Viagem",
+    description: null,
+    departure_date: null,
+    my_role: "organizer",
+    origin: { city: "São Paulo", country: "BR" },
+    entry_transfer: null,
+    stops: [],
+    crew: { members: [], pending_invitations: [] },
     ...partial,
   };
 }
@@ -101,5 +120,132 @@ describe("summarizeSharedTransfers (avanço dos translados compartilhados)", () 
       stop({ position: 2, desired_transfer: { kind: "bus", other_text: null } }),
     ]);
     expect(result).toEqual({ proposed: 2, total: 2, open: 0 });
+  });
+});
+
+describe("deriveTrajetos (linha do tempo dos Trajetos)", () => {
+  it("1 parada só: sua ida + sua volta-semente, sem compartilhados", () => {
+    const trip = backbone({
+      origin: { city: "São Paulo", country: "BR" },
+      entry_transfer: { kind: "plane", other_text: null },
+      stops: [stop({ position: 0, city: "Nova York", arrival_date: "2026-07-02" })],
+    });
+
+    const trajetos = deriveTrajetos(trip);
+
+    expect(trajetos).toEqual([
+      {
+        kind: "ida",
+        from: "São Paulo",
+        to: "Nova York",
+        transfer: { kind: "plane", other_text: null },
+        date: "2026-07-02",
+      },
+      { kind: "volta-seed", from: "Nova York", to: "São Paulo", transfer: null, date: null },
+    ]);
+  });
+
+  it("N paradas: ida + um compartilhado por salto parada→parada + volta-semente", () => {
+    const trip = backbone({
+      origin: { city: "São Paulo", country: "BR" },
+      entry_transfer: { kind: "plane", other_text: null },
+      stops: [
+        stop({ position: 0, city: "Nova York", arrival_date: "2026-07-02" }),
+        stop({
+          position: 1,
+          city: "Boston",
+          arrival_date: "2026-07-05",
+          desired_transfer: { kind: "train", other_text: null },
+        }),
+        stop({
+          position: 2,
+          city: "Portland",
+          arrival_date: null,
+          desired_transfer: { kind: "undecided", other_text: null },
+        }),
+      ],
+    });
+
+    const trajetos = deriveTrajetos(trip);
+
+    expect(trajetos.map((t) => [t.kind, t.from, t.to])).toEqual([
+      ["ida", "São Paulo", "Nova York"],
+      ["shared", "Nova York", "Boston"],
+      ["shared", "Boston", "Portland"],
+      ["volta-seed", "Portland", "São Paulo"],
+    ]);
+    // o compartilhado herda o desired_transfer e a data da parada de chegada
+    expect(trajetos[1].transfer).toEqual({ kind: "train", other_text: null });
+    expect(trajetos[1].date).toBe("2026-07-05");
+    // arrival_date nulo propaga para o salto (não só na volta-semente hardcoded)
+    expect(trajetos[2].date).toBeNull();
+  });
+
+  it("origem sem cidade no Perfil: cai para 'Sua cidade' nas pontas", () => {
+    const trip = backbone({
+      origin: { city: null, country: null },
+      stops: [stop({ position: 0, city: "Lisboa" })],
+    });
+
+    const trajetos = deriveTrajetos(trip);
+
+    expect(trajetos[0].from).toBe("Sua cidade");
+    expect(trajetos[trajetos.length - 1].to).toBe("Sua cidade");
+  });
+
+  it("sem paradas: retorna lista vazia (defensivo — backbone real tem ≥1)", () => {
+    expect(deriveTrajetos(backbone({ stops: [] }))).toEqual([]);
+  });
+});
+
+describe("trajetoStatus (pílula de estado do Trajeto)", () => {
+  it("volta-semente: muted 'emerge na pesquisa'", () => {
+    const status = trajetoStatus({
+      kind: "volta-seed",
+      from: "A",
+      to: "B",
+      transfer: null,
+      date: null,
+    });
+    expect(status).toEqual({ tone: "muted", label: "emerge na pesquisa" });
+  });
+
+  it("translado concreto: accent 'proposto: {tipo}' (texto livre quando 'other')", () => {
+    expect(
+      trajetoStatus({
+        kind: "shared",
+        from: "A",
+        to: "B",
+        transfer: { kind: "train", other_text: null },
+        date: null,
+      }),
+    ).toEqual({ tone: "accent", label: "proposto: Trem" });
+
+    expect(
+      trajetoStatus({
+        kind: "ida",
+        from: "A",
+        to: "B",
+        transfer: { kind: "other", other_text: "Balsa" },
+        date: null,
+      }),
+    ).toEqual({ tone: "accent", label: "proposto: Balsa" });
+  });
+
+  it("indefinido (undecided ou nulo): warning 'em discussão'", () => {
+    expect(
+      trajetoStatus({
+        kind: "shared",
+        from: "A",
+        to: "B",
+        transfer: { kind: "undecided", other_text: null },
+        date: null,
+      }),
+    ).toEqual({ tone: "warning", label: "em discussão" });
+
+    expect(trajetoStatus({ kind: "ida", from: "A", to: "B", transfer: null, date: null })).toEqual({
+      tone: "warning",
+      label: "em discussão",
+    });
   });
 });
