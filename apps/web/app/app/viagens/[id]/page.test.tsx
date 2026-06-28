@@ -155,13 +155,16 @@ describe("Painel da viagem — tabs e switcher", () => {
     expect(within(tabs).getByText(/ingressos/i)).toBeInTheDocument();
   });
 
-  it("bottom switcher: Painel ativo + Rotas em breve", async () => {
+  it("bottom switcher: Painel ativo + atalho funcional para Pesquisas", async () => {
     apiFetch.mockResolvedValue(ok(backbone));
     render(await ViagemPage(ctx("t1")));
 
     const switcher = screen.getByRole("navigation", { name: /vistas da viagem/i });
     expect(within(switcher).getByText("Painel")).toHaveAttribute("aria-current", "page");
-    expect(within(switcher).getByText(/rotas/i)).toHaveAttribute("aria-disabled", "true");
+    expect(within(switcher).getByRole("link", { name: /pesquisas/i })).toHaveAttribute(
+      "href",
+      "#pesquisas",
+    );
   });
 });
 
@@ -194,7 +197,9 @@ describe("Painel da viagem — linha do tempo", () => {
     apiFetch.mockResolvedValue(ok(backbone));
     render(await ViagemPage(ctx("t1")));
 
-    const section = screen.getByRole("heading", { name: /linha do tempo/i }).closest("section");
+    const section = screen
+      .getByRole("heading", { name: /translados & pesquisas/i })
+      .closest("section");
     expect(section).not.toBeNull();
     const tl = within(section as HTMLElement);
     // sua ida (avião) · compartilhado proposto (trem) · compartilhado em discussão · volta-semente
@@ -204,10 +209,9 @@ describe("Painel da viagem — linha do tempo", () => {
     expect(tl.getByText("em discussão")).toBeInTheDocument();
     expect(tl.getByText("sua volta")).toBeInTheDocument();
     expect(tl.getByText("emerge na pesquisa")).toBeInTheDocument();
-    // a composição derivação→render chega na linha: a nota da volta-semente (conteúdo único)
-    expect(tl.getByText(/a volta emerge quando alguém pesquisar/i)).toBeInTheDocument();
-    // as pontas/compartilhados oferecem o CTA desabilitado; a volta-semente não
-    expect(tl.getAllByText(/pesquisa de translado · em breve/i).length).toBe(3);
+    // na camada de exploração, inclusive a volta-semente passa a oferecer registro
+    expect(tl.getByText(/a volta começa aqui/i)).toBeInTheDocument();
+    expect(tl.getAllByRole("button", { name: /registrar pesquisa/i })).toHaveLength(4);
   });
 });
 

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CrewRow } from "@/components/crew-row";
 import { EmBreveCard } from "@/components/em-breve-card";
+import { FareResearchTimeline } from "@/components/fare-research-timeline";
 import { ProgressStrip } from "@/components/progress-strip";
 import { TabChip } from "@/components/tab-chip";
-import { TrajetoRow } from "@/components/trajeto-row";
 import { Wordmark } from "@/components/wordmark";
 import { apiFetch } from "@/lib/bff/server";
 import {
@@ -106,13 +106,18 @@ export default async function ViagemPage({ params }: { params: Promise<{ id: str
         ) : null}
 
         <div className={styles.grid}>
-          <section>
-            <h2 className={styles.colLabel}>Linha do tempo · seus trajetos</h2>
-            <ol className={styles.timeline}>
-              {trajetos.map((trajeto, i) => (
-                <TrajetoRow key={`${trajeto.kind}-${i}`} trajeto={trajeto} />
-              ))}
-            </ol>
+          <section id="pesquisas" aria-labelledby="pesquisas-title">
+            <div className={styles.colHeading}>
+              <h2 className={styles.colLabel} id="pesquisas-title">
+                Translados &amp; pesquisas
+              </h2>
+              <p className={styles.colHint}>Abra um Trajeto para registrar o que encontrou.</p>
+            </div>
+            <FareResearchTimeline
+              tripId={trip.id}
+              trajetos={trajetos}
+              className={styles.timeline}
+            />
           </section>
 
           <aside>
@@ -177,10 +182,9 @@ export default async function ViagemPage({ params }: { params: Promise<{ id: str
         <span className={`${styles.switcherItem} ${styles.switcherActive}`} aria-current="page">
           Painel
         </span>
-        <span className={`${styles.switcherItem} ${styles.switcherSoon}`} aria-disabled="true">
-          Rotas
-          <span className="sr-only"> (em breve)</span>
-        </span>
+        <Link className={`${styles.switcherItem} ${styles.switcherLink}`} href="#pesquisas">
+          Pesquisas
+        </Link>
       </nav>
     </main>
   );
