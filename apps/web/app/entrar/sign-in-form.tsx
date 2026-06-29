@@ -128,61 +128,46 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
     setError(null);
   }
 
+  const progress = (
+    <div className={styles.progress}>
+      <div>
+        <span className={step === "code" ? styles.progressDone : styles.progressActive} />
+        <strong>01 · E-mail</strong>
+      </div>
+      <div>
+        <span className={step === "code" ? styles.progressActive : ""} />
+        <strong className={step === "code" ? undefined : styles.progressMuted}>02 · Código</strong>
+      </div>
+    </div>
+  );
+
   const divisor = (
     <div className={styles.divisor}>
       <span className={styles.divisorLabel}>ou</span>
     </div>
   );
 
-  const googleButton = (
+  const googleButton = googleEnabled ? (
     <button
       type="button"
       className={styles.google}
-      disabled={!googleEnabled}
-      title={googleEnabled ? undefined : "Indisponível neste ambiente"}
       onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
     >
-      {googleEnabled ? (
-        <>
-          <svg
-            aria-hidden="true"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M17.64 9.2045c0-.638-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.6150z"
-              fill="#4285F4"
-            />
-            <path
-              d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2582c-.8055.54-1.8354.859-3.0477.859-2.344 0-4.3282-1.5836-5.036-3.7104H.957v2.3318C2.4382 15.9832 5.4818 18 9 18z"
-              fill="#34A853"
-            />
-            <path
-              d="M3.964 10.71C3.7845 10.17 3.6818 9.5932 3.6818 9s.1027-1.17.2822-1.71V4.9582H.957A8.9965 8.9965 0 0 0 0 9c0 1.4514.3477 2.8264.957 4.0418L3.964 10.71z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4627.8918 11.4255 0 9 0 5.4818 0 2.4382 2.0168.957 4.9582L3.964 7.29C4.6718 5.1632 6.656 3.5795 9 3.5795z"
-              fill="#EA4335"
-            />
-          </svg>
-          Continuar com Google
-        </>
-      ) : (
-        "Google indisponível"
-      )}
+      <span aria-hidden="true" className={styles.googleMark}>
+        G
+      </span>
+      Continuar com Google
     </button>
-  );
+  ) : null;
 
   if (step === "email") {
     return (
       <section className={styles.card}>
-        <p className={styles.eyebrow}>Controle de embarque</p>
+        {progress}
         <h1 className={styles.heading}>Apresente seu e-mail</h1>
-        <p className={styles.sub}>Enviaremos um código para sua entrada</p>
+        <p className={styles.sub}>
+          Enviaremos um código de embarque de 6 dígitos. Sem senha para lembrar.
+        </p>
         <form className={styles.form} onSubmit={handleRequest}>
           <label className={styles.field}>
             <span className={styles.label}>E-mail</span>
@@ -204,61 +189,69 @@ export function SignInForm({ googleEnabled = false }: { googleEnabled?: boolean 
             </p>
           ) : null}
           <button type="submit" className={styles.primary} disabled={pending || !email}>
-            Continuar
+            Continuar →
           </button>
-          {divisor}
-          {googleButton}
+          {googleButton ? (
+            <>
+              {divisor}
+              {googleButton}
+              <p className={styles.googleNote}>
+                Google aparece só quando disponível neste ambiente
+              </p>
+            </>
+          ) : null}
         </form>
       </section>
     );
   }
 
   const alerta = remaining < 60;
+  const ttlPercent = Math.max(0, Math.round((remaining / OTP_TTL_SECONDS) * 100));
   return (
-    <>
-      <section className={styles.card}>
-        <p className={styles.eyebrow}>Controle de embarque</p>
+    <section className={styles.card}>
+      {progress}
+      <div className={styles.codeHeading}>
         <h1 className={styles.heading}>Apresente seu código</h1>
-        <p className={styles.sub}>
-          Enviamos 6 dígitos para <span className={styles.subEmail}>{email}</span>
-        </p>
-        <form className={styles.form} onSubmit={handleVerify}>
-          <OtpInput value={code} onChange={setCode} disabled={pending} />
-          <div className={`${styles.ttlRow} ${alerta ? styles.alerta : ""}`}>
-            <span className={styles.ttl} aria-live="polite">
-              <span className={styles.ttlDot} aria-hidden="true" />
-              Expira em <span className={styles.ttlTime}>{formatRemaining(remaining)}</span>
-            </span>
-            <button
-              type="button"
-              className={styles.resend}
-              onClick={handleResend}
-              disabled={pending || resendIn > 0}
-            >
-              {resendIn > 0 ? `Reenviar em ${resendIn}` : "Reenviar código"}
-            </button>
-          </div>
-          {error ? (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            className={styles.primary}
-            disabled={pending || code.length < CODE_LENGTH}
-          >
-            Embarcar →
-          </button>
-          {divisor}
-          {googleButton}
-        </form>
-      </section>
-      <div className={styles.footer}>
-        <button type="button" className={styles.footerLink} onClick={trocarEmail}>
-          trocar e-mail
+        <button type="button" className={styles.swapEmail} onClick={trocarEmail}>
+          ← trocar e-mail
         </button>
       </div>
-    </>
+      <p className={styles.sub}>
+        Enviamos 6 dígitos para <span className={styles.subEmail}>{email}</span>
+      </p>
+      <form className={styles.form} onSubmit={handleVerify}>
+        <OtpInput value={code} onChange={setCode} disabled={pending} />
+        <div className={`${styles.ttlRow} ${alerta ? styles.alerta : ""}`}>
+          <span className={styles.ttl} aria-live="polite">
+            <span className={styles.ttlDot} aria-hidden="true" />
+            Expira em <span className={styles.ttlTime}>{formatRemaining(remaining)}</span>
+          </span>
+          <button
+            type="button"
+            className={styles.resend}
+            onClick={handleResend}
+            disabled={pending || resendIn > 0}
+          >
+            {resendIn > 0 ? `Reenviar em ${resendIn}` : "Reenviar código"}
+          </button>
+        </div>
+        <div className={styles.ttlTrack} aria-hidden="true">
+          <span style={{ width: `${ttlPercent}%` }} />
+        </div>
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          className={styles.primary}
+          disabled={pending || code.length < CODE_LENGTH}
+        >
+          Embarcar →
+        </button>
+      </form>
+      <p className={styles.prototypeHint}>Dica do protótipo · qualquer 6 dígitos embarcam</p>
+    </section>
   );
 }
