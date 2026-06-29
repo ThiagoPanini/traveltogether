@@ -171,7 +171,7 @@ export function fareResearchFromDraft(
     money:
       draft.useMoney && moneyAmount > 0 ? { amount: moneyAmount, currency: draft.currency } : null,
     points:
-      draft.transferKind === "plane" && draft.usePoints && pointsAmount > 0
+      draft.usePoints && pointsAmount > 0
         ? { amount: pointsAmount, program: draft.loyaltyProgram.trim() }
         : null,
     priceBasis: draft.priceBasis,
@@ -213,17 +213,12 @@ export function validateFareResearchStep(draft: FareResearchDraft, step: number)
   if (step === 3) {
     const errors: string[] = [];
     const validMoney = draft.useMoney && parsePositiveNumber(draft.moneyAmount) > 0;
-    const validPoints =
-      draft.transferKind === "plane" &&
-      draft.usePoints &&
-      parsePositiveNumber(draft.pointsAmount) > 0 &&
-      draft.loyaltyProgram.trim().length > 0;
+    const validPoints = draft.usePoints && parsePositiveNumber(draft.pointsAmount) > 0;
     if (!validMoney && !validPoints) errors.push("Informe um valor em dinheiro e/ou pontos.");
     if (draft.useMoney && !validMoney) errors.push("Informe um valor em dinheiro maior que zero.");
-    if (draft.transferKind === "plane" && draft.usePoints) {
+    if (draft.usePoints) {
       if (parsePositiveNumber(draft.pointsAmount) <= 0)
         errors.push("Informe a quantidade de pontos.");
-      if (!draft.loyaltyProgram.trim()) errors.push("Informe o programa de fidelidade.");
     }
     return [...new Set(errors)];
   }
@@ -246,7 +241,7 @@ export function formatResearchPoints(research: FareResearch): string | null {
   const amount = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }).format(
     research.points.amount,
   );
-  return `${amount} pts · ${research.points.program}`;
+  return research.points.program ? `${amount} pts · ${research.points.program}` : `${amount} pts`;
 }
 
 export function loadFareResearches(tripId: string): FareResearch[] {

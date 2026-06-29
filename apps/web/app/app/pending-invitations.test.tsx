@@ -22,8 +22,8 @@ afterEach(() => {
 describe("PendingInvitations", () => {
   it("mostra o nome da viagem, o papel e quem convidou", () => {
     render(<PendingInvitations invitations={invites} />);
-    expect(screen.getByText("Road Trip")).toBeInTheDocument();
-    expect(screen.getByText(/membro · convite de ana/i)).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
+    expect(screen.getByText(/convidou · road trip/i)).toBeInTheDocument();
   });
 
   it("aceitar chama POST /api/invitations/{id}/accept e revalida", async () => {

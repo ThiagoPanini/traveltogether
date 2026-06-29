@@ -34,7 +34,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
   it("passo 1: e-mail, Continuar, divisor 'ou' e a opção do Google", () => {
     render(<SignInForm googleEnabled />);
     expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /continuar$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^continuar →$/i })).toBeInTheDocument();
     expect(screen.getByText(/^ou$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continuar com google/i })).toBeEnabled();
   });
@@ -45,11 +45,9 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     expect(signIn).toHaveBeenCalledWith("google", { callbackUrl: "/onboarding" });
   });
 
-  it("Google indisponível: botão desabilitado e nunca dispara o provedor", () => {
+  it("Google indisponível: não renderiza a opção do provedor", () => {
     render(<SignInForm />);
-    const botao = screen.getByRole("button", { name: /google.*indispon|indispon.*google/i });
-    expect(botao).toBeDisabled();
-    fireEvent.click(botao);
+    expect(screen.queryByRole("button", { name: /google/i })).not.toBeInTheDocument();
     expect(signIn).not.toHaveBeenCalled();
   });
 
@@ -62,7 +60,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "viajante@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
 
     // chamou o proxy de pedido de OTP
     await waitFor(() => expect(fetch).toHaveBeenCalled());
@@ -97,7 +95,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "novo@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
     await screen.findByRole("group", { name: /código de embarque/i });
 
     digitar("246813");
@@ -111,7 +109,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "viajante@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
     await screen.findByRole("group", { name: /código de embarque/i });
 
     fireEvent.click(screen.getByRole("button", { name: /trocar e-mail/i }));
@@ -122,7 +120,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
 
   it("subtítulo do passo de e-mail usa tempo futuro ('Enviaremos')", () => {
     render(<SignInForm />);
-    expect(screen.getByText(/enviaremos um código para sua entrada/i)).toBeInTheDocument();
+    expect(screen.getByText(/enviaremos um código de embarque de 6 dígitos/i)).toBeInTheDocument();
   });
 
   it("temporizador de reenvio não exibe sufixo 's' durante o cooldown", async () => {
@@ -130,7 +128,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "viajante@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
     await screen.findByRole("group", { name: /código de embarque/i });
     // Imediatamente após pedir o código, o botão mostra o contador sem "s"
     const reenviar = screen.getByRole("button", { name: /reenviar/i });
@@ -143,7 +141,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "viajante@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
     await screen.findByRole("group", { name: /código de embarque/i });
 
     // o reenvio nasce travado por um cooldown (#194) — anti-spam no cliente
@@ -158,7 +156,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
         target: { value: "viajante@example.com" },
       });
       await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+        fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
       });
       expect(screen.getByRole("button", { name: /reenviar/i })).toBeDisabled();
 
@@ -188,7 +186,7 @@ describe("SignInForm (login OTP, duas etapas)", () => {
     fireEvent.change(screen.getByLabelText(/e-mail/i), {
       target: { value: "viajante@example.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /continuar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^continuar →$/i }));
     await screen.findByRole("group", { name: /código de embarque/i });
 
     digitar("000000");

@@ -1,1667 +1,911 @@
-/*
- * Wizard de criação de viagem — shell takeover (full-bleed) + 6 passos.
- * Tokens do Noturno (globals.css). Variáveis com escopo do wizard ficam em `.screen`.
- */
-
 .screen {
-  --wiz-gutter: 32px;
   position: fixed;
   inset: 0;
   z-index: 40;
   display: flex;
   flex-direction: column;
   background: var(--bg-root);
-  color: var(--text-body);
 }
 
-/* ---- Header ---- */
-
-.top {
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  height: 58px;
+  gap: 20px;
+  padding: 20px 36px;
+  border-bottom: 1px solid var(--line);
   flex-shrink: 0;
-  padding: 0 var(--wiz-gutter);
-  border-bottom: var(--border-hairline) solid var(--line);
-  background: var(--surface-bar);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.brandDivider {
-  width: 1px;
-  height: 18px;
-  background: var(--line);
-}
-
-.brandLabel {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-circle);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-
-.close:hover {
-  border-color: var(--line-strong);
-  color: var(--text-bright);
-}
-
-/* ---- Stepbar numerada ---- */
-
-.stepbarWrap {
-  flex-shrink: 0;
-  padding: 14px var(--wiz-gutter);
-  border-bottom: var(--border-hairline) solid var(--line);
-  background: var(--bg-canvas);
-}
-
-.stepbar {
-  display: flex;
-  align-items: center;
-  max-width: var(--max-width-wide);
-  margin: 0 auto;
-}
-
-.stepItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stepItem:not(:first-child) {
-  flex: 1;
-}
-
-.stepConn {
-  flex: 1;
-  height: 1.5px;
-  background: var(--line);
-}
-
-.stepConnFilled {
-  background: var(--accent);
-}
-
-.stepBtn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 4px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.stepBtn:disabled {
-  cursor: default;
-}
-
-.stepNum {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border: var(--border-outline) solid var(--line);
-  border-radius: var(--radius-circle);
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-  transition:
-    border-color 0.15s,
-    color 0.15s,
-    background 0.15s;
-}
-
-.stepNumDone {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.stepNumCurrent {
-  border-color: var(--accent);
+.header span,
+.mobileHeader p,
+.stepContent > p:first-child {
   color: var(--accent);
-}
-
-.stepName {
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  white-space: nowrap;
-}
-
-.stepNameCurrent {
-  color: var(--text-bright);
-}
-
-/* ---- Corpo rolável ---- */
-
-.main {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.split,
-.single,
-.transferStep {
-  margin: 0 auto;
-  padding: 40px var(--wiz-gutter) 56px;
-}
-
-.single {
-  max-width: 760px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.transferStep {
-  max-width: var(--max-width-wide);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.split {
-  max-width: var(--max-width-wide);
-  display: grid;
-  grid-template-columns: 1fr 0.82fr;
-  gap: 40px;
-  align-items: start;
-}
-
-.splitLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* ---- Cabeçalho de seção (eyebrow + título + lede) ---- */
-
-.sectionHead {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.eyebrow {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
 }
 
-.title {
-  font-size: 34px;
-  line-height: 0.96;
-}
-
-.lede {
-  max-width: 54ch;
-  color: var(--text-muted);
-  font-size: 15px;
-  line-height: 1.55;
-}
-
-/* ---- Campos ---- */
-
-.fields {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  position: relative;
-}
-
-.label {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.input {
-  width: 100%;
-  padding: 11px 13px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-btn);
-  background: var(--bg-inset);
-  color: var(--text-body);
-  font-family: inherit;
-  font-size: 16px;
-  transition: border-color 0.15s;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.nameInput {
-  font-family: var(--font-display), sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.textarea {
-  width: 100%;
-  min-height: 84px;
-  padding: 11px 13px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-btn);
-  background: var(--bg-inset);
-  color: var(--text-body);
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 1.5;
-  resize: vertical;
-  transition: border-color 0.15s;
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.counter {
-  align-self: flex-end;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  color: var(--text-faint);
-}
-
-/* ---- Passo 1 · card de destino ---- */
-
-.destCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: var(--border-hairline) solid var(--accent-border);
-  border-radius: var(--radius-card);
-  background: var(--fill-accent);
-}
-
-.destCardIcon {
-  flex-shrink: 0;
-  color: var(--accent);
-}
-
-.destCardBody {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.destCardCity {
-  font-family: var(--font-display), sans-serif;
-  font-size: 22px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+.header h1 {
+  margin: 5px 0 0;
   color: var(--text-bright);
+  font-size: 30px;
+  letter-spacing: 0.02em;
 }
 
-.destCardMeta {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/* ---- Painel lateral (rota de bordo / stand-in do mapa) ---- */
-
-.aside {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  height: var(--map-panel-height);
-  padding: 20px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--bg-inset);
-}
-
-.asideCaption {
+.header button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  padding: 5px 11px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-pill);
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
 }
 
-.asideJourney {
+.stepper {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 16px 36px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 
-/* Mapa esquemático (ADR-0010): preenche o painel abaixo da legenda; o fallback
-   (rota vertical) define a altura quando o mapa não está ativo (SSR/jsdom/erro). */
-.mapWrap {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
+.stepper button {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.stepper button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.stepper span {
+  display: flex;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--text-faint);
+  font-family: var(--font-display), sans-serif;
+  font-size: 11px;
+}
+
+.stepper strong {
   overflow: hidden;
-  border-radius: var(--radius-md);
-  background: var(--bg-canvas);
-}
-
-.mapCanvas {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.mapPins {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.mapPin {
-  position: absolute;
-  opacity: 0;
-  transform: translate(-50%, -100%);
-  transform-origin: bottom center;
-  transition: opacity 0.18s ease;
-}
-
-.mapPinTag {
-  display: block;
-  margin-bottom: 6px;
-  padding: 3px 6px;
-  transform: rotate(-4deg);
-  border: var(--border-hairline) solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--bg-canvas) 86%, transparent);
-  box-shadow: 0 3px 8px color-mix(in srgb, var(--bg-root) 72%, transparent);
-  color: var(--text-bright);
-  font-family: var(--font-mono), monospace;
-  font-size: 8.5px;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
+  color: var(--text-muted);
+  font-family: var(--font-display), sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.mapPinHead {
-  position: relative;
-  z-index: 2;
-  display: block;
-  width: 15px;
-  height: 15px;
-  margin: 0 auto;
-  border: var(--border-outline) solid var(--text-bright);
-  border-radius: var(--radius-circle);
-  background: radial-gradient(circle at 34% 30%, var(--text-bright), var(--accent) 62%);
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--bg-root) 72%, transparent);
+.stepActive {
+  border-color: var(--accent) !important;
+  background: var(--accent);
+  color: var(--on-accent) !important;
 }
 
-.mapPinHeadDest {
-  width: 18px;
-  height: 18px;
+.stepDone {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
 }
 
-.mapPinHeadOrigin {
-  background: radial-gradient(circle at 34% 30%, var(--text-bright), var(--success) 62%);
-}
-
-.mapPinStem {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 2px;
-  height: 13px;
-  margin: -2px auto 0;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 46%, var(--bg-root)));
-}
-
-.mapPinStemOrigin {
-  background: linear-gradient(
-    var(--success),
-    color-mix(in srgb, var(--success) 46%, var(--bg-root))
-  );
-}
-
-.countryOutline {
-  fill: var(--fill-accent) !important;
-  stroke: var(--accent) !important;
-  stroke-width: 2px !important;
-  stroke-dasharray: 5 4 !important;
-  vector-effect: non-scaling-stroke;
-  animation: countryMarch 0.8s linear infinite;
-}
-
-@keyframes countryMarch {
-  to {
-    stroke-dashoffset: -18;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .countryOutline,
-  .mapPin {
-    animation: none;
-    transition: none;
-  }
-}
-
-.mapFallback {
-  position: relative;
-}
-
-.mapFallbackHidden {
+.mobileHeader {
   display: none;
 }
 
-.asideNode {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.asideDot {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  border: var(--border-outline) solid var(--line-strong);
-  border-radius: var(--radius-circle);
-  background: var(--bg-inset);
-}
-
-.asideDotOrigin {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.asideDotDest {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.asideConn {
-  display: flex;
-  align-items: center;
-  height: 32px;
-  margin-left: 5px;
-  padding-left: 18px;
-  border-left: 1.5px dashed var(--line-dashed);
-  color: var(--text-faint);
-}
-
-.asideNodeBody {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.asideCity {
-  font-size: 14px;
-  color: var(--text-body);
-}
-
-.asideTag {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-/* ---- Passo 2 · trilha de paradas ---- */
-
-.journey {
-  display: flex;
-  flex-direction: column;
-}
-
-.node {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.nodeDest {
-  border-color: var(--accent-border);
-  background: var(--fill-accent);
-}
-
-.nodeDot {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  border: var(--border-outline) solid var(--line-strong);
-  border-radius: var(--radius-circle);
-}
-
-.nodeDot_origin {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.nodeDot_stop {
-  border-color: var(--line-strong);
-  background: var(--fill-subtle);
-}
-
-.nodeDot_dest {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.nodeBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.body {
+  display: grid;
+  grid-template-columns: 1fr 332px;
   flex: 1;
-  min-width: 0;
+  min-height: 0;
 }
 
-.nodeCity {
-  font-family: var(--font-display), sans-serif;
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
-  text-transform: uppercase;
+.stepPanel {
+  overflow: auto;
+  padding: 30px 36px 34px;
+}
+
+.stepContent {
+  max-width: 580px;
+}
+
+.stepContent > p:first-child {
+  display: block;
+  margin: 0 0 12px;
+}
+
+.stepContent h2 {
+  margin: 0 0 12px;
   color: var(--text-bright);
+  font-size: 34px;
+  letter-spacing: 0.02em;
 }
 
-.nodeCountry {
-  overflow: hidden;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-faint);
-}
-
-.nodeTag {
-  flex-shrink: 0;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.nodeTag_origin {
-  color: var(--success);
-}
-
-.nodeTag_dest {
-  color: var(--accent);
-}
-
-.nodeRemove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-circle);
-  background: transparent;
-  color: var(--text-faint);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.nodeRemove:hover {
-  background: var(--fill-subtle);
-  color: var(--accent);
-}
-
-/* Gap entre dois pontos: "+" circular / painel de inserção */
-
-.gap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.gapSeg {
-  width: 1.5px;
-  height: 14px;
-  background: var(--line-dashed);
-}
-
-.gapAdd {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: var(--radius-circle);
-  background: var(--bg-root);
+.stepContent > p:not(:first-child) {
+  margin: 0 0 24px;
   color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-
-.gapAdd:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.gapPanel {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: var(--border-hairline) solid var(--accent-border);
-  border-radius: var(--radius-card);
-  background: var(--bg-inset);
-}
-
-.gapPanelLabel {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.gapPanelFields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.gapCancel {
-  align-self: flex-start;
-  padding: 4px 2px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-faint);
-  cursor: pointer;
-}
-
-.gapCancel:hover {
-  color: var(--accent);
-}
-
-.journeyNote {
-  color: var(--text-muted);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.55;
 }
 
-/* ---- Passo 3 · translados ---- */
-
-.legProgress {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.legProgressTrack {
-  flex: 1;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--fill-subtle);
-  overflow: hidden;
-}
-
-.legProgressFill {
+.stepContent label {
   display: block;
-  height: 100%;
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-  transition: width 0.25s;
+  margin-bottom: 16px;
 }
 
-.legProgressText {
+.stepContent label span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--text-faint);
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
 }
 
-.transferTrailViewport {
+.stepContent input,
+.stepContent select,
+.stepContent textarea,
+.inlineAdd input {
   width: 100%;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-dashed);
+  border-radius: var(--radius-btn);
+  outline: none;
+  background: var(--fill-subtle);
+  color: var(--text-bright);
+  font: inherit;
+}
+
+.stepContent input,
+.stepContent select {
+  padding: 13px 15px;
+  font-size: 15px;
+}
+
+.stepContent label:first-of-type input {
+  padding: 14px 16px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.stepContent textarea {
+  padding: 13px 15px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+}
+
+.shortField {
+  width: 220px;
+  max-width: 100%;
+  margin-bottom: 22px !important;
+}
+
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.notice span {
+  color: var(--text-faint);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notice p {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.routeRail {
+  overflow: auto;
+  padding: 26px 24px;
+  border-left: 1px solid var(--line);
   background: var(--bg-inset);
-  scrollbar-color: var(--line-strong) transparent;
-  scrollbar-width: thin;
+  background-image: radial-gradient(rgba(154, 167, 177, 0.13) 1px, transparent 1.6px);
+  background-size: 20px 20px;
 }
 
-.transferTrail {
-  width: max-content;
-  min-width: 100%;
+.routeRail > div:first-child {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 24px 20px 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
-.transferNode {
-  width: 112px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  text-align: center;
-}
-
-.transferNodeKicker,
-.transferNodeCountry {
+.routeRail > div:first-child span,
+.routeRail footer span {
+  color: var(--text-faint);
   font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.routeRail > div:first-child span:last-child {
+  color: var(--text-faintest);
   font-size: 9px;
   letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  color: var(--text-faint);
 }
 
-.transferNodeCore {
+.routeRail footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.routeRail footer strong {
+  color: var(--accent);
+  font-family: var(--font-display), sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.routeList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding-left: 2px;
+}
+
+.routeList::before {
+  position: absolute;
+  top: 12px;
+  bottom: 14px;
+  left: 8px;
+  width: 0;
+  border-left: 1.5px dashed var(--line-dashed);
+  content: "";
+}
+
+.routeList li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 13px minmax(0, 1fr) auto auto;
+  gap: 13px;
+  align-items: center;
+  padding: 7px 0;
+}
+
+.routeList li > span:first-child {
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.originDot {
+  border: 1.5px solid var(--line-strong);
+  background: var(--bg-inset) !important;
+}
+
+.destDot {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-width: 0;
+  border: 1.5px solid var(--accent);
+  background: var(--accent) !important;
+  color: var(--on-accent);
+  font-size: 8px;
 }
 
-.transferNodeDot {
-  width: 10px;
-  height: 10px;
-  flex-shrink: 0;
-  border: var(--border-outline) solid var(--line-strong);
-  border-radius: var(--radius-circle);
-  background: var(--fill-subtle);
-}
-
-.transferNodeDot_origin {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.transferNodeDot_dest {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.transferNodeCity {
+.routeList strong {
   overflow: hidden;
+  color: var(--text-body);
   font-family: var(--font-display), sans-serif;
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
+  letter-spacing: 0.04em;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--text-bright);
 }
 
-.transferLink {
-  width: 112px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+.routeList small,
+.routeList em {
+  color: var(--text-faintest);
+  font-family: var(--font-mono), monospace;
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.transferLinkTop {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.routeList li:last-child small {
+  color: var(--accent);
 }
 
-.transferLine {
+.routeList button {
   width: 26px;
-  height: 1.5px;
-  background: var(--line-dashed);
-}
-
-.transferLineDefined {
-  background: var(--accent);
-}
-
-.legRing {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: var(--radius-circle);
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-faint);
   cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s,
-    background 0.15s;
 }
 
-.legRing:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.legRingDefined {
-  border-style: solid;
-  border-color: var(--accent);
-  background: var(--fill-accent);
-  color: var(--accent);
-}
-
-.transferLinkLabel {
-  max-width: 110px;
-  overflow: hidden;
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-faint);
-}
-
-.transferNotice {
-  padding: 13px 15px;
-  border-left: var(--border-accent-edge) solid var(--accent);
-  background: var(--fill-subtle);
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-/* ---- Faixa-itinerário horizontal (passos 4 e 6) ---- */
-
-.bandBlock {
+.inlineAdd {
   display: flex;
-  flex-direction: column;
   gap: 10px;
+  margin-top: 18px;
 }
 
-.bandCaption {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.band {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px 2px;
-  padding: 18px 16px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--bg-inset);
-}
-
-.bandStop {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 62px;
-  text-align: center;
-}
-
-.bandKicker {
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.bandDot {
-  width: 12px;
-  height: 12px;
-  border: var(--border-outline) solid var(--line-strong);
-  border-radius: var(--radius-circle);
-}
-
-.bandDotOrigin {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.bandDotDest {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.bandCity {
-  max-width: 88px;
-  font-size: 13px;
-  line-height: 1.2;
-  color: var(--text-body);
-}
-
-.bandLink {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.bandLinkLine {
-  width: 14px;
-  height: 1.5px;
-  background: var(--line-dashed);
-}
-
-.bandLinkDefined {
-  background: var(--accent);
-}
-
-.bandIcon {
-  display: flex;
-  color: var(--text-faint);
-}
-
-.bandIconDefined {
-  color: var(--accent);
-}
-
-.bandReveal {
-  animation: bandReveal 0.4s ease;
-}
-
-@keyframes bandReveal {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* ---- Passo 5 · tripulação ---- */
-
-.youCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.youAvatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  border-radius: var(--radius-circle);
-  background: var(--fill-accent);
-  color: var(--accent);
-}
-
-.youBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.inlineAdd input {
   flex: 1;
-  min-width: 0;
+  padding: 13px 15px;
+  font-size: 14px;
 }
 
-.youName {
-  font-size: 15px;
-  color: var(--text-bright);
-}
-
-.youMeta {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.youBadge {
-  padding: 4px 10px;
-  border: var(--border-hairline) solid var(--accent-border);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--fill-accent);
-}
-
-.inviteForm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.inviteForm .field {
-  flex: 1 1 360px;
-}
-
-.inviteInputWrap {
-  position: relative;
-  width: 100%;
-}
-
-.inviteInputIcon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-faint);
-  pointer-events: none;
-}
-
-.inviteInput {
-  padding-left: 36px;
-}
-
-.roleToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--bg-inset);
-  min-inline-size: 0;
-}
-
-.roleBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: none;
-  border-radius: var(--radius-pill);
+.inlineAdd button {
+  flex-shrink: 0;
+  padding: 0 20px;
+  border: 1.5px solid var(--accent-border);
+  border-radius: var(--radius-btn);
   background: transparent;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-display), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
 }
 
-.roleBtnActive {
-  background: var(--fill-accent);
-  color: var(--accent);
+.stepContent small {
+  display: block;
+  margin-top: 14px;
+  color: var(--text-faintest);
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.inviteList {
+.legs {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  list-style: none;
 }
 
-.inviteCard {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 14px;
-  border: var(--border-hairline) solid var(--line);
+.legCard {
+  overflow: hidden;
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--surface);
 }
 
-.inviteBlind {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: var(--radius-circle);
-  font-size: 16px;
-  color: var(--text-faint);
-}
-
-.inviteInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1 1 160px;
-  min-width: 0;
-}
-
-.inviteEmail {
-  font-size: 14px;
-  color: var(--text-body);
-  overflow-wrap: anywhere;
-}
-
-.invitePending {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--warning);
-}
-
-.iconBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-circle);
-  background: transparent;
-  font-size: 18px;
-  line-height: 1;
-  color: var(--text-faint);
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    background 0.15s;
-}
-
-.iconBtn:hover {
-  background: var(--fill-subtle);
-  color: var(--accent);
-}
-
-/* ---- Passo 6 · resumo ---- */
-
-.hero {
-  display: flex;
-  flex-direction: column;
+.legCard > button {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  width: 100%;
   gap: 14px;
-  padding: 20px 22px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--bg-inset);
-}
-
-.heroHead {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  padding: 15px 16px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
 
-.heroName {
-  font-size: 30px;
-  line-height: 0.96;
-}
-
-.heroDesc {
-  color: var(--text-muted);
-  font-size: 14px;
+.legCard > button > span {
+  color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
   line-height: 1.5;
+  text-transform: uppercase;
 }
 
-.numbers {
+.legCard strong {
+  overflow: hidden;
+  color: var(--text-body);
+  font-family: var(--font-display), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.legCard small {
+  grid-column: 2;
+  margin: -10px 0 0;
+  color: var(--accent);
+  font-size: 8.5px;
+}
+
+.legCard em {
+  display: inline-flex;
+  grid-column: 3;
+  grid-row: 1 / 3;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border: 1.5px solid var(--line-dashed);
+  border-radius: var(--radius-pill);
+  color: var(--text-faint);
+  font-family: var(--font-display), sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.transferSet {
+  border-color: var(--accent) !important;
+  background: var(--fill-accent);
+  color: var(--accent) !important;
+}
+
+.transferOptions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 8px;
+  padding: 4px 16px 16px;
 }
 
-.numberCard {
+.transferOptions button {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.numberValue {
+  align-items: flex-start;
+  gap: 5px;
+  padding: 11px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-btn);
+  background: var(--fill-subtle);
+  color: var(--text-body);
+  cursor: pointer;
   font-family: var(--font-display), sans-serif;
-  font-size: 28px;
-  line-height: 1;
-  color: var(--accent);
-}
-
-.numberLabel {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-align: left;
   text-transform: uppercase;
-  color: var(--text-muted);
 }
 
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.transferOptions span {
+  color: var(--accent);
+  font-size: 15px;
 }
 
-.section {
+.crewList {
   display: flex;
   flex-direction: column;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.crewList > div {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
-  padding: 16px 18px;
-  border: var(--border-hairline) solid var(--line);
+  padding: 13px 15px;
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--surface);
 }
 
-.sectionRow {
+.crewList > div > span {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.sectionTitle {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-bright);
-}
-
-.editBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  cursor: pointer;
-}
-
-.editBtn:hover {
-  text-decoration: underline;
-}
-
-.summaryList {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-}
-
-.summaryRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: var(--border-hairline) solid var(--line-muted);
-}
-
-.summaryRow:last-child {
-  border-bottom: none;
-}
-
-.summaryMeta {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-/* ---- Modal de translado ---- */
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.backdrop {
-  position: absolute;
-  inset: 0;
-  border: none;
-  background: rgba(0, 0, 0, 0.6);
-  cursor: pointer;
-}
-
-.modal {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 520px;
-  max-height: 88vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 24px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--bg-canvas);
-  box-shadow: var(--shadow-switcher);
-}
-
-.modalKicker {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.modalHead {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 42px;
-}
-
-.modalTitle {
-  font-size: 24px;
-}
-
-.modalClose {
-  position: absolute;
-  top: -5px;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 32px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-circle);
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: var(--font-display), sans-serif;
+  font-size: 14px;
+}
+
+.crewList strong {
+  display: block;
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crewList small {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 8.5px;
+}
+
+.crewList em {
+  padding: 4px 10px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 8.5px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.crewList button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-faint);
   cursor: pointer;
 }
 
-.modalClose:hover {
-  border-color: var(--line-strong);
-  color: var(--text-bright);
-}
-
-.grid {
+.summaryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.typeBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border: var(--border-hairline) solid var(--line);
+.summaryCard,
+.tripNameCard {
+  padding: 17px 18px;
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--surface);
-  cursor: pointer;
-  text-align: center;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
 }
 
-.typeBtn:hover {
-  border-color: var(--line-strong);
+.summaryCard span,
+.tripNameCard span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.typeBtnActive {
-  border-color: var(--accent);
-  background: var(--fill-accent);
+.summaryCard strong,
+.tripNameCard strong {
+  color: var(--text-bright);
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.typeGlyph {
-  display: flex;
+.accentText {
+  color: var(--accent) !important;
+}
+
+.tripNameCard {
+  margin-top: 12px;
+  border-left: var(--border-accent-edge) solid var(--accent);
+}
+
+.tripNameCard span {
   color: var(--accent);
 }
 
-.typeName {
-  font-size: 13px;
-  color: var(--text-body);
+.tripNameCard strong {
+  font-size: 24px;
 }
-
-.typeNote {
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.otherTypeRow {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.otherTypeRow .input {
-  min-width: 0;
-}
-
-.otherApply {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0 16px;
-  border: var(--border-hairline) solid var(--line);
-  border-radius: var(--radius-btn);
-  background: var(--surface);
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-
-.otherApply:hover {
-  border-color: var(--line-strong);
-  color: var(--text-bright);
-}
-
-.otherApply:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-/* ---- Rodapé fixo ---- */
 
 .footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
+  padding: 14px 36px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-canvas);
   flex-shrink: 0;
-  padding: 14px var(--wiz-gutter);
-  border-top: var(--border-hairline) solid var(--line);
-  background: var(--surface-bar);
 }
 
-.footerSpacer {
-  flex: 1;
-}
-
-.footerHint {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.error {
-  color: var(--accent-alert);
-  font-size: 13px;
-}
-
-.secondary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  border: var(--border-hairline) solid var(--line);
+.footer button {
+  padding: 11px 20px;
+  border: 1.5px solid var(--line-strong);
   border-radius: var(--radius-btn);
-  background: var(--surface);
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  background: transparent;
   color: var(--text-body);
   cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.secondary:hover {
-  border-color: var(--line-strong);
-}
-
-.primary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 11px 20px;
-  border: none;
-  border-radius: var(--radius-btn);
-  background: var(--accent);
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.footer button:last-child {
+  padding: 12px 26px;
+  border-color: transparent;
+  background: var(--accent);
   color: var(--on-accent);
-  cursor: pointer;
-  transition: opacity 0.15s;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.primary:disabled {
-  opacity: 0.5;
-  cursor: default;
+.footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
-/* ---- Responsivo ---- */
+.footer span {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+}
 
-@media (max-width: 860px) {
-  .split {
-    grid-template-columns: 1fr;
+@media (max-width: 760px) {
+  .screen {
+    position: fixed;
   }
 
-  .aside {
-    min-height: 0;
-  }
-}
-
-@media (max-width: 720px) {
-  .stepName {
+  .header,
+  .stepper {
     display: none;
   }
 
-  .numbers {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bandReveal {
-    animation: none;
+  .mobileHeader {
+    display: block;
+    flex-shrink: 0;
+    padding: 38px 18px 14px;
+    border-bottom: 1px solid var(--line);
   }
 
-  .close,
-  .stepNum,
-  .legRing,
-  .gapAdd,
-  .roleBtn,
-  .primary,
-  .secondary,
-  .input,
-  .textarea,
-  .legProgressFill {
-    transition: none;
+  .mobileHeader > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .mobileHeader button {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    font-family: var(--font-mono), monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mobileHeader > div:first-child > span {
+    color: var(--text-faint);
+    font-family: var(--font-mono), monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .mobileHeader > div:first-child button:last-child {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text-faint);
+  }
+
+  .mobileTrack {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .mobileTrack span {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .mobileTrackOn {
+    background: var(--accent) !important;
+  }
+
+  .mobileHeader p {
+    margin: 0 0 6px;
+    font-size: 9px;
+  }
+
+  .mobileHeader h1 {
+    margin: 0;
+    color: var(--text-bright);
+    font-size: 25px;
+    letter-spacing: 0.02em;
+  }
+
+  .body {
+    display: block;
+    overflow: auto;
+  }
+
+  .stepPanel {
+    overflow: visible;
+    padding: 20px 18px 22px;
+  }
+
+  .routeRail {
+    display: none;
+  }
+
+  .stepContent {
+    max-width: none;
+  }
+
+  .stepContent > p:first-child,
+  .stepContent h2 {
+    display: none;
+  }
+
+  .stepContent > p:not(:first-child) {
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .stepContent input,
+  .stepContent select {
+    padding: 12px 13px;
+    font-size: 14px;
+  }
+
+  .stepContent label:first-of-type input {
+    padding: 13px 15px;
+    font-size: 20px;
+  }
+
+  .shortField {
+    width: 100%;
+  }
+
+  .routeList li {
+    grid-template-columns: 14px minmax(0, 1fr) auto auto;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .routeList li > span:first-child {
+    width: 14px;
+    height: 14px;
+  }
+
+  .routeList strong {
+    font-size: 17px;
+  }
+
+  .inlineAdd {
+    gap: 8px;
+  }
+
+  .inlineAdd button {
+    padding: 0 16px;
+    font-size: 12px;
+  }
+
+  .legCard > button {
+    display: flex;
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .legCard > button > span {
+    display: none;
+  }
+
+  .legCard strong {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .legCard small {
+    display: none;
+  }
+
+  .legCard em {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .transferOptions {
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    padding: 2px 13px 13px;
+  }
+
+  .transferOptions button {
+    flex-direction: row;
+    align-items: center;
+    padding: 9px 10px;
+    font-size: 11.5px;
+  }
+
+  .notice {
+    padding: 13px 14px;
+  }
+
+  .summaryGrid {
+    gap: 9px;
+  }
+
+  .summaryCard,
+  .tripNameCard {
+    padding: 13px 14px;
+  }
+
+  .summaryCard span,
+  .tripNameCard span {
+    font-size: 8px;
+  }
+
+  .summaryCard strong {
+    font-size: 17px;
+  }
+
+  .tripNameCard strong {
+    font-size: 19px;
+  }
+
+  .footer {
+    display: block;
+    padding: 11px 18px 13px;
+  }
+
+  .footer button:first-child {
+    display: none;
+  }
+
+  .footer span {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 8.5px;
+  }
+
+  .footer button:last-child {
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
   }
 }

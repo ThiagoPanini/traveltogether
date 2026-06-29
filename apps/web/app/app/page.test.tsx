@@ -75,7 +75,7 @@ describe("/app (painel de bordo)", () => {
 
     render(await AppHome());
 
-    expect(screen.getByText("M")).toBeInTheDocument();
+    expect(screen.getAllByText("M").length).toBeGreaterThan(0);
   });
 
   it("oferece a ação de sair (logout)", async () => {
@@ -93,7 +93,7 @@ describe("/app (painel de bordo)", () => {
 
     render(await AppHome());
 
-    expect(screen.getByText("viajante")).toBeInTheDocument();
+    expect(screen.getAllByText("viajante").length).toBeGreaterThan(0);
   });
 
   it("lista as viagens que participo em cartões com link pro painel da viagem", async () => {
@@ -115,7 +115,7 @@ describe("/app (painel de bordo)", () => {
 
     const trip = screen.getByRole("link", { name: /costa leste/i });
     expect(within(trip).getByText("Costa Leste")).toBeInTheDocument();
-    expect(within(trip).getAllByText("Nova York")).not.toHaveLength(0);
+    expect(trip).toHaveTextContent(/São Paulo\s*→\s*Nova York/);
     expect(trip).toHaveAttribute("href", "/app/viagens/t1");
   });
 
@@ -154,8 +154,12 @@ describe("/app (painel de bordo)", () => {
 
     const metrics = screen.getByLabelText("Resumo do painel");
     expect(within(metrics).getByText("02")).toBeInTheDocument();
-    expect(within(metrics).getByText("05")).toBeInTheDocument();
-    expect(within(metrics).getAllByText("01")).toHaveLength(2);
+    expect(within(metrics).getByText("São Paulo")).toBeInTheDocument();
+    expect(within(metrics).getByText("Organiza")).toBeInTheDocument();
+    expect(screen.getAllByText("Convites").length).toBeGreaterThan(0);
+    const invitesTitle = screen.getByRole("heading", { name: "Convites" }).parentElement;
+    expect(invitesTitle).not.toBeNull();
+    expect(within(invitesTitle as HTMLElement).getByText("1")).toBeInTheDocument();
   });
 
   it("mostra os convites pendentes com botão de aceitar", async () => {
@@ -175,7 +179,7 @@ describe("/app (painel de bordo)", () => {
 
     render(await AppHome());
 
-    expect(screen.getByText("Road Trip")).toBeInTheDocument();
+    expect(screen.getByText(/convidou · road trip/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /aceitar/i })).toBeInTheDocument();
   });
 });

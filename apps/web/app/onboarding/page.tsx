@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { Wordmark } from "@/components/wordmark";
 import { apiFetch } from "@/lib/bff/server";
 import styles from "./onboarding.module.css";
 import { OnboardingForm } from "./onboarding-form";
@@ -45,11 +44,14 @@ export default async function OnboardingPage() {
 
   return (
     <main className={styles.screen}>
-      <Wordmark />
-      <section className={styles.card}>
-        <p className={styles.eyebrow}>Antes de embarcar</p>
-        <h1 className={styles.heading}>Complete seu perfil</h1>
-        <p className={styles.sub}>Duas informações rápidas para personalizar suas viagens.</p>
+      <header className={styles.header}>
+        <span className={styles.brand}>
+          <span aria-hidden="true">✦</span>
+          travel·manager
+        </span>
+        <span className={styles.headerMeta}>Passo único</span>
+      </header>
+      <section className={styles.stage}>
         <SessionBoundary session={session}>
           <OnboardingForm defaultName={defaultName} />
         </SessionBoundary>

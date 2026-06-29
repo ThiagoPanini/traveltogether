@@ -2,7 +2,7 @@
 
 ## Princípio
 
-`Noturno` é uma pele quente de aviação analógica: petróleo profundo, cremes, accent terracota, display condensado em caixa-alta e metadados mono. Use esta forma visual sem reimportar o bundle congelado de origem.
+`Noturno` é uma pele quente de aviação analógica: petróleo profundo, cremes, accent terracota, display condensado em caixa-alta e metadados mono. Use esta forma visual para as telas do redesign sem voltar ao tema antigo de SaaS genérico.
 
 ## Tokens
 
@@ -15,22 +15,20 @@
 | Fundo | `bg-root`, `bg-canvas`, `bg-inset`, `surface`, `surface-bar`, `fill-subtle`, `fill-accent` | Profundidade, cartões, painéis, inputs e seleção de rota. |
 | Linha | `line`, `line-muted`, `line-dashed`, `line-strong`, `line-faint` | Hairlines, divisórias, borda tracejada, contornos e ícones apagados. |
 | Texto | `text-bright`, `text-body`, `text-muted`, `text-mono`, `text-faint`, `text-faintest` | Hierarquia de leitura e metadados. |
-| Acento/semântica | `accent`, `accent-alert`, `on-accent`, `success`, `warning`, bordas alpha | Marca, CTA, status e alerta de expiração. |
+| Acento/semântica | `accent`, `accent-alert`, `on-accent`, `success`, `warning`, bordas alpha | Marca, CTA, status, alerta e Preferida. |
 | Forma | `radius-*`, `border-*` | Raios, pílulas, hairline e acento lateral. |
 | Layout | `page-gutter`, `max-width-wide`, `max-width-panel`, `hero-max`, `login-card`, `map-panel-height` | Containers, larguras de tela e altura fixa do mapa da criação. |
-| Sombra | `shadow-switcher` | Switcher inferior projetado. |
+| Sombra | `shadow-switcher` | Sombra reservada para navegação flutuante ou painéis futuros. |
 
 ### Nome vivo
 
 O bundle de origem chama a borda secundária de `line-2`; no código vivo o token é `line-muted` / `--line-muted`. Use `line-muted`.
 
-### Tokens de reserva
-
-Tokens definidos sem uso na home pertencem ao estrato `⏳ projetado` (`blueprint.md`) e não dão licença para inventar superfície sem contrato. Antes de usar um token de reserva, leia a peça projetada que o justifica.
-
 ## Cores
 
 Nunca escreva hex direto em componente; use token CSS. As únicas exceções são os literais conscientes catalogados abaixo. Selection usa `accent` sobre `bg-root`; texto sobre fundo `accent` usa `on-accent`.
+
+Evite páginas dominadas por uma única variação de azul petróleo. O fundo é escuro, mas a composição deve respirar com creme, linhas, superfícies, accent terracota e estados semânticos.
 
 ## Tipografia
 
@@ -48,12 +46,12 @@ Escala:
 
 | Papel | Tamanho |
 |---|---|
-| Hero | `74px` máximo, com clamp na home |
-| H1 painel | `56px` |
-| H2 seção | `34-42px` |
-| Título de card | `18-22px` |
-| Corpo | `14-17px` |
-| Rótulo mono | `9-13px` |
+| Hero | `74px` máximo, com `clamp` nas telas públicas e painéis. |
+| H1 painel | `56px` máximo. |
+| H2 seção | `34-42px`. |
+| Título de card | `18-22px`. |
+| Corpo | `14-17px`. |
+| Rótulo mono | `9-13px`. |
 
 ## Voz e copy
 
@@ -67,18 +65,13 @@ Escala:
 
 ## Movimento
 
-A home **tem** movimento implementado. São três mecanismos, todos com `prefers-reduced-motion` tratado:
+O redesign atual é majoritariamente estático e responsivo. Se uma tela introduzir animação, ela deve ser discreta, co-localizada no CSS Module da peça e desligada com `prefers-reduced-motion: reduce`.
 
-- **`pulse`** — `apps/web/components/pulse.module.css`: `@keyframes pulse` contínuo de `4.5s` (opacidade `0.55→1`, escala `1→1.12`), aplicado na estrela `✦` do `Wordmark` (`pulse` prop) e na estrela do eyebrow do herói. O elemento é sempre decorativo (`aria-hidden`). Sob `prefers-reduced-motion: reduce` a animação é desligada no próprio módulo; a estrela fica estática, sem perder forma nem cor.
-- **`reveal`** — `apps/web/components/reveal.tsx` + `reveal.module.css`: scroll-reveal por `IntersectionObserver` (fade + translateY de entrada, duração/distância/atraso parametrizáveis por custom property para escalonar irmãos). Vários `<Reveal>` orquestram a entrada de header, herói, seções e cada camada da home. Degrada com segurança: sem `IntersectionObserver` ou sob reduced-motion o conteúdo aparece de imediato e **nunca** fica preso em opacity 0. A *declaração* da transição mora no módulo CSS (não inline) para que a media query de reduced-motion consiga vencê-la.
-- **`ScrollLayers`** — `apps/web/components/scroll-layers.tsx`: orquestra as camadas de domínio reveladas abaixo da dobra conforme o scroll, compondo `<Reveal>` por camada (não é uma animação própria, é a composição do reveal ao longo da página).
-- **`panelArrival` + `radarSweep`** — `apps/web/app/app/app.module.css`: no Painel de bordo, herói, Convites e grade inferior entram em uma sequência curta de fade + deslocamento; o feixe do radar esquemático gira continuamente em baixa velocidade. Sob `prefers-reduced-motion: reduce`, as duas animações e as transições de deslocamento são desligadas, mantendo toda a informação e os estados visíveis.
-
-Regra para movimento novo:
+Regras:
 
 - Defina o comportamento no arquivo do componente.
 - Inclua `@media (prefers-reduced-motion: reduce)` junto do componente.
-- Com CSS Modules, co-localize `@keyframes` no mesmo módulo em que a classe usa `animation-name` — nomes de keyframe não são globais confiáveis nesse caso.
+- Com CSS Modules, co-localize `@keyframes` no mesmo módulo em que a classe usa `animation-name`.
 - Não use animação como único feedback de estado.
 
 ## Literais conscientes
@@ -88,7 +81,5 @@ Valores que espelham tokens e exigem sincronia manual:
 - `docs/design/tokens.json` (fonte viva de tokens).
 - `apps/web/app/globals.css` (espelho CSS; deve continuar igual ao JSON).
 - `apps/web/lib/design/tokens.ts` (catálogo TS/testes; idem).
-
-Literais responsivos conscientes na home: `clamp(42px, 8vw, 76px)` (herói) e `clamp(30px, 5vw, 48px)` / `clamp(30px, 5vw, 44px)` (H2 de seção) — o teto espelha a escala de hero/H2.
 
 Valores locais de geometria (`gap`, `padding`, `fontSize`, `clamp`) podem ficar no componente enquanto forem específicos. Se aparecerem em várias fronteiras, promova para token.

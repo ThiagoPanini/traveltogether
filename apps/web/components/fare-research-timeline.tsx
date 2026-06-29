@@ -1,12 +1,13 @@
 "use client";
 
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { formatTripDate, type Trajeto } from "@/lib/trips/backbone";
+import { useEffect, useMemo, useState } from "react";
+import type { Trajeto } from "@/lib/trips/backbone";
 import {
   type FareResearch,
   type FareResearchDraft,
   fareResearchFromDraft,
+  formatResearchMoney,
+  formatResearchPoints,
   loadFareResearches,
   saveFareResearches,
   trajectoryKey,
@@ -14,35 +15,63 @@ import {
 import { transferLabel } from "@/lib/trips/transfers";
 import styles from "./fare-research.module.css";
 import { FareResearchWizard } from "./fare-research-wizard";
-import { TrajetoRow } from "./trajeto-row";
 
 type ActiveResearch = {
   trajeto: Trajeto;
   trajectoryKey: string;
-  existing?: FareResearch;
+  index: number;
 };
 
-/**
- * Costura cliente entre a timeline real do backbone e as fichas locais de Pesquisa. Mantém cada
- * ficha sob o Trajeto que a originou, abre o wizard para criar/editar e isola o storage por Viagem.
- */
+type ResearchSummary = {
+  done: number;
+  total: number;
+};
+
+type FareResearchTimelineProps = {
+  tripId: string;
+  tripName?: string;
+  trajetos: Trajeto[];
+  currentUserInitials?: string;
+  className?: string;
+  onSummaryChange?: (summary: ResearchSummary) => void;
+};
+
+/** Timeline cliente dos Trajetos pesquisáveis, espelhando o painel redesenhado. */
 export function FareResearchTimeline({
   tripId,
+  tripName = "Viagem",
   trajetos,
+  currentUserInitials = "V",
   className,
-}: {
-  tripId: string;
-  trajetos: Trajeto[];
-  className?: string;
-}) {
+  onSummaryChange,
+}: FareResearchTimelineProps) {
   const [researches, setResearches] = useState<FareResearch[]>([]);
+  const [preferredIds, setPreferredIds] = useState<Set<string>>(() => new Set());
   const [active, setActive] = useState<ActiveResearch | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const grouped = useMemo(
+    () =>
+      trajetos.map((trajeto, index) => {
+        const key = trajectoryKey(trajeto, index);
+        return {
+          key,
+          trajeto,
+          items: researches.filter((research) => research.trajectoryKey === key),
+        };
+      }),
+    [researches, trajetos],
+  );
 
   useEffect(() => {
     setResearches(loadFareResearches(tripId));
   }, [tripId]);
+
+  useEffect(() => {
+    onSummaryChange?.({
+      done: grouped.filter((group) => group.items.length > 0).length,
+      total: trajetos.length,
+    });
+  }, [grouped, onSummaryChange, trajetos.length]);
 
   function persist(next: FareResearch[]) {
     setResearches(next);
@@ -51,63 +80,89 @@ export function FareResearchTimeline({
 
   function save(draft: FareResearchDraft) {
     if (!active) return;
-    const id = active.existing?.id ?? createResearchId();
-    const createdAt = active.existing?.createdAt;
-    const research = fareResearchFromDraft(
-      draft,
-      active.trajectoryKey,
-      id,
-      createdAt ?? new Date().toISOString(),
-    );
-    const next = active.existing
-      ? researches.map((item) => (item.id === id ? research : item))
-      : [...researches, research];
-    persist(next);
-    setDeletingId(null);
-    setAnnouncement(active.existing ? "Pesquisa atualizada." : "Pesquisa registrada.");
+    const id = createResearchId();
+    const research = fareResearchFromDraft(draft, active.trajectoryKey, id);
+    persist([...researches, research]);
+    setPreferredIds((current) => {
+      const next = new Set(current);
+      if (!researches.some((item) => item.trajectoryKey === active.trajectoryKey)) {
+        next.add(id);
+      }
+      return next;
+    });
+    setAnnouncement("Pesquisa registrada.");
     setActive(null);
   }
 
-  function remove(research: FareResearch) {
-    persist(researches.filter((item) => item.id !== research.id));
-    setDeletingId(null);
-    setAnnouncement("Pesquisa removida.");
+  function togglePreferred(research: FareResearch) {
+    setPreferredIds((current) => {
+      const next = new Set(current);
+      const sameTrajectory = researches
+        .filter((item) => item.trajectoryKey === research.trajectoryKey)
+        .map((item) => item.id);
+      for (const id of sameTrajectory) next.delete(id);
+      if (!current.has(research.id)) next.add(research.id);
+      return next;
+    });
+  }
+
+  if (trajetos.length === 0) {
+    return (
+      <div className={className}>
+        <div className={styles.emptyResearch}>Sem trajetos nesta viagem.</div>
+      </div>
+    );
   }
 
   return (
     <>
-      <ol className={className}>
-        {trajetos.map((trajeto, index) => {
-          const key = trajectoryKey(trajeto, index);
-          const matches = researches.filter((research) => research.trajectoryKey === key);
+      <div className={className}>
+        {grouped.map(({ key, trajeto, items }, index) => {
+          const count = items.length;
+          const preferredCount = items.filter((research) => preferredIds.has(research.id)).length;
           return (
-            <TrajetoRow
-              key={key}
-              trajeto={trajeto}
-              researchCount={matches.length}
-              onAddResearch={() => setActive({ trajeto, trajectoryKey: key })}
-            >
-              {matches.length > 0 ? (
-                <section className={styles.researchList} aria-label="Pesquisas registradas">
-                  {matches.map((research, researchIndex) => (
+            <section className={styles.legCard} key={key}>
+              <header className={styles.legHead}>
+                <span>
+                  Trajeto {index + 1} de {trajetos.length}
+                </span>
+                <strong>
+                  {trajeto.from} <span aria-hidden="true">→</span> {trajeto.to}
+                </strong>
+                <em>{scopeLabel(trajeto)}</em>
+              </header>
+
+              <div className={styles.legBody}>
+                {items.length > 0 ? (
+                  items.map((research) => (
                     <ResearchCard
                       key={research.id}
                       research={research}
-                      index={researchIndex}
-                      deletePending={deletingId === research.id}
-                      onEdit={() => setActive({ trajeto, trajectoryKey: key, existing: research })}
-                      onRequestRemove={() => setDeletingId(research.id)}
-                      onCancelRemove={() => setDeletingId(null)}
-                      onRemove={() => remove(research)}
+                      initials={currentUserInitials}
+                      preferred={preferredIds.has(research.id)}
+                      onTogglePreferred={() => togglePreferred(research)}
                     />
-                  ))}
-                  <p className={styles.persistenceNote}>Fichas salvas neste navegador.</p>
-                </section>
-              ) : null}
-            </TrajetoRow>
+                  ))
+                ) : (
+                  <div className={styles.emptyResearch}>
+                    Sem pesquisas ainda · sejam os primeiros
+                  </div>
+                )}
+
+                <div className={styles.legFoot}>
+                  <span>{countLabel(count, preferredCount)}</span>
+                  <button
+                    type="button"
+                    onClick={() => setActive({ trajeto, trajectoryKey: key, index })}
+                  >
+                    + Pesquisar translado
+                  </button>
+                </div>
+              </div>
+            </section>
           );
         })}
-      </ol>
+      </div>
 
       <output className="sr-only" aria-live="polite">
         {announcement}
@@ -115,9 +170,11 @@ export function FareResearchTimeline({
 
       {active ? (
         <FareResearchWizard
-          key={`${active.trajectoryKey}:${active.existing?.id ?? "new"}`}
+          key={active.trajectoryKey}
+          tripName={tripName}
           trajeto={active.trajeto}
-          existing={active.existing}
+          trajectoryIndex={active.index + 1}
+          trajectoryTotal={trajetos.length}
           onClose={() => setActive(null)}
           onSave={save}
         />
@@ -128,113 +185,63 @@ export function FareResearchTimeline({
 
 function ResearchCard({
   research,
-  index,
-  deletePending,
-  onEdit,
-  onRequestRemove,
-  onCancelRemove,
-  onRemove,
+  initials,
+  preferred,
+  onTogglePreferred,
 }: {
   research: FareResearch;
-  index: number;
-  deletePending: boolean;
-  onEdit: () => void;
-  onRequestRemove: () => void;
-  onCancelRemove: () => void;
-  onRemove: () => void;
+  initials: string;
+  preferred: boolean;
+  onTogglePreferred: () => void;
 }) {
   const first = research.segments[0];
   const route =
-    research.transferKind === "plane"
+    research.transferKind === "plane" && first.originCode && first.destinationCode
       ? `${first.originCode} → ${first.destinationCode}`
       : `${first.from} → ${first.to}`;
-  const priceDimensions =
-    research.money && research.points
-      ? "dinheiro + pontos"
-      : research.money
-        ? "dinheiro"
-        : "pontos";
-  const kind =
+  const money = formatResearchMoney(research);
+  const points = formatResearchPoints(research);
+  const price = money ?? points ?? "Sem valor";
+  const type =
     research.transferKind === "other"
-      ? research.otherTransfer
+      ? research.otherTransfer || "Outro"
       : transferLabel({ kind: research.transferKind });
-  const date = formatTripDate(first.departureDate);
-  const scope =
-    research.segments.length > 1
-      ? "ida e volta"
-      : research.trajectoryKey.startsWith("volta-seed:")
-        ? "só volta"
-        : "só ida";
+  const detail = research.provider ? `${route} · ${research.provider}` : route;
 
   return (
-    <article className={styles.researchCard}>
-      <header className={styles.researchCardHead}>
-        <span className={styles.researchCardKicker}>
-          Pesquisa {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className={styles.researchType}>
-          {kind} · {scope}
-        </span>
-      </header>
-      <div className={styles.researchCardBody}>
-        <div className={styles.researchIdentity}>
-          <strong>{route}</strong>
-          <span>
-            {research.provider}
-            {research.reference ? ` · ${research.reference}` : ""}
-            {date ? ` · ${date}` : ""}
-          </span>
-        </div>
-        <div className={styles.researchPrice}>
-          <strong>{priceDimensions}</strong>
-          <small>{research.priceBasis === "person" ? "por pessoa" : "por veículo / serviço"}</small>
-        </div>
-        <div className={styles.researchActions}>
-          {deletePending ? (
-            <fieldset className={styles.deleteConfirm}>
-              <legend className="sr-only">Confirmar remoção</legend>
-              <button type="button" onClick={onCancelRemove}>
-                Cancelar
-              </button>
-              <button type="button" onClick={onRemove}>
-                Remover
-              </button>
-            </fieldset>
-          ) : (
-            <>
-              {research.link ? (
-                <a
-                  className={styles.iconButton}
-                  href={research.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Abrir link da Pesquisa ${index + 1}`}
-                >
-                  <ExternalLink size={13} strokeWidth={1.5} aria-hidden="true" />
-                </a>
-              ) : null}
-              <button
-                type="button"
-                className={styles.iconButton}
-                onClick={onEdit}
-                aria-label={`Editar Pesquisa ${index + 1}`}
-              >
-                <Pencil size={13} strokeWidth={1.5} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className={styles.iconButton}
-                onClick={onRequestRemove}
-                aria-label={`Remover Pesquisa ${index + 1}`}
-              >
-                <Trash2 size={13} strokeWidth={1.5} aria-hidden="true" />
-              </button>
-            </>
-          )}
+    <article className={`${styles.researchCard} ${preferred ? styles.researchPreferred : ""}`}>
+      <div className={styles.researchMain}>
+        <span className={styles.researchAvatar}>{initials.slice(0, 2).toUpperCase()}</span>
+        <div>
+          <div className={styles.researchIdentity}>
+            <strong>Você</strong>
+            <span>{type}</span>
+          </div>
+          <small>{detail}</small>
         </div>
       </div>
+      <div className={styles.researchPrice}>
+        <strong>{price}</strong>
+        <small>{research.priceBasis === "person" ? "por pessoa" : "por veículo"}</small>
+        {money && points ? <small>{points}</small> : null}
+      </div>
+      <button type="button" className={styles.preferredButton} onClick={onTogglePreferred}>
+        {preferred ? "★ Preferida de você" : "Marcar preferida"}
+      </button>
     </article>
   );
+}
+
+function scopeLabel(trajeto: Trajeto): string {
+  if (trajeto.kind === "ida") return "Sua ida · pessoal";
+  return "Compartilhado";
+}
+
+function countLabel(count: number, preferredCount: number): string {
+  if (count === 0) return "Sem pesquisas ainda";
+  const research = count === 1 ? "1 pesquisa" : `${count} pesquisas`;
+  const preferred = preferredCount === 1 ? "1 preferida" : "nenhuma preferida";
+  return `${research} · ${preferred}`;
 }
 
 function createResearchId(): string {

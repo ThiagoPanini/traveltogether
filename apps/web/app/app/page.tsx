@@ -1,19 +1,6 @@
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Compass,
-  LayoutDashboard,
-  LogOut,
-  Mail,
-  MapPinned,
-  Plane,
-  Plus,
-  Route,
-} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Wordmark } from "@/components/wordmark";
 import { apiFetch } from "@/lib/bff/server";
 import { logout } from "./actions";
 import styles from "./app.module.css";
@@ -24,7 +11,11 @@ export const metadata: Metadata = {
 };
 
 type Me = {
-  profile: { display_name?: string | null; origin_city?: string | null } | null;
+  profile: {
+    display_name?: string | null;
+    origin_city?: string | null;
+    country?: string | null;
+  } | null;
 };
 
 type TripSummary = {
@@ -36,7 +27,6 @@ type TripSummary = {
 };
 
 const ROLE_LABEL = { member: "Membro", organizer: "Organizador" } as const;
-const RADAR_POINT_STYLES = [styles.radarPointOne, styles.radarPointTwo, styles.radarPointThree];
 
 async function fetchJson<T>(path: string, fallback: T): Promise<T> {
   try {
@@ -48,21 +38,18 @@ async function fetchJson<T>(path: string, fallback: T): Promise<T> {
   }
 }
 
-/**
- * Painel de bordo da área logada. Resume as Participações do usuário, mantém os
- * Convites pendentes acionáveis e leva para o detalhe de cada Viagem sem inventar
- * dados da camada de exploração que ainda não existem.
- */
 export default async function AppHome() {
   const session = await auth();
 
   let displayName = session?.user?.name?.trim() ?? "";
   let originCity = "";
+  let originCountry = "";
 
   const me = await fetchJson<Me | null>("/auth/me", null);
   if (me) {
     displayName = me.profile?.display_name?.trim() || displayName;
     originCity = me.profile?.origin_city?.trim() || "";
+    originCountry = me.profile?.country?.trim() || "";
   }
 
   const trips = await fetchJson<TripSummary[]>("/trips", []);
@@ -71,63 +58,52 @@ export default async function AppHome() {
   const nameLabel = displayName || "viajante";
   const firstName = nameLabel.split(/\s+/)[0];
   const initial = nameLabel[0]?.toUpperCase() || "V";
-  const totalStops = trips.reduce((total, trip) => total + trip.stop_count, 0);
   const organizerCount = trips.filter((trip) => trip.my_role === "organizer").length;
-  const hasTrips = trips.length > 0;
+  const primaryRole = organizerCount > 0 ? "Organiza" : "Membro";
+  const originLabel = originCity || "Origem";
+  const originMeta = [originCity, originCountry].filter(Boolean).join(" · ") || "Origem a definir";
+  const featuredTrip = trips[0] ?? null;
 
   return (
     <main className={styles.screen}>
       <aside className={styles.sidebar} aria-label="Menu principal">
         <Link href="/app" className={styles.brand} aria-label="travelmanager — painel">
-          <Wordmark size={17} pulse />
+          <span aria-hidden="true">✦</span>
+          travel·manager
         </Link>
 
         <nav className={styles.primaryNav} aria-label="Navegação do painel">
-          <Link
-            href="/app"
-            className={`${styles.navItem} ${styles.navItemActive}`}
-            aria-current="page"
-          >
-            <LayoutDashboard size={17} strokeWidth={1.7} aria-hidden="true" />
+          <span className={`${styles.navItem} ${styles.navItemActive}`} aria-current="page">
+            <span aria-hidden="true">◈</span>
             <span>Painel</span>
-            <span className={styles.navIndex} aria-hidden="true">
-              01
-            </span>
-          </Link>
+          </span>
           <a href="#viagens" className={styles.navItem}>
-            <MapPinned size={17} strokeWidth={1.7} aria-hidden="true" />
+            <span aria-hidden="true">⊞</span>
             <span>Minhas viagens</span>
-            <span className={styles.navCount}>{trips.length}</span>
+            <strong>{trips.length}</strong>
           </a>
-          {invitations.length > 0 ? (
-            <a href="#convites" className={styles.navItem}>
-              <Mail size={17} strokeWidth={1.7} aria-hidden="true" />
-              <span>Convites</span>
-              <span className={`${styles.navCount} ${styles.navCountAlert}`}>
-                {invitations.length}
-              </span>
-            </a>
-          ) : null}
+          <a href="#convites" className={styles.navItem}>
+            <span aria-hidden="true">✉</span>
+            <span>Convites</span>
+            <strong className={styles.inviteBadge}>{invitations.length}</strong>
+          </a>
         </nav>
 
         <Link href="/app/viagens/nova" className={styles.sidebarCta}>
-          <Plus size={17} strokeWidth={2} aria-hidden="true" />
-          <span>Nova viagem</span>
+          <span aria-hidden="true">+</span> Nova viagem
         </Link>
 
-        <div className={styles.sidebarSpacer} />
-
         <div className={styles.profileCard}>
-          <div className={styles.avatar} aria-hidden="true">
+          <span className={styles.avatar} aria-hidden="true">
             {initial}
+          </span>
+          <div>
+            <strong>{nameLabel}</strong>
+            <small>{originMeta}</small>
           </div>
-          <div className={styles.userInfo}>
-            <span className={styles.userName}>{nameLabel}</span>
-            <span className={styles.userCity}>{originCity || "Origem a definir"}</span>
-          </div>
-          <form action={logout} className={styles.signoutForm}>
+          <form action={logout}>
             <button type="submit" className={styles.signout} aria-label="Sair">
-              <LogOut size={16} strokeWidth={1.7} aria-hidden="true" />
+              ⎋
             </button>
           </form>
         </div>
@@ -135,225 +111,152 @@ export default async function AppHome() {
 
       <div className={styles.workspace}>
         <header className={styles.topbar}>
-          <p className={styles.breadcrumb}>
-            <span>Área de embarque</span>
-            <ArrowRight size={12} strokeWidth={1.5} aria-hidden="true" />
-            <strong>Painel de bordo</strong>
+          <p>
+            Área de embarque <span aria-hidden="true">→</span> <strong>Painel de bordo</strong>
           </p>
-          <p className={styles.baseStatus}>
-            <span className={styles.liveDot} aria-hidden="true" />
-            Base ativa · {originCity || "origem a definir"}
+          <p>
+            <span aria-hidden="true" /> Base ativa · {originLabel}
           </p>
         </header>
 
         <div className={styles.content}>
+          <div className={styles.mobileProfile}>
+            <div>
+              <span className={styles.avatar} aria-hidden="true">
+                {initial}
+              </span>
+              <div>
+                <strong>{nameLabel}</strong>
+                <small>{originMeta}</small>
+              </div>
+            </div>
+            <span>
+              <span aria-hidden="true" /> Base ativa
+            </span>
+          </div>
+
           <section className={styles.hero} aria-labelledby="dashboard-title">
-            <div className={styles.heroCopy}>
+            <div>
               <p className={styles.eyebrow}>Olá, {firstName} · tudo a bordo</p>
               <h1 id="dashboard-title">
-                {hasTrips ? (
-                  <>
-                    Seu mapa está <em>em movimento.</em>
-                  </>
-                ) : (
-                  <>
-                    O mundo cabe no <em>próximo plano.</em>
-                  </>
-                )}
+                Seu mapa está
+                <br />
+                em movimento.
               </h1>
-              <p className={styles.heroDescription}>
-                {hasTrips
-                  ? "Abra uma Viagem para rever Paradas, translados propostos e quem já está na Tripulação."
-                  : "Crie o primeiro esqueleto da jornada, convide o grupo e tracem as Paradas cidade a cidade."}
+              <p>
+                Abra uma viagem para rever paradas, translados propostos e quem já está na
+                tripulação.
               </p>
               <div className={styles.heroActions}>
                 <Link href="/app/viagens/nova" className={styles.primaryAction}>
-                  Planejar nova viagem
-                  <ArrowUpRight size={17} strokeWidth={2} aria-hidden="true" />
+                  Planejar nova viagem →
                 </Link>
-                {hasTrips ? (
-                  <a href="#viagens" className={styles.secondaryAction}>
-                    Ver minhas viagens
-                    <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
-                  </a>
+                {featuredTrip ? (
+                  <Link href={`/app/viagens/${featuredTrip.id}`} className={styles.secondaryAction}>
+                    Abrir {featuredTrip.destination_city} →
+                  </Link>
                 ) : null}
               </div>
             </div>
 
-            <div className={styles.radar} aria-hidden="true">
-              <span className={styles.radarLabel}>Mapa esquemático</span>
-              <span className={`${styles.radarRing} ${styles.radarRingOuter}`} />
-              <span className={`${styles.radarRing} ${styles.radarRingInner}`} />
-              <span className={styles.radarCrossHorizontal} />
-              <span className={styles.radarCrossVertical} />
-              <span className={styles.radarSweep} />
-              <span className={styles.radarPlane}>
-                <Plane size={23} strokeWidth={1.6} />
-              </span>
-              {(hasTrips ? trips.slice(0, 3) : [{ destination_city: "Destino" }]).map(
-                (trip, index) => (
-                  <span
-                    key={`${trip.destination_city}-${index}`}
-                    className={`${styles.radarPoint} ${RADAR_POINT_STYLES[index]}`}
-                  >
-                    <span>{trip.destination_city}</span>
-                  </span>
-                ),
-              )}
-            </div>
-
             <dl className={styles.metrics} aria-label="Resumo do painel">
-              <div className={styles.metric}>
-                <dt>Viagens no radar</dt>
+              <div>
+                <dt>Viagens ativas</dt>
                 <dd>{String(trips.length).padStart(2, "0")}</dd>
               </div>
-              <div className={styles.metric}>
-                <dt>Paradas mapeadas</dt>
-                <dd>{String(totalStops).padStart(2, "0")}</dd>
+              <div>
+                <dt>Origem-base</dt>
+                <dd>{originLabel}</dd>
               </div>
-              <div className={styles.metric}>
-                <dt>Como organizador</dt>
-                <dd>{String(organizerCount).padStart(2, "0")}</dd>
-              </div>
-              <div className={styles.metric}>
-                <dt>Convites na fila</dt>
-                <dd>{String(invitations.length).padStart(2, "0")}</dd>
+              <div>
+                <dt>Papel</dt>
+                <dd>{primaryRole}</dd>
               </div>
             </dl>
           </section>
-
-          {invitations.length > 0 ? <PendingInvitations invitations={invitations} /> : null}
 
           <div className={styles.dashboardGrid}>
             <section id="viagens" className={styles.tripsSection} aria-labelledby="trips-title">
               <div className={styles.sectionHeading}>
                 <div>
-                  <p className={styles.sectionKicker}>Caderno de bordo · Participações</p>
+                  <p>Caderno de bordo · participações</p>
                   <h2 id="trips-title">Minhas viagens</h2>
                 </div>
-                {hasTrips ? (
-                  <Link href="/app/viagens/nova" className={styles.textAction}>
-                    Nova viagem
-                    <Plus size={15} strokeWidth={2} aria-hidden="true" />
-                  </Link>
-                ) : null}
+                <Link href="/app/viagens/nova">+ Nova viagem</Link>
               </div>
 
-              {hasTrips ? (
+              {trips.length > 0 ? (
                 <ul className={styles.trips}>
                   {trips.map((trip, index) => (
-                    <li key={trip.id} className={index === 0 ? styles.featuredTrip : undefined}>
+                    <li key={trip.id}>
                       <Link href={`/app/viagens/${trip.id}`} className={styles.tripCard}>
                         <span className={styles.tripTopline}>
-                          <span>Viagem / {String(index + 1).padStart(2, "0")}</span>
-                          <span className={styles.rolePill}>{ROLE_LABEL[trip.my_role]}</span>
+                          <span>Viagem {String(index + 1).padStart(2, "0")}</span>
+                          <span>{ROLE_LABEL[trip.my_role]}</span>
                         </span>
-
-                        <span className={styles.tripRoute} aria-hidden="true">
-                          <span className={styles.routeCity}>{originCity || "Sua base"}</span>
-                          <span className={styles.routeTrack}>
-                            <span className={styles.routePlane}>
-                              <Plane size={13} strokeWidth={1.8} />
-                            </span>
-                          </span>
-                          <span className={styles.routeCity}>{trip.destination_city}</span>
+                        <h3>{trip.name}</h3>
+                        <span className={styles.tripRoute}>
+                          {originLabel} → {trip.destination_city}
                         </span>
-
-                        <span className={styles.destinationLabel}>Destino</span>
-                        <span className={styles.destination}>{trip.destination_city}</span>
-                        <span className={styles.tripName}>{trip.name}</span>
-
-                        <span className={styles.tripFooter}>
-                          <span>
-                            {trip.stop_count} {trip.stop_count === 1 ? "Parada" : "Paradas"}
-                          </span>
-                          <span className={styles.openTrip}>
-                            Abrir painel
-                            <ArrowUpRight size={15} strokeWidth={1.9} aria-hidden="true" />
-                          </span>
+                        <span className={styles.tripProgress}>
+                          {trip.stop_count} {trip.stop_count === 1 ? "parada" : "paradas"} na rota
                         </span>
+                        <span className={styles.openTrip}>Abrir painel →</span>
                       </Link>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className={styles.emptyBoard}>
-                  <div className={styles.emptyTicket}>
-                    <span className={styles.emptyNumber}>00</span>
-                    <span className={styles.emptyRoute} aria-hidden="true">
-                      <span />
-                      <Route size={22} strokeWidth={1.4} />
-                      <span />
-                    </span>
-                    <p className={styles.emptyKicker}>Manifesto aberto · aguardando destino</p>
-                    <h3>Nenhuma viagem no radar — ainda.</h3>
-                    <p>
-                      A primeira Viagem organiza destino, Paradas, membros e um período aproximado.
-                      O resto ganha forma junto com o grupo.
-                    </p>
-                    <Link href="/app/viagens/nova" className={styles.primaryAction}>
-                      Criar primeira viagem
-                      <ArrowUpRight size={17} strokeWidth={2} aria-hidden="true" />
-                    </Link>
-                  </div>
-                  <ol className={styles.firstSteps} aria-label="Etapas da criação de uma viagem">
-                    <li>
-                      <span>01</span>
-                      <strong>Escolha o destino</strong>
-                      <small>A última Parada da sequência.</small>
-                    </li>
-                    <li>
-                      <span>02</span>
-                      <strong>Trace as Paradas</strong>
-                      <small>O esqueleto compartilhado da jornada.</small>
-                    </li>
-                    <li>
-                      <span>03</span>
-                      <strong>Chame a Tripulação</strong>
-                      <small>Cada pessoa entra ao aceitar o Convite.</small>
-                    </li>
-                  </ol>
+                  <span>00</span>
+                  <h3>Nenhuma viagem no radar — ainda.</h3>
+                  <p>Crie o primeiro esqueleto da jornada, convide o grupo e tracem as Paradas.</p>
+                  <Link href="/app/viagens/nova" className={styles.primaryAction}>
+                    Criar primeira viagem →
+                  </Link>
                 </div>
               )}
             </section>
 
-            <aside className={styles.logbook} aria-labelledby="logbook-title">
-              <div className={styles.logbookTopline}>
-                <span>Nota de navegação</span>
-                <Compass size={18} strokeWidth={1.6} aria-hidden="true" />
-              </div>
-              <div className={styles.logbookStamp} aria-hidden="true">
-                TM
-                <span>✦</span>
-              </div>
-              <h2 id="logbook-title">A viagem é do grupo. A escolha é de cada pessoa.</h2>
-              <p>
-                Todo mundo pode explorar caminhos e compartilhar Pesquisas. Depois, cada viajante
-                marca a própria Preferida — sem votação que decida por alguém.
-              </p>
-              <dl className={styles.logbookFacts}>
-                <div>
-                  <dt>Sua origem-base</dt>
-                  <dd>{originCity || "Ainda não definida"}</dd>
+            <aside className={styles.rail}>
+              <section id="convites" className={styles.railCard}>
+                <div className={styles.railTitle}>
+                  <h2>Convites</h2>
+                  <span>{invitations.length}</span>
                 </div>
-                <div>
-                  <dt>{hasTrips ? "Papel mais frequente" : "Estado do caderno"}</dt>
-                  <dd>
-                    {hasTrips
-                      ? organizerCount >= trips.length - organizerCount
-                        ? "Organizador"
-                        : "Membro"
-                      : "Primeiro embarque"}
-                  </dd>
-                </div>
-              </dl>
-              <div className={styles.logbookMark} aria-hidden="true">
-                travelmanager · caderno compartilhado
-              </div>
+                <PendingInvitations invitations={invitations} />
+              </section>
+
+              <section className={styles.noteCard}>
+                <span>Nota de bordo</span>
+                <p>
+                  A viagem é do grupo. A escolha é de cada pessoa — sem votação que decida por
+                  alguém.
+                </p>
+              </section>
             </aside>
           </div>
         </div>
       </div>
+
+      <nav className={styles.mobileTabs} aria-label="Navegação principal">
+        <span aria-current="page">
+          <span aria-hidden="true">◈</span>
+          Painel
+        </span>
+        <a href="#viagens">
+          <span aria-hidden="true">⊞</span>
+          Viagens
+        </a>
+        <Link href="/app/viagens/nova" className={styles.mobileCreate}>
+          <span aria-hidden="true">+</span>
+          Criar
+        </Link>
+        <a href="#convites">
+          <span aria-hidden="true">✉</span>
+          Convites
+        </a>
+      </nav>
     </main>
   );
 }

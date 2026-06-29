@@ -1,256 +1,574 @@
-/* Painel da Viagem (Noturno) — home de uma viagem sobre o esqueleto real. */
-
 .screen {
-  min-height: 100vh;
-  padding-bottom: 110px; /* respiro para o switcher fixo */
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: var(--bg-root);
+  color: var(--text-body);
 }
-
-.container {
-  width: 100%;
-  max-width: var(--max-width-panel);
-  margin: 0 auto;
-  padding: 0 var(--page-gutter);
-}
-
-/* ---- Header ---- */
 
 .header {
-  padding-top: 22px;
+  flex-shrink: 0;
+  padding: 22px 36px 0;
+  border-bottom: var(--border-hairline) solid var(--line);
 }
 
-.back {
-  display: inline-block;
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   margin-bottom: 16px;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.back:hover {
+.breadcrumb a,
+.breadcrumb span:first-of-type {
+  color: var(--text-faint);
+}
+
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible {
   color: var(--accent);
 }
 
-.headerBar {
+.breadcrumb span:last-child {
+  color: var(--text-body);
+}
+
+.hero {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-bottom: 20px;
-  border-bottom: var(--border-hairline) solid var(--line);
+  gap: 30px;
+  margin-bottom: 18px;
+}
+
+.heroCopy {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  color: var(--text-bright);
+  font-size: 40px;
+  letter-spacing: 0.02em;
+  line-height: 0.92;
+}
+
+.routeLine {
+  margin: 0;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.55;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.destination {
+  color: var(--accent);
+}
+
+.departure {
+  margin: 9px 0 0;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.progressBox {
+  width: 230px;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.progressBox div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.progressBox span {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.progressBox strong {
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.progressBox small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.progressTrack {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius-bar);
+  background: var(--fill-subtle);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
 }
 
 .tabs {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
 }
 
-/* ---- Herói ---- */
-
-.hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding: 32px 0 26px;
-  border-bottom: var(--border-hairline) solid var(--line);
-}
-
-.eyebrow {
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
+.tabs button {
+  margin-right: 14px;
+  padding: 10px 4px 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin: 0;
 }
 
-.name {
-  font-size: clamp(40px, 7vw, 56px);
-  line-height: 0.9;
-  margin: 10px 0 6px;
+.tabs button:hover,
+.tabs button:focus-visible,
+.tabActive {
   color: var(--text-bright);
 }
 
-.subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin: 0;
+.tabActive {
+  border-bottom-color: var(--accent) !important;
 }
 
-.count {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.countNumber {
-  font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-weight: 700;
-  font-size: 50px;
-  line-height: 0.85;
-  color: var(--accent);
-}
-
-.countCaption {
+.soonTabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
   font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 9px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-faintest);
+}
+
+.soonTabs em {
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
   color: var(--text-faint);
-  margin-top: 4px;
+  font-style: normal;
 }
 
-/* ---- Progress strip ---- */
-
-.progress {
-  padding: 18px 0;
-  border-bottom: var(--border-hairline) solid var(--line);
-}
-
-/* ---- Grid (timeline + rail) ---- */
-
-.grid {
+.body {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 40px;
-  padding: 32px 0 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  min-height: 0;
 }
 
-@media (max-width: 720px) {
-  .grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
+.mainPane {
+  min-width: 0;
+  overflow: auto;
+  padding: 26px 32px 34px;
 }
 
-.colLabel {
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin: 0 0 6px;
-}
-
-.colHeading {
+.sectionHead {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
+  gap: 18px;
+  margin-bottom: 18px;
 }
 
-.colHint {
-  max-width: 220px;
-  font-size: 10px;
-  line-height: 1.4;
-  text-align: right;
-  color: var(--text-faintest);
+.sectionHead h2 {
+  margin: 0;
+  color: var(--text-bright);
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+
+.sectionHead span {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .timeline {
-  list-style: none;
   display: flex;
   flex-direction: column;
+  gap: 14px;
 }
 
-/* ---- Rail ---- */
-
-.railSection + .railSection {
-  margin-top: 30px;
-}
-
-.crew {
-  list-style: none;
+.rail {
   display: flex;
+  overflow: auto;
   flex-direction: column;
+  gap: 16px;
+  padding: 24px 22px;
+  border-left: var(--border-hairline) solid var(--line);
+  background: var(--bg-canvas);
 }
 
-.subLabel {
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faintest);
-  margin: 16px 0 2px;
-}
-
-.soonGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* ---- Bottom switcher ---- */
-
-.switcher {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
+.railHead {
   display: flex;
   align-items: center;
-  background: var(--surface-bar);
-  border: var(--border-hairline) solid var(--line-muted);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  box-shadow: var(--shadow-switcher);
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
 
-.switcherItem {
-  padding: 8px 16px;
+.railHead span {
+  color: var(--text-bright);
   font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
+  font-size: 16px;
   letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.railHead small {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.railCrew {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.crewMini,
+.crewCard,
+.pendingCard {
+  min-width: 0;
+}
+
+.crewMini {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.crewMini span,
+.crewCard > span,
+.pendingCard > span {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: var(--border-outline) solid var(--line-strong);
+  border-radius: 50%;
   color: var(--text-muted);
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 13px;
 }
 
-.switcherActive {
-  background: var(--accent);
-  color: var(--on-accent);
+.crewMini div,
+.crewCard div,
+.pendingCard div {
+  min-width: 0;
+  line-height: 1.2;
 }
 
-.switcherLink {
-  border-left: var(--border-hairline) solid var(--line-muted);
-  color: var(--text-muted);
-  transition:
-    background 140ms ease,
-    color 140ms ease;
+.crewMini strong,
+.crewCard strong,
+.pendingCard strong {
+  display: block;
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.switcherLink:hover,
-.switcherLink:focus-visible {
-  background: var(--fill-accent);
+.crewMini small,
+.crewCard small,
+.pendingCard small {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.avatarAccent {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+.avatarWarning {
+  border-color: var(--warning) !important;
+  color: var(--warning) !important;
+}
+
+.note {
+  padding: 17px;
+  border: var(--border-hairline) solid var(--line);
+  border-left: var(--border-accent-edge) solid var(--accent);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.note span {
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--accent);
 }
 
-.switcherLink:focus-visible {
-  outline: var(--border-outline) solid var(--accent);
-  outline-offset: -3px;
+.note p {
+  margin: 10px 0 0;
+  color: var(--text-body);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-@media (max-width: 520px) {
-  .colHeading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .colHint {
-    max-width: none;
-    text-align: left;
-  }
+.crewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .switcherLink {
-    transition: none;
+.crewCard,
+.pendingCard {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 16px;
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.crewCard > span,
+.pendingCard > span {
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+}
+
+.crewCard strong,
+.pendingCard strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.crewCard small,
+.pendingCard small {
+  font-size: 8.5px;
+}
+
+.pendingCard {
+  border-color: var(--warning-border);
+}
+
+.pendingCard > span,
+.pendingCard small {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.pendingCard em {
+  flex-shrink: 0;
+  border: var(--border-hairline) solid var(--warning-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 11px;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 8.5px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warning);
+}
+
+@media (max-width: 760px) {
+  .screen {
+    min-height: 100dvh;
+  }
+
+  .header {
+    padding: 36px 18px 0;
+  }
+
+  .breadcrumb {
+    margin-bottom: 14px;
+    font-size: 9px;
+  }
+
+  .breadcrumb span:not(:first-of-type) {
+    display: none;
+  }
+
+  .breadcrumb a::before {
+    content: "‹ ";
+  }
+
+  .hero {
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow {
+    margin-bottom: 9px;
+    font-size: 9px;
+  }
+
+  .eyebrow span {
+    width: 5px;
+    height: 5px;
+  }
+
+  .hero h1 {
+    margin-bottom: 9px;
+    font-size: 27px;
+  }
+
+  .routeLine {
+    margin-bottom: 14px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
+  .departure {
+    display: none;
+  }
+
+  .progressBox {
+    width: 100%;
+  }
+
+  .progressBox div {
+    margin-bottom: 7px;
+  }
+
+  .progressBox span {
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .progressBox strong {
+    font-size: 14px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    gap: 7px;
+    padding-bottom: 12px;
+  }
+
+  .tabs button {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 7px 15px;
+    border: var(--border-hairline) solid var(--line);
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+  }
+
+  .tabActive {
+    border-color: var(--line) !important;
+    background: var(--fill-subtle) !important;
+  }
+
+  .soonTabs {
+    flex-shrink: 0;
+    margin-left: 0;
+    border: var(--border-hairline) solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 8px 13px;
+    font-size: 8.5px;
+    white-space: nowrap;
+  }
+
+  .soonTabs em {
+    display: none;
+  }
+
+  .body {
+    display: block;
+  }
+
+  .mainPane {
+    padding: 18px 18px 22px;
+    overflow: visible;
+  }
+
+  .sectionHead {
+    display: none;
+  }
+
+  .timeline {
+    gap: 12px;
+  }
+
+  .rail {
+    display: none;
+  }
+
+  .crewGrid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-bottom: 9px;
+  }
+
+  .crewCard,
+  .pendingCard {
+    padding: 13px 14px;
+  }
+
+  .crewCard > span,
+  .pendingCard > span {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .pendingCard em {
+    display: none;
   }
 }
