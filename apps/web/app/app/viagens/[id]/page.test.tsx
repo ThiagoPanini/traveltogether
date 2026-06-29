@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +20,6 @@ vi.mock("next/link", () => ({
 
 import ViagemPage from "./page";
 
-/** Backbone visto por um Organizador, com translados parcialmente propostos. */
 const backbone = {
   id: "t1",
   name: "Costa Leste",
@@ -88,147 +87,66 @@ function ok(body: unknown) {
 }
 
 beforeEach(() => {
-  // Congela "hoje" para a contagem de embarque ser determinística (8 jul − 1 jul = 7).
-  // Fakeia só `Date` — fakear timers/microtasks travaria o `await res.json()` da página.
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(new Date(2026, 6, 1));
+  window.localStorage.clear();
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   apiFetch.mockReset();
   notFound.mockReset();
+  window.localStorage.clear();
 });
 
-describe("Painel da viagem — herói", () => {
-  it("mostra partida, nome, paradas em ordem, nº de viajantes e a contagem de embarque", async () => {
+describe("Painel da viagem — redesign", () => {
+  it("mostra breadcrumb, herói, rota e progresso de pesquisas", async () => {
     apiFetch.mockResolvedValue(ok(backbone));
     render(await ViagemPage(ctx("t1")));
 
+    expect(screen.getByRole("link", { name: /painel de bordo/i })).toHaveAttribute("href", "/app");
     expect(screen.getByRole("heading", { level: 1, name: /costa leste/i })).toBeInTheDocument();
-    expect(screen.getByText("parte 08 jul 2026")).toBeInTheDocument();
-    expect(screen.getByText(/nova york → boston → portland/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 viajantes/)).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
-    expect(screen.getByText(/dias p\/ embarque/i)).toBeInTheDocument();
-  });
-
-  it("sem data de partida: eyebrow 'datas a definir' e sem contador", async () => {
-    apiFetch.mockResolvedValue(ok({ ...backbone, departure_date: null }));
-    render(await ViagemPage(ctx("t1")));
-
-    expect(screen.getByText("datas a definir")).toBeInTheDocument();
-    expect(screen.queryByText(/dias p\/ embarque/i)).not.toBeInTheDocument();
-  });
-});
-
-describe("Painel da viagem — avanço dos translados", () => {
-  it("mede os trajetos compartilhados propostos, com % e contador de pendências", async () => {
-    apiFetch.mockResolvedValue(ok(backbone));
-    render(await ViagemPage(ctx("t1")));
-
-    const bar = screen.getByRole("progressbar", {
-      name: /1 de 2 trajetos compartilhados com translado proposto/i,
-    });
-    expect(bar).toHaveAttribute("aria-valuenow", "1");
-    expect(bar).toHaveAttribute("aria-valuemax", "2");
-    expect(screen.getByText("50%")).toBeInTheDocument();
-    expect(screen.getByText(/1 em discussão/i)).toBeInTheDocument();
-  });
-
-  it("esconde a faixa quando não há trajeto compartilhado (1 parada só)", async () => {
-    apiFetch.mockResolvedValue(ok({ ...backbone, stops: [backbone.stops[0]] }));
-    render(await ViagemPage(ctx("t1")));
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-  });
-});
-
-describe("Painel da viagem — tabs e switcher", () => {
-  it("tabs do topo: Painel ativo (aria-current) + cascas em breve", async () => {
-    apiFetch.mockResolvedValue(ok(backbone));
-    render(await ViagemPage(ctx("t1")));
-
-    const tabs = screen.getByRole("navigation", { name: /seções da viagem/i });
-    expect(within(tabs).getByText("Painel")).toHaveAttribute("aria-current", "page");
-    expect(within(tabs).getByText(/roteiro/i)).toHaveAttribute("aria-disabled", "true");
-    expect(within(tabs).getByText(/orçamento/i)).toBeInTheDocument();
-    expect(within(tabs).getByText(/ingressos/i)).toBeInTheDocument();
-  });
-
-  it("bottom switcher: Painel ativo + atalho funcional para Pesquisas", async () => {
-    apiFetch.mockResolvedValue(ok(backbone));
-    render(await ViagemPage(ctx("t1")));
-
-    const switcher = screen.getByRole("navigation", { name: /vistas da viagem/i });
-    expect(within(switcher).getByText("Painel")).toHaveAttribute("aria-current", "page");
-    expect(within(switcher).getByRole("link", { name: /pesquisas/i })).toHaveAttribute(
-      "href",
-      "#pesquisas",
+    expect(screen.getByText(/organizador · partida são paulo/i)).toBeInTheDocument();
+    expect(document.body.textContent).toMatch(
+      /São Paulo\s*→\s*Nova York\s*→\s*Boston\s*→\s*Portland/,
     );
+    expect(document.body.textContent).toMatch(/4\s*cidades\s*·\s*3\s*trajetos/);
+    expect(screen.getByText("Translados pesquisados")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("/ 3")).toBeInTheDocument();
   });
-});
 
-describe("Painel da viagem — tripulação", () => {
-  it("lista membros por papel (você marcado) e os convites pendentes ao Organizador", async () => {
+  it("renderiza a linha de trajetos como foco do corpo", async () => {
     apiFetch.mockResolvedValue(ok(backbone));
     render(await ViagemPage(ctx("t1")));
 
-    expect(screen.getByText("Maria (você)")).toBeInTheDocument();
-    expect(screen.getByText("organiza")).toBeInTheDocument();
-    expect(screen.getByText("João")).toBeInTheDocument();
-    expect(screen.getByText("membro")).toBeInTheDocument();
-    // convite cego: subgrupo "Aguardando aceite" + e-mail + status
-    expect(screen.getByText(/aguardando aceite/i)).toBeInTheDocument();
-    expect(screen.getByText("ana@exemplo.com")).toBeInTheDocument();
-    expect(screen.getByText("aguardando")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /a linha dos trajetos/i })).toBeInTheDocument();
+    expect(screen.getByText("Trajeto 1 de 3")).toBeInTheDocument();
+    expect(screen.getAllByText(/São Paulo/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Nova York/i).length).toBeGreaterThan(0);
+    expect(screen.getByText("Trajeto 3 de 3")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /\+ pesquisar translado/i })).toHaveLength(3);
+    expect(screen.queryByRole("navigation", { name: /vistas da viagem/i })).not.toBeInTheDocument();
   });
 
-  it("convite cego: um Membro não vê os pendentes (mesmo se o payload os trouxer)", async () => {
+  it("aba Tripulação mostra membros e convite pendente mascarado para organizador", async () => {
+    apiFetch.mockResolvedValue(ok(backbone));
+    render(await ViagemPage(ctx("t1")));
+
+    fireEvent.click(screen.getByRole("button", { name: /tripulação/i }));
+
+    expect(screen.getByRole("heading", { name: /tripulação a bordo/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/maria · você/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("João").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("an•••••@exemplo.com").length).toBeGreaterThan(0);
+    expect(screen.getByText(/convite enviado · aguardando aceite/i)).toBeInTheDocument();
+  });
+
+  it("membro não vê convites pendentes mesmo se o payload trouxer", async () => {
     apiFetch.mockResolvedValue(ok({ ...backbone, my_role: "member" }));
     render(await ViagemPage(ctx("t1")));
 
-    expect(screen.queryByText(/aguardando aceite/i)).not.toBeInTheDocument();
-    expect(screen.queryByText("ana@exemplo.com")).not.toBeInTheDocument();
-  });
-});
-
-describe("Painel da viagem — linha do tempo", () => {
-  it("deriva sua ida + compartilhados + sua volta-semente, com as pílulas de estado", async () => {
-    apiFetch.mockResolvedValue(ok(backbone));
-    render(await ViagemPage(ctx("t1")));
-
-    const section = screen
-      .getByRole("heading", { name: /translados & pesquisas/i })
-      .closest("section");
-    expect(section).not.toBeNull();
-    const tl = within(section as HTMLElement);
-    // sua ida (avião) · compartilhado proposto (trem) · compartilhado em discussão · volta-semente
-    expect(tl.getByText("sua ida")).toBeInTheDocument();
-    expect(tl.getByText("proposto: Avião")).toBeInTheDocument();
-    expect(tl.getByText("proposto: Trem")).toBeInTheDocument();
-    expect(tl.getByText("em discussão")).toBeInTheDocument();
-    expect(tl.getByText("sua volta")).toBeInTheDocument();
-    expect(tl.getByText("emerge na pesquisa")).toBeInTheDocument();
-    // na camada de exploração, inclusive a volta-semente passa a oferecer registro
-    expect(tl.getByText(/a volta começa aqui/i)).toBeInTheDocument();
-    expect(tl.getAllByRole("button", { name: /registrar pesquisa/i })).toHaveLength(4);
-  });
-});
-
-describe("Painel da viagem — cascas e 404", () => {
-  it("mostra os cards 'em breve' (Roteiro/Orçamento/Ingressos)", async () => {
-    apiFetch.mockResolvedValue(ok(backbone));
-    render(await ViagemPage(ctx("t1")));
-
-    const soon = screen.getByRole("heading", { name: /em breve nesta viagem/i }).parentElement;
-    expect(soon).not.toBeNull();
-    expect(within(soon as HTMLElement).getByText("Roteiro")).toBeInTheDocument();
-    expect(within(soon as HTMLElement).getByText("Orçamento")).toBeInTheDocument();
-    expect(within(soon as HTMLElement).getByText("Ingressos")).toBeInTheDocument();
-    expect(within(soon as HTMLElement).getAllByText("em breve")).toHaveLength(3);
+    expect(screen.queryByText("an•••••@exemplo.com")).not.toBeInTheDocument();
   });
 
-  it("404 da API chama notFound (não vaza existência)", async () => {
+  it("404 da API chama notFound", async () => {
     apiFetch.mockResolvedValue(new Response(null, { status: 404 }));
     await expect(ViagemPage(ctx("missing"))).rejects.toThrow(/NEXT_NOT_FOUND/);
     expect(notFound).toHaveBeenCalled();
