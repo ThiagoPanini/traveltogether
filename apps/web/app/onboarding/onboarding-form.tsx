@@ -2,67 +2,27 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { Combobox, type ComboboxOption } from "@/components/combobox";
+import { useState } from "react";
 import { COUNTRIES } from "@/lib/countries";
-import { searchCities } from "@/lib/geo/cities";
 import styles from "./onboarding.module.css";
 
-const COUNTRY_OPTIONS: ComboboxOption[] = COUNTRIES.map((c) => ({
-  value: c.code,
-  label: c.name,
-}));
-
-type Step = 1 | 2;
+function countryName(code: string): string {
+  return COUNTRIES.find((country) => country.code === code)?.name ?? "País a definir";
+}
 
 /**
- * Wizard de onboarding em 2 passos (Fase 2, #215): captura o Perfil mínimo
- * (nome, país, cidade de origem) e grava via `POST /api/profile`.
- *
- * Passo 1 — nome. Passo 2 — país (combobox) + cidade (combobox gated pelo país,
- * com escape hatch para cidade fora do dataset GeoNames). Contrato da API
- * inalterado; `origin_city` continua string livre (ADR-0006).
+ * Perfil mínimo em uma etapa: nome, cidade de origem e país. A origem é do Perfil
+ * (não da Viagem) e vira a base visual de cada rota que o usuário criar.
  */
 export function OnboardingForm({ defaultName = "" }: { defaultName?: string }) {
   const router = useRouter();
   const { update } = useSession();
 
-  const [step, setStep] = useState<Step>(1);
   const [displayName, setDisplayName] = useState(defaultName);
-  const [country, setCountry] = useState("");
-  const [countryInput, setCountryInput] = useState("");
-  const [countryOptions, setCountryOptions] = useState<ComboboxOption[]>(COUNTRY_OPTIONS);
   const [originCity, setOriginCity] = useState("");
-  const [cityInput, setCityInput] = useState("");
-  const [cityOptions, setCityOptions] = useState<ComboboxOption[]>([]);
+  const [country, setCountry] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    const q = countryInput.toLowerCase();
-    setCountryOptions(COUNTRY_OPTIONS.filter((o) => o.label.toLowerCase().includes(q)));
-  }, [countryInput]);
-
-  useEffect(() => {
-    if (!country) {
-      setCityOptions([]);
-      return;
-    }
-    let cancelled = false;
-    searchCities(country, cityInput).then((results) => {
-      if (cancelled) return;
-      setCityOptions(results.map((c) => ({ value: c.name, label: c.name })));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [country, cityInput]);
-
-  function handleCountryChange(val: string) {
-    setCountry(val);
-    setOriginCity("");
-    setCityInput("");
-  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -74,13 +34,11 @@ export function OnboardingForm({ defaultName = "" }: { defaultName?: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           display_name: displayName,
-          origin_city: originCity || cityInput.trim(),
+          origin_city: originCity.trim(),
           country,
         }),
       });
       if (!res.ok) throw new Error("request failed");
-      // O JWT carimbado no login ainda diz `needsOnboarding`; renova a sessão para
-      // que o middleware não devolva a área logada ao /onboarding (#193).
       await update({ needsOnboarding: false });
       router.refresh();
       router.push("/app");
@@ -90,92 +48,97 @@ export function OnboardingForm({ defaultName = "" }: { defaultName?: string }) {
     }
   }
 
-  const totalSteps = 2;
-  const progressPct = (step / totalSteps) * 100;
+  const firstName = displayName.trim().split(/\s+/)[0] || "viajante";
+  const cityLabel = originCity.trim() || "Sua cidade";
+  const countryLabel = country ? countryName(country) : "País a definir";
+  const canSubmit = displayName.trim() && originCity.trim() && country;
 
   return (
-    <div className={styles.wizard}>
-      <div
-        className={styles.progressTrack}
-        role="progressbar"
-        aria-valuenow={progressPct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`Passo ${step} de ${totalSteps}`}
-      >
-        <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
-      </div>
-      <p className={styles.progressLabel}>
-        Passo {step} de {totalSteps}
-      </p>
+    <div className={styles.layout}>
+      <form className={styles.formPanel} onSubmit={handleSubmit}>
+        <p className={styles.eyebrow}>
+          <span aria-hidden="true" /> Antes de embarcar
+        </p>
+        <h1>Defina sua origem-base</h1>
+        <p className={styles.sub}>
+          Toda rota que vocês traçarem parte daqui. É a única coisa que precisamos agora — dá pra
+          ajustar depois no perfil.
+        </p>
 
-      {step === 1 ? (
-        <form
-          className={styles.form}
-          onSubmit={(e) => {
-            e.preventDefault();
-            setStep(2);
-          }}
-        >
-          <label className={styles.field} htmlFor="display_name">
-            <span className={`mono ${styles.label}`}>Como podemos te chamar?</span>
+        <label className={styles.field} htmlFor="display_name">
+          <span>Como te chamamos?</span>
+          <input
+            id="display_name"
+            type="text"
+            name="display_name"
+            required
+            autoComplete="name"
+            className={styles.nameInput}
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
+            placeholder="Seu nome"
+          />
+        </label>
+
+        <div className={styles.originFields}>
+          <label className={styles.field} htmlFor="origin_city">
+            <span>Cidade de origem</span>
             <input
-              id="display_name"
+              id="origin_city"
               type="text"
-              name="display_name"
+              name="origin_city"
               required
-              autoComplete="name"
-              className={styles.input}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Seu nome"
+              autoComplete="address-level2"
+              value={originCity}
+              onChange={(event) => setOriginCity(event.target.value)}
+              placeholder="São Paulo"
             />
           </label>
-          <button type="submit" className={styles.primary} disabled={!displayName.trim()}>
-            Próximo →
-          </button>
-        </form>
-      ) : (
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <Combobox
-            label="País"
-            options={countryOptions}
-            value={country}
-            onChange={handleCountryChange}
-            inputValue={countryInput}
-            onInputChange={setCountryInput}
-            placeholder="Selecione o país"
-          />
-          <Combobox
-            label="Cidade de origem"
-            options={cityOptions}
-            value={originCity}
-            onChange={setOriginCity}
-            inputValue={cityInput}
-            onInputChange={setCityInput}
-            placeholder={country ? "Digite sua cidade" : "Escolha o país primeiro"}
-            disabled={!country}
-            escapeLabel="Minha cidade não está na lista — usar o que digitei"
-          />
-          {error ? (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
-          ) : null}
-          <div className={styles.actions}>
-            <button type="button" className={styles.secondary} onClick={() => setStep(1)}>
-              ← Voltar
-            </button>
-            <button
-              type="submit"
-              className={styles.primary}
-              disabled={pending || !country || !(originCity || cityInput.trim())}
+          <label className={styles.field} htmlFor="country">
+            <span>País</span>
+            <select
+              id="country"
+              name="country"
+              required
+              value={country}
+              onChange={(event) => setCountry(event.target.value)}
             >
-              Concluir
-            </button>
+              <option value="">Selecione</option>
+              {COUNTRIES.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <button type="submit" className={styles.primary} disabled={pending || !canSubmit}>
+          Concluir e embarcar →
+        </button>
+      </form>
+
+      <aside className={styles.preview} aria-label="Seu cartão de origem">
+        <p>Seu cartão de origem</p>
+        <div className={styles.originCard}>
+          <div className={styles.originKicker}>
+            <span aria-hidden="true" />
+            Origem · você
           </div>
-        </form>
-      )}
+          <strong>{cityLabel}</strong>
+          <span>{countryLabel}</span>
+        </div>
+        <p className={styles.previewNote}>
+          É assim que <span>{firstName}</span> vai aparecer como ponto de partida em cada viagem do
+          grupo.
+        </p>
+      </aside>
     </div>
   );
 }

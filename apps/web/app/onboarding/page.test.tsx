@@ -65,14 +65,14 @@ describe("/onboarding (gate + prefill)", () => {
     await expect(OnboardingPage()).rejects.toThrow("REDIRECT:/app");
   });
 
-  it("usuário novo vê o wizard no passo 1 com o nome pré-preenchido", async () => {
+  it("usuário novo vê a etapa única com o nome pré-preenchido", async () => {
     auth.mockResolvedValue({ user: { name: "Maria do Google" } });
     apiFetch.mockResolvedValue(meResponse({ needs_onboarding: true, profile: null }));
 
     render(await OnboardingPage());
 
-    // Passo 1: campo de nome pré-preenchido e botão "Próximo"
-    expect(screen.getByLabelText(/como podemos te chamar/i)).toHaveValue("Maria do Google");
-    expect(screen.getByRole("button", { name: /próximo/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/como te chamamos/i)).toHaveValue("Maria do Google");
+    expect(screen.getByLabelText(/cidade de origem/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /concluir e embarcar/i })).toBeInTheDocument();
   });
 });

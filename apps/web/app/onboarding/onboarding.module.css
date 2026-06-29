@@ -1,159 +1,382 @@
-/* Tela de onboarding (Noturno): wizard de 2 passos (Fase 2, #215). */
-
 .screen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: 48px var(--page-gutter);
+  background: var(--bg-root);
 }
 
-.card {
-  width: 100%;
-  max-width: 400px;
-  background: var(--surface);
-  border: var(--border-hairline) solid var(--line);
-  border-radius: 14px;
-  padding: 32px 28px;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 40px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-bright);
+  font-family: var(--font-display), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand span {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.headerMeta {
+  color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+}
+
+.layout {
+  width: 920px;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: 1.05fr 0.82fr;
+  gap: 42px;
+  align-items: center;
+}
+
+.formPanel {
+  min-width: 0;
 }
 
 .eyebrow {
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 18px;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
-  text-align: center;
-  margin: 0 0 10px;
 }
 
-.heading {
-  font-size: 26px;
-  margin: 0 0 4px;
-  text-align: center;
+.eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.formPanel h1 {
+  margin: 0;
+  color: var(--text-bright);
+  font-size: 42px;
+  letter-spacing: 0.02em;
+  line-height: 0.94;
 }
 
 .sub {
-  font-size: 14px;
+  max-width: 420px;
+  margin: 14px 0 30px;
   color: var(--text-muted);
-  text-align: center;
-  margin: 0 0 20px;
-}
-
-/* Wizard */
-
-.wizard {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.progressTrack {
-  height: 3px;
-  background: var(--fill-subtle);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: var(--radius-pill);
-  transition: width 0.3s ease;
-}
-
-.progressLabel {
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  text-align: center;
-  margin: 0;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: block;
+  margin-bottom: 18px;
 }
 
-.label {
-  font-size: 11px;
-  letter-spacing: 0.14em;
+.field span {
+  display: block;
+  margin-bottom: 9px;
   color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.input {
+.field input,
+.field select {
   width: 100%;
-  padding: 12px 14px;
-  font-size: 15px;
-  color: var(--text-bright);
-  background: var(--fill-subtle);
-  border: var(--border-hairline) solid var(--line);
+  padding: 13px 15px;
+  border: 1px solid var(--line-dashed);
   border-radius: var(--radius-btn);
+  outline: none;
+  background: var(--fill-subtle);
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 15px;
 }
 
-.input:focus {
-  outline: none;
+.field input:focus,
+.field select:focus {
   border-color: var(--accent);
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
+.nameInput {
+  padding: 14px 16px !important;
+  font-family: var(--font-display), sans-serif !important;
+  font-size: 22px !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.originFields {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .primary {
-  flex: 1;
-  padding: 12px 16px;
-  font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--bg-root);
-  background: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
   border: 0;
   border-radius: var(--radius-btn);
+  background: var(--accent);
+  color: var(--on-accent);
   cursor: pointer;
+  font-family: var(--font-display), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .primary:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-}
-
-.secondary {
-  padding: 12px 16px;
-  font-family: var(--font-display), "Saira Condensed", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  background: transparent;
-  border: var(--border-hairline) solid var(--line-strong);
-  border-radius: var(--radius-btn);
-  cursor: pointer;
-}
-
-.secondary:hover {
-  color: var(--text-body);
-  border-color: var(--line-muted);
+  opacity: 0.55;
 }
 
 .error {
-  margin: 0;
-  font-size: 13px;
+  margin: 0 0 14px;
   color: var(--accent-alert);
+  font-size: 13px;
+}
+
+.preview {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-inset);
+  background-image: radial-gradient(rgba(154, 167, 177, 0.16) 1px, transparent 1.6px);
+  background-size: 20px 20px;
+}
+
+.preview > p:first-child {
+  margin: 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.originCard {
+  margin-top: 22px;
+  padding: 22px 20px;
+  border: 1px solid var(--line);
+  border-left: var(--border-accent-edge) solid var(--accent);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.originKicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.originKicker span {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg-inset);
+}
+
+.originCard strong {
+  display: block;
+  color: var(--text-bright);
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.originCard > span {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.previewNote {
+  margin: 18px 0 0;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.previewNote span {
+  color: var(--text-body);
+}
+
+@media (max-width: 720px) {
+  .header {
+    padding: 40px 22px 0;
+    border-bottom: 0;
+  }
+
+  .brand {
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .brand span {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .headerMeta {
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+  }
+
+  .stage {
+    display: block;
+    padding: 28px 22px 26px;
+  }
+
+  .layout {
+    display: block;
+    width: 100%;
+  }
+
+  .eyebrow {
+    margin-bottom: 14px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+
+  .eyebrow span {
+    width: 5px;
+    height: 5px;
+  }
+
+  .formPanel h1 {
+    font-size: 30px;
+    line-height: 0.96;
+  }
+
+  .sub {
+    margin: 12px 0 24px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .field {
+    margin-bottom: 15px;
+  }
+
+  .field span {
+    margin-bottom: 8px;
+    font-size: 9.5px;
+  }
+
+  .nameInput {
+    padding: 13px 15px !important;
+    font-size: 19px !important;
+  }
+
+  .originFields {
+    grid-template-columns: 1fr 116px;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .field input,
+  .field select {
+    padding: 12px 13px;
+    font-size: 14px;
+  }
+
+  .preview {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .preview > p:first-child {
+    display: none;
+  }
+
+  .originCard {
+    margin: 0 0 22px;
+    padding: 18px;
+  }
+
+  .originKicker {
+    margin-bottom: 12px;
+    font-size: 9px;
+  }
+
+  .originKicker span {
+    width: 10px;
+    height: 10px;
+  }
+
+  .originCard strong {
+    font-size: 25px;
+  }
+
+  .originCard > span {
+    margin-top: 6px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .previewNote {
+    display: none;
+  }
+
+  .primary {
+    width: 100%;
+  }
 }
