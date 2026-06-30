@@ -1,14 +1,23 @@
-/* Trajetos + Pesquisa de translado — redesign Noturno. */
+/* Trajetos + Pesquisa de translado — redesign Noturno. Auditoria extra: o rótulo "Trajeto N de X" tinha largura fixa e quebrava antes da rota; o cabeçalho agora usa grid sem wrap, com elipse só no nome longo. */
 
 .legCard {
   overflow: hidden;
   border: var(--border-hairline) solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.legCard:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-bar);
 }
 
 .legHead {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
@@ -16,7 +25,7 @@
 }
 
 .legHead span {
-  width: 80px;
+  width: auto;
   flex-shrink: 0;
   color: var(--text-faint);
   font-family: var(--font-mono), "Spline Sans Mono", monospace;
@@ -24,18 +33,21 @@
   letter-spacing: 0.1em;
   line-height: 1.5;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .legHead strong {
   min-width: 0;
-  flex: 1;
+  overflow: hidden;
   color: var(--text-bright);
   font-family: var(--font-display), "Saira Condensed", sans-serif;
   font-size: 19px;
   font-weight: 600;
   letter-spacing: 0.03em;
   line-height: 1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .legHead em {
@@ -104,6 +116,16 @@
   letter-spacing: 0.04em;
   padding: 8px 14px;
   text-transform: uppercase;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.legFoot button:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .researchCard {
@@ -115,6 +137,13 @@
   border-radius: var(--radius-card);
   background: var(--surface);
   padding: 13px 15px;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.researchCard:hover {
+  border-color: var(--line-strong);
 }
 
 .researchPreferred {
@@ -138,7 +167,7 @@
   justify-content: center;
   flex-shrink: 0;
   border: var(--border-outline) solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--text-muted);
   font-family: var(--font-display), "Saira Condensed", sans-serif;
   font-size: 13px;
@@ -302,7 +331,7 @@
 .wizardEyebrow span {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--accent);
 }
 
@@ -666,7 +695,7 @@
   width: 18px;
   height: 18px;
   border: var(--border-hairline) solid var(--line);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--bg-root);
 }
 
@@ -827,25 +856,23 @@
 
 @media (max-width: 760px) {
   .legHead {
-    display: block;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 10px;
     padding: 14px 15px;
   }
 
   .legHead span {
-    display: inline-block;
     width: auto;
-    margin-bottom: 6px;
     font-size: 8.5px;
   }
 
   .legHead strong {
-    display: block;
     font-size: 17px;
   }
 
   .legHead em {
-    float: right;
-    margin-top: -2px;
+    grid-column: 1 / -1;
+    justify-self: start;
     font-size: 8px;
     padding: 3px 9px;
   }
@@ -1145,5 +1172,13 @@
   .primaryButton {
     flex: 1;
     padding: 11px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legCard,
+  .legFoot button,
+  .researchCard {
+    transition: none;
   }
 }

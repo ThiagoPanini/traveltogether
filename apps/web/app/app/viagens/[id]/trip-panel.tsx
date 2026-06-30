@@ -6,7 +6,6 @@ import { FareResearchTimeline } from "@/components/fare-research-timeline";
 import type { MemberRead, PendingInvitation, Trajeto, TripBackbone } from "@/lib/trips/backbone";
 import styles from "./panel.module.css";
 
-type TripTab = "trajetos" | "tripulacao";
 type ResearchSummary = { done: number; total: number };
 
 type TripPanelProps = {
@@ -17,7 +16,6 @@ type TripPanelProps = {
 
 /** Painel da Viagem do redesign: abas no topo, timeline como foco e tripulação no rail. */
 export function TripPanel({ trip, trajetos, departureLabel }: TripPanelProps) {
-  const [tab, setTab] = useState<TripTab>("trajetos");
   const [researchSummary, setResearchSummary] = useState<ResearchSummary>({
     done: 0,
     total: trajetos.length,
@@ -34,6 +32,9 @@ export function TripPanel({ trip, trajetos, departureLabel }: TripPanelProps) {
     [originCity, trip.stops],
   );
   const destination = routeParts.at(-1)?.label ?? "Destino";
+  const description =
+    trip.description?.trim() ||
+    "Sem descrição ainda — use este painel para alinhar paradas, trajetos e pesquisas do grupo.";
   const progressPct =
     researchSummary.total > 0
       ? `${Math.round((researchSummary.done / researchSummary.total) * 100)}%`
@@ -58,77 +59,66 @@ export function TripPanel({ trip, trajetos, departureLabel }: TripPanelProps) {
               {roleLabel} · partida {originCity}
             </span>
             <h1>{trip.name}</h1>
-            <p className={styles.routeLine}>
-              {routeParts.slice(0, -1).map((node) => (
-                <span key={node.key}>
-                  {node.label}
-                  <span aria-hidden="true"> → </span>
-                </span>
-              ))}
-              <span className={styles.destination}>{destination} ★</span>
-              <span aria-hidden="true"> · </span>
-              {routeParts.length} cidades · {trajetos.length} trajetos
-            </p>
+            <p className={styles.description}>{description}</p>
             {departureLabel ? <p className={styles.departure}>Parte {departureLabel}</p> : null}
-          </div>
-
-          <div className={styles.progressBox}>
-            <div>
-              <span>Translados pesquisados</span>
-              <strong>
-                {researchSummary.done}
-                <small> / {researchSummary.total}</small>
-              </strong>
-            </div>
-            <span className={styles.progressTrack} aria-hidden="true">
-              <span style={{ width: progressPct }} />
-            </span>
           </div>
         </div>
 
         <div className={styles.tabs}>
-          <button
-            type="button"
-            className={tab === "trajetos" ? styles.tabActive : ""}
-            aria-current={tab === "trajetos" ? "page" : undefined}
-            onClick={() => setTab("trajetos")}
-          >
+          <button type="button" className={styles.tabActive} aria-current="page">
             Trajetos
           </button>
-          <button
-            type="button"
-            className={tab === "tripulacao" ? styles.tabActive : ""}
-            aria-current={tab === "tripulacao" ? "page" : undefined}
-            onClick={() => setTab("tripulacao")}
+          <span
+            className={styles.tabSoon}
+            aria-disabled="true"
+            title="Roteiro chega em breve; por enquanto, o painel concentra paradas e pesquisas de translado."
           >
-            Tripulação
-          </button>
+            Roteiro <em>em breve</em>
+          </span>
           <span className={styles.soonTabs}>
-            Roteiro · Orçamento · Ingressos <em>em breve</em>
+            Orçamento · Ingressos <em>em breve</em>
           </span>
         </div>
       </header>
 
       <div className={styles.body}>
         <section className={styles.mainPane}>
-          {tab === "trajetos" ? (
-            <>
-              <div className={styles.sectionHead}>
-                <h2>A linha dos trajetos</h2>
-                <span>Pesquisas e preferidas · por pessoa</span>
+          <div className={styles.sectionHead}>
+            <div>
+              <h2>A linha dos trajetos</h2>
+              <span>Pesquisas e preferidas · por pessoa</span>
+            </div>
+            <div className={styles.progressBox}>
+              <div>
+                <span>Translados pesquisados</span>
+                <strong>
+                  {researchSummary.done}
+                  <small> / {researchSummary.total}</small>
+                </strong>
               </div>
-              <FareResearchTimeline
-                tripId={trip.id}
-                tripName={trip.name}
-                trajetos={trajetos}
-                currentUserInitials={me?.initials ?? "V"}
-                className={styles.timeline}
-                onSummaryChange={handleResearchSummary}
-              />
-            </>
-          ) : (
-            <CrewGrid members={trip.crew.members} pending={pending} />
-          )}
+              <span className={styles.progressTrack} aria-hidden="true">
+                <span style={{ width: progressPct }} />
+              </span>
+            </div>
+          </div>
+          <div className={styles.routeLine}>
+            <span className="sr-only">Rota da viagem:</span>
+            {routeParts.slice(0, -1).map((node) => (
+              <span key={node.key}>{node.label}</span>
+            ))}
+            <span className={styles.destination}>{destination}</span>
+            <small>
+              {routeParts.length} cidades · {trajetos.length} trajetos
+            </small>
+          </div>
+          <FareResearchTimeline
+            tripId={trip.id}
+            tripName={trip.name}
+            trajetos={trajetos}
+            currentUserInitials={me?.initials ?? "V"}
+            className={styles.timeline}
+            onSummaryChange={handleResearchSummary}
+          />
         </section>
 
         <aside className={styles.rail} aria-label="Tripulação">
@@ -160,49 +150,6 @@ export function TripPanel({ trip, trajetos, departureLabel }: TripPanelProps) {
         </aside>
       </div>
     </main>
-  );
-}
-
-function CrewGrid({ members, pending }: { members: MemberRead[]; pending: PendingInvitation[] }) {
-  return (
-    <>
-      <div className={styles.sectionHead}>
-        <h2>Tripulação a bordo</h2>
-        <span>Cada um decide a própria preferida</span>
-      </div>
-      <div className={styles.crewGrid}>
-        {members.map((member, index) => (
-          <CrewCard key={`${member.initials}-${member.role}-${index}`} member={member} />
-        ))}
-      </div>
-      {pending.map((invite) => (
-        <article className={styles.pendingCard} key={invite.id}>
-          <span>?</span>
-          <div>
-            <strong>{maskEmail(invite.email)}</strong>
-            <small>Convite enviado · aguardando aceite</small>
-          </div>
-          <em>Pendente</em>
-        </article>
-      ))}
-    </>
-  );
-}
-
-function CrewCard({ member }: { member: MemberRead }) {
-  const organizer = member.role === "organizer";
-  const name = member.display_name?.trim() || "Tripulante";
-  return (
-    <article className={styles.crewCard}>
-      <span className={organizer ? styles.avatarAccent : ""}>{member.initials}</span>
-      <div>
-        <strong>{member.is_me ? `${name} · você` : name}</strong>
-        <small>
-          {organizer ? "Organizadora" : "Membro"} ·{" "}
-          {member.is_me ? "Preferida em aberto" : "Sem preferida ainda"}
-        </small>
-      </div>
-    </article>
   );
 }
 

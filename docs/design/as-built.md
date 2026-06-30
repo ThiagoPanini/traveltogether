@@ -20,23 +20,27 @@ Fronteira: `apps/web/app/onboarding/page.tsx`, `onboarding-form.tsx` e `onboardi
 
 O formulário salva em `/api/profile`, renova a sessão com `update({ needsOnboarding: false })`, faz `router.refresh()` e navega para `/app`. O preview lateral mostra como a origem do Perfil aparecerá nas viagens; origem pertence ao Perfil, não à Viagem.
 
+## Shell autenticado (/app/**)
+
+Fronteira: `apps/web/app/app/layout.tsx`, `app-shell.tsx` e `app-shell.module.css`. Toda a área autenticada agora passa por um shell compartilhado: sidebar no desktop, barra inferior compacta no mobile, topbar de contexto, perfil, logout, contadores de Viagens/Convites e CTA único de **Nova viagem**. A sidebar é colapsável (expandida = ícone + rótulo; compacta = só ícone), persiste em `localStorage` e usa lucide-react para ícones consistentes com estados de foco/hover do Noturno.
+
 ## Painel de bordo (/app)
 
-Fronteira: `apps/web/app/app/page.tsx`, `pending-invitations.tsx`, `actions.ts` e `app.module.css`. A home autenticada segue o protótipo com sidebar fixa no desktop, barra inferior compacta no mobile, topbar de contexto, hero "Seu mapa está em movimento.", métricas de Viagens ativas, origem-base e papel, grade de Participações e rail de Convites.
+Fronteira: `apps/web/app/app/page.tsx`, `pending-invitations.tsx`, `actions.ts` e `app.module.css`. A home autenticada vive dentro do shell compartilhado e mantém hero "Seu mapa está em movimento.", métricas de Viagens ativas, origem-base e papel, grade de Participações e rail de Convites. Os CTAs duplicados saíram do hero/heading; criar Viagem fica no shell e no empty state quando não há nenhuma Viagem.
 
-O conteúdo vem de `GET /auth/me`, `GET /trips` e `GET /invitations`. Os cartões de Viagem mostram origem do Perfil → destino, nome, quantidade de Paradas e papel do usuário, e levam ao Painel da viagem. O empty state mantém a estética de painel de bordo e cria a primeira Viagem sem prometer dados inexistentes.
+O conteúdo vem de `GET /auth/me`, `GET /trips` e `GET /invitations`. Os cartões de Viagem mostram índice, papel, nome, destino em destaque, origem do Perfil → destino, quantidade de Paradas e affordance de abertura do Painel da viagem. O empty state mantém a estética de painel de bordo e cria a primeira Viagem sem prometer dados inexistentes.
 
 ## Nova viagem (/app/viagens/nova)
 
-Fronteira: `apps/web/app/app/viagens/nova/trip-wizard.tsx` e `wizard.module.css`. O wizard implementa os seis passos do protótipo: **Destino**, **Paradas**, **Translados**, **Nome**, **Tripulação** e **Resumo**. O layout tem header e stepper no desktop, cabeçalho compacto no mobile, rail de rota sempre visível quando há espaço e footer fixo com avanço/volta.
+Fronteira: `apps/web/app/app/viagens/nova/trip-wizard.tsx` e `wizard.module.css`. O wizard implementa os seis passos do protótipo: **Destino**, **Paradas**, **Translados**, **Nome**, **Tripulação** e **Resumo**. O layout roda dentro do shell autenticado, com header e stepper no desktop, cabeçalho compacto no mobile, rail de rota sempre visível quando há espaço e footer com avanço/volta.
 
 O rascunho continua salvo em `localStorage` até a confirmação. O passo Destino define a última Parada; Paradas adiciona cidades intermediárias; Translados registra propostas por Trajeto; Nome preserva o casing digitado; Tripulação adiciona convites e papel; Resumo confirma o payload via `/api/trips`, limpa o rascunho e navega para o Painel da viagem criada.
 
 ## Painel da viagem (/app/viagens/[id])
 
-Fronteira: `apps/web/app/app/viagens/[id]/page.tsx`, `trip-panel.tsx` e `panel.module.css`. O server component é fino: busca `GET /trips/{id}` via BFF, usa `notFound()` quando a API não autoriza ou não encontra, deriva os Trajetos e entrega o painel navegável para o client.
+Fronteira: `apps/web/app/app/viagens/[id]/page.tsx`, `trip-panel.tsx` e `panel.module.css`. O server component é fino: busca `GET /trips/{id}` via BFF, usa `notFound()` quando a API não autoriza ou não encontra, deriva os Trajetos e entrega o painel navegável para o client, já dentro do shell autenticado.
 
-O painel do redesign tem breadcrumb, herói com papel e origem, linha de rota, progresso de Pesquisas por Trajeto, abas superiores **Trajetos** e **Tripulação**, main pane e rail de Tripulação/nota. A volta-semente não aparece nesta versão visual; a timeline mostra os Trajetos do protótipo atual e evita o bottom switcher antigo.
+O painel do redesign tem breadcrumb, herói com papel, origem e descrição da Viagem, fita compacta de rota junto do corpo, progresso de Pesquisas por Trajeto integrado ao bloco de Trajetos, aba superior **Trajetos** ativa e aba **Roteiro** em estado visual de _em breve_ (indisponível, com tooltip). A Tripulação fica apenas no rail lateral com nota de bordo, evitando duplicar navegação. A volta-semente não aparece nesta versão visual; a timeline mostra os Trajetos do protótipo atual e evita o bottom switcher antigo.
 
 ## Pesquisa de translado
 
@@ -48,7 +52,7 @@ As Pesquisas ainda são protótipo funcional local: `loadFareResearches`/`saveFa
 
 ## Componentes e peças de suporte
 
-`OtpInput`, `Wordmark`, `TabChip`, `StatusPill`, `ProgressStrip`, `CrewRow`, `EmBreveCard`, `FareResearchTimeline` e `FareResearchWizard` continuam como peças reutilizáveis. Alguns componentes antigos de exploração visual, como `Reveal` e `ScrollLayers`, ainda podem existir no código, mas não compõem a landing redesenhada atual.
+`AppShell`, `OtpInput`, `Wordmark`, `TabChip`, `StatusPill`, `ProgressStrip`, `CrewRow`, `EmBreveCard`, `FareResearchTimeline` e `FareResearchWizard` continuam como peças reutilizáveis. Alguns componentes antigos de exploração visual, como `Reveal` e `ScrollLayers`, ainda podem existir no código, mas não compõem a landing redesenhada atual.
 
 `apps/web/app/tokens/page.tsx`, `apps/web/lib/design/tokens.ts`, `docs/design/tokens.json` e `apps/web/app/globals.css` seguem sincronizados como catálogo de tokens. Divergência entre esses arquivos é bug.
 

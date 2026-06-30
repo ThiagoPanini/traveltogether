@@ -58,15 +58,14 @@ describe("/app (painel de bordo)", () => {
     expect(cta).toHaveAttribute("href", "/app/viagens/nova");
   });
 
-  it("mostra o nome e a cidade de origem do perfil no header", async () => {
+  it("mostra o nome e a cidade de origem no resumo mobile", async () => {
     auth.mockResolvedValue({ user: { name: "Maria" } });
     mockApi({ profile: { display_name: "Maria Souza", origin_city: "Curitiba" } });
 
     render(await AppHome());
 
-    const menu = screen.getByRole("complementary", { name: /menu principal/i });
-    expect(within(menu).getByText("Maria Souza")).toBeInTheDocument();
-    expect(within(menu).getByText("Curitiba")).toBeInTheDocument();
+    expect(screen.getByText("Maria Souza")).toBeInTheDocument();
+    expect(screen.getAllByText("Curitiba").length).toBeGreaterThan(0);
   });
 
   it("exibe avatar com a inicial maiúscula do nome", async () => {
@@ -76,15 +75,6 @@ describe("/app (painel de bordo)", () => {
     render(await AppHome());
 
     expect(screen.getAllByText("M").length).toBeGreaterThan(0);
-  });
-
-  it("oferece a ação de sair (logout)", async () => {
-    auth.mockResolvedValue({ user: { name: "Maria" } });
-    mockApi({ profile: { display_name: "Maria", origin_city: null } });
-
-    render(await AppHome());
-
-    expect(screen.getByRole("button", { name: /sair/i })).toBeInTheDocument();
   });
 
   it("usa 'viajante' como fallback quando perfil e sessão não têm nome", async () => {

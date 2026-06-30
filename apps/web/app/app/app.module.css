@@ -1,3 +1,5 @@
+/* Auditoria extra: o painel tinha ritmo vertical frouxo, cards sem affordance de clique/foco e mistura de CTAs concorrentes. Mantemos CTA primário no shell e elevamos os cards como bilhetes de bordo navegáveis. */
+
 .screen {
   min-height: 100dvh;
   display: flex;
@@ -34,7 +36,7 @@
   align-items: center;
   justify-content: center;
   border: 1.5px solid var(--accent);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--accent);
   font-size: 12px;
 }
@@ -76,7 +78,7 @@
 }
 
 .navItemActive {
-  background: rgba(223, 106, 77, 0.1);
+  background: var(--fill-accent);
   color: var(--text-bright);
 }
 
@@ -86,7 +88,7 @@
 
 .inviteBadge {
   padding: 1px 7px;
-  border-radius: 99px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent) !important;
 }
@@ -125,7 +127,7 @@
   justify-content: center;
   flex-shrink: 0;
   border: 1.5px solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--text-bright);
   font-family: var(--font-display), sans-serif;
   font-size: 15px;
@@ -211,11 +213,14 @@
 .topbar p:last-child span {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--success);
 }
 
 .content {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
   padding: 34px 36px 44px;
 }
 
@@ -228,7 +233,9 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 36px;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: var(--border-hairline) solid var(--line);
 }
 
 .hero > div:first-child {
@@ -253,7 +260,7 @@
 }
 
 .hero p:not(.eyebrow) {
-  margin: 18px 0 24px;
+  margin: 18px 0 0;
   color: var(--text-muted);
   font-size: 15px;
   line-height: 1.55;
@@ -362,7 +369,7 @@
   letter-spacing: 0.02em;
 }
 
-.sectionHeading a {
+.sectionCount {
   color: var(--accent);
   font-family: var(--font-mono), monospace;
   font-size: 10px;
@@ -378,14 +385,54 @@
 }
 
 .tripCard {
+  position: relative;
   display: flex;
   min-height: 190px;
   flex-direction: column;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: 19px 20px 18px;
+  border: var(--border-hairline) solid var(--line);
+  border-left: var(--border-accent-edge) solid var(--line-muted);
+  border-radius: var(--radius-card);
   background: var(--surface);
   color: inherit;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+}
+
+.tripCard::after {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: 42px;
+  height: 2px;
+  border-radius: var(--radius-bar);
+  background: var(--line-muted);
+  content: "";
+  transition:
+    background 150ms ease,
+    width 150ms ease;
+}
+
+.tripCard:hover,
+.tripCard:focus-visible {
+  border-color: var(--line-strong);
+  border-left-color: var(--accent);
+  background: var(--surface-bar);
+  transform: translateY(-2px);
+}
+
+.tripCard:hover::after,
+.tripCard:focus-visible::after {
+  width: 58px;
+  background: var(--accent);
+}
+
+.tripCard:focus-visible {
+  outline: var(--border-outline) solid var(--accent);
+  outline-offset: 4px;
 }
 
 .tripTopline {
@@ -401,22 +448,51 @@
   text-transform: uppercase;
 }
 
-.tripTopline span:last-child {
+.tripRole {
   padding: 3px 9px;
-  border: 1px solid var(--line-strong);
-  border-radius: 99px;
-  color: var(--accent);
+  border: var(--border-hairline) solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
   font-size: 9px;
 }
 
+.tripRoleOrganizer {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
 .tripCard h3 {
-  margin: 0 0 8px;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 0 13px;
   color: var(--text-bright);
   font-size: 22px;
   letter-spacing: 0.02em;
 }
 
+.tripCard h3 span,
+.tripCard h3 small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tripCard h3 small {
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .tripRoute {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
   color: var(--text-muted);
   font-family: var(--font-mono), monospace;
   font-size: 9.5px;
@@ -425,8 +501,20 @@
   text-transform: uppercase;
 }
 
+.tripRoute span:not(:nth-child(2)) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tripRoute span:nth-child(2) {
+  color: var(--accent);
+}
+
 .tripProgress {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid var(--line);
@@ -437,6 +525,14 @@
   text-transform: uppercase;
 }
 
+.tripProgress span {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-circle);
+  background: var(--success);
+}
+
 .openTrip {
   margin-top: 12px;
   color: var(--accent);
@@ -444,6 +540,10 @@
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.openTrip::after {
+  content: " →";
 }
 
 .emptyBoard {
@@ -505,7 +605,7 @@
 
 .railTitle span {
   padding: 2px 8px;
-  border-radius: 99px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent);
   font-family: var(--font-mono), monospace;
@@ -541,7 +641,7 @@
   justify-content: center;
   flex-shrink: 0;
   border: 1.5px solid var(--warning);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--warning);
   font-family: var(--font-display), sans-serif;
   font-size: 12px;
@@ -702,7 +802,7 @@
   .mobileProfile > span span {
     width: 5px;
     height: 5px;
-    border-radius: 50%;
+    border-radius: var(--radius-circle);
     background: var(--success);
   }
 
@@ -848,8 +948,20 @@
   .mobileCreate > span {
     width: 26px;
     height: 26px;
-    border-radius: 50%;
+    border-radius: var(--radius-circle);
     background: var(--accent);
     color: var(--on-accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tripCard,
+  .tripCard::after {
+    transition: none;
+  }
+
+  .tripCard:hover,
+  .tripCard:focus-visible {
+    transform: none;
   }
 }

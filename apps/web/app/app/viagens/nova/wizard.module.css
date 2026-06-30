@@ -1,8 +1,10 @@
+/* Auditoria extra: o wizard usava `position: fixed` e apagava a navegação autenticada. Agora ele vive dentro do shell `/app/**`, preservando sidebar e barra mobile. */
+
 .screen {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
   display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 100%;
   flex-direction: column;
   background: var(--bg-root);
 }
@@ -83,7 +85,7 @@
   justify-content: center;
   flex-shrink: 0;
   border: 1.5px solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--text-faint);
   font-family: var(--font-display), sans-serif;
   font-size: 11px;
@@ -235,7 +237,10 @@
   padding: 26px 24px;
   border-left: 1px solid var(--line);
   background: var(--bg-inset);
-  background-image: radial-gradient(rgba(154, 167, 177, 0.13) 1px, transparent 1.6px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--text-muted) 13%, transparent) 1px,
+    transparent 1.6px
+  );
   background-size: 20px 20px;
 }
 
@@ -308,7 +313,7 @@
   z-index: 1;
   width: 13px;
   height: 13px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--text-faint);
 }
 
@@ -532,7 +537,7 @@
   align-items: center;
   justify-content: center;
   border: 1.5px solid var(--accent);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--accent);
   font-family: var(--font-display), sans-serif;
   font-size: 14px;
@@ -679,7 +684,7 @@
 
 @media (max-width: 760px) {
   .screen {
-    position: fixed;
+    min-height: 100dvh;
   }
 
   .header,

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -104,9 +104,11 @@ describe("Painel da viagem — redesign", () => {
     expect(screen.getByRole("link", { name: /painel de bordo/i })).toHaveAttribute("href", "/app");
     expect(screen.getByRole("heading", { level: 1, name: /costa leste/i })).toBeInTheDocument();
     expect(screen.getByText(/organizador · partida são paulo/i)).toBeInTheDocument();
-    expect(document.body.textContent).toMatch(
-      /São Paulo\s*→\s*Nova York\s*→\s*Boston\s*→\s*Portland/,
-    );
+    expect(screen.getByText("Subindo a costa sem pressa")).toBeInTheDocument();
+    expect(screen.getAllByText("São Paulo").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Nova York").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Boston").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Portland").length).toBeGreaterThan(0);
     expect(document.body.textContent).toMatch(/4\s*cidades\s*·\s*3\s*trajetos/);
     expect(screen.getByText("Translados pesquisados")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
@@ -126,17 +128,18 @@ describe("Painel da viagem — redesign", () => {
     expect(screen.queryByRole("navigation", { name: /vistas da viagem/i })).not.toBeInTheDocument();
   });
 
-  it("aba Tripulação mostra membros e convite pendente mascarado para organizador", async () => {
+  it("Roteiro fica em breve e o rail mostra tripulação sem duplicar aba", async () => {
     apiFetch.mockResolvedValue(ok(backbone));
     render(await ViagemPage(ctx("t1")));
 
-    fireEvent.click(screen.getByRole("button", { name: /tripulação/i }));
+    expect(screen.queryByRole("button", { name: /tripulação/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/roteiro/i)).toHaveAttribute("aria-disabled", "true");
 
-    expect(screen.getByRole("heading", { name: /tripulação a bordo/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/maria · você/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("João").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("an•••••@exemplo.com").length).toBeGreaterThan(0);
-    expect(screen.getByText(/convite enviado · aguardando aceite/i)).toBeInTheDocument();
+    const rail = screen.getByRole("complementary", { name: /tripulação/i });
+    expect(within(rail).getByText(/maria · você/i)).toBeInTheDocument();
+    expect(within(rail).getByText("João")).toBeInTheDocument();
+    expect(within(rail).getByText("an•••••@exemplo.com")).toBeInTheDocument();
+    expect(within(rail).getByText(/aguardando aceite/i)).toBeInTheDocument();
   });
 
   it("membro não vê convites pendentes mesmo se o payload trouxer", async () => {

@@ -1,0 +1,400 @@
+/* Auditoria extra: a navegação autenticada misturava glyphs, não persistia em `/app/**` e não tinha modo compacto. Este shell centraliza a linguagem Noturno, troca símbolos por lucide e salva o colapso localmente. */
+
+.shell {
+  display: flex;
+  min-height: 100dvh;
+  background: var(--bg-root);
+  color: var(--text-body);
+}
+
+.sidebar {
+  display: flex;
+  width: 244px;
+  flex-shrink: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: var(--border-hairline) solid var(--line);
+  background: var(--bg-canvas);
+  transition: width 180ms ease;
+}
+
+.collapsed .sidebar {
+  width: 76px;
+}
+
+.sidebarHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 14px 18px;
+}
+
+.brand {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-bright);
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brandMark,
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-circle);
+}
+
+.brandMark {
+  width: 30px;
+  height: 30px;
+  border: var(--border-outline) solid var(--accent);
+  color: var(--accent);
+}
+
+.brandText,
+.navLabel,
+.sidebarCta span,
+.profileText {
+  min-width: 0;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.toggle,
+.signout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.toggle {
+  width: 32px;
+  height: 32px;
+}
+
+.primaryNav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 12px;
+}
+
+.navItem {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 12px;
+  border: var(--border-hairline) solid transparent;
+  border-radius: var(--radius-btn);
+  color: var(--text-muted);
+  padding: 0 11px;
+}
+
+.collapsed .navItem {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.navItem svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.navLabel {
+  flex: 1;
+  overflow: hidden;
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.navCount {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  transition: opacity 160ms ease;
+}
+
+.navItem:hover,
+.navItem:focus-visible,
+.navItemActive {
+  border-color: var(--line-muted);
+  background: var(--fill-subtle);
+  color: var(--text-bright);
+}
+
+.navItem:hover svg,
+.navItem:focus-visible svg,
+.navItemActive svg {
+  color: var(--accent);
+}
+
+.inviteBadge {
+  min-width: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent) !important;
+  padding: 2px 7px;
+  text-align: center;
+}
+
+.sidebarCta {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 18px 16px 0;
+  border: var(--border-outline) solid transparent;
+  border-radius: var(--radius-btn);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.collapsed .sidebarCta {
+  margin-inline: 16px;
+}
+
+.sidebarCtaActive {
+  box-shadow: inset 0 0 0 var(--border-outline) var(--on-accent);
+}
+
+.profileCard {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  margin: auto 12px 0;
+  padding: 16px 4px 22px;
+  border-top: var(--border-hairline) solid var(--line);
+}
+
+.collapsed .profileCard {
+  justify-content: center;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border: var(--border-outline) solid var(--line-strong);
+  color: var(--text-bright);
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 15px;
+}
+
+.profileText {
+  flex: 1;
+  line-height: 1.2;
+}
+
+.profileName,
+.profileMeta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileName {
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.profileMeta {
+  color: var(--text-faint);
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.signout {
+  width: 30px;
+  height: 30px;
+}
+
+.collapsed .brandText,
+.collapsed .navLabel,
+.collapsed .sidebarCta span,
+.collapsed .profileText,
+.collapsed .navCount {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-6px);
+}
+
+.collapsed .signout {
+  display: none;
+}
+
+.toggle:hover,
+.toggle:focus-visible,
+.signout:hover,
+.signout:focus-visible {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  outline: none;
+}
+
+.toggle:focus-visible,
+.signout:focus-visible,
+.sidebarCta:focus-visible,
+.navItem:focus-visible,
+.mobileTabs a:focus-visible {
+  outline: var(--border-outline) solid var(--accent);
+  outline-offset: 3px;
+}
+
+.workspace {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: var(--border-hairline) solid var(--line);
+  padding: 18px 36px;
+}
+
+.topbar p {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.topbar strong {
+  color: var(--text-body);
+  font-weight: 500;
+}
+
+.topbar p:last-child {
+  color: var(--text-muted);
+}
+
+.topbar p:last-child span {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: var(--success);
+}
+
+.workspaceContent {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.mobileTabs {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    display: block;
+    padding-bottom: 74px;
+  }
+
+  .sidebar,
+  .topbar {
+    display: none;
+  }
+
+  .workspace,
+  .workspaceContent {
+    display: block;
+    overflow: visible;
+  }
+
+  .mobileTabs {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    border-top: var(--border-hairline) solid var(--line);
+    background: var(--surface-bar);
+    box-shadow: var(--shadow-switcher);
+    padding: 9px 8px 12px;
+  }
+
+  .mobileTabs a {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border-radius: var(--radius-btn);
+    color: var(--text-faint);
+    font-family: var(--font-mono), "Spline Sans Mono", monospace;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    padding: 5px;
+    text-transform: uppercase;
+  }
+
+  .mobileTabs a[aria-current="page"] {
+    color: var(--accent);
+  }
+
+  .mobileCreate svg {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-circle);
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .brandText,
+  .navLabel,
+  .sidebarCta span,
+  .profileText {
+    transition: none;
+  }
+}

@@ -1,6 +1,10 @@
+/* Auditoria extra: a rota competia com a descrição, o progresso ficava longe dos Trajetos e a aba de Tripulação duplicava o rail. O painel agora prioriza descrição, rota compacta e Roteiro indisponível. */
+
 .screen {
   display: flex;
-  min-height: 100dvh;
+  flex: 1;
+  min-width: 0;
+  min-height: 100%;
   flex-direction: column;
   background: var(--bg-root);
   color: var(--text-body);
@@ -64,7 +68,7 @@
 .eyebrow span {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--accent);
 }
 
@@ -76,18 +80,52 @@
   line-height: 0.92;
 }
 
-.routeLine {
+.description {
+  max-width: 720px;
   margin: 0;
-  font-family: var(--font-mono), "Spline Sans Mono", monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  line-height: 1.55;
-  text-transform: uppercase;
   color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.routeLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--bg-inset);
+  padding: 12px 14px;
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.routeLine span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.routeLine span:not(:last-of-type)::after {
+  color: var(--line-faint);
+  content: "→";
 }
 
 .destination {
   color: var(--accent);
+}
+
+.routeLine small {
+  margin-left: auto;
+  color: var(--text-faintest);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
 }
 
 .departure {
@@ -100,9 +138,12 @@
 }
 
 .progressBox {
-  width: 230px;
+  width: 260px;
   flex-shrink: 0;
-  padding-bottom: 4px;
+  border: var(--border-hairline) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--bg-inset);
+  padding: 13px 14px;
 }
 
 .progressBox div {
@@ -150,11 +191,10 @@
 .tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .tabs button {
-  margin-right: 14px;
   padding: 10px 4px 13px;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -165,6 +205,31 @@
   font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.tabSoon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid transparent;
+  padding: 10px 4px 13px;
+  color: var(--text-faintest);
+  font-family: var(--font-display), "Saira Condensed", sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: help;
+}
+
+.tabSoon em {
+  border: var(--border-hairline) dashed var(--line-dashed);
+  border-radius: var(--radius-pill);
+  color: var(--text-faint);
+  font-family: var(--font-mono), "Spline Sans Mono", monospace;
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
 }
 
 .tabs button:hover,
@@ -218,6 +283,10 @@
   margin-bottom: 18px;
 }
 
+.sectionHead > div:first-child {
+  min-width: 0;
+}
+
 .sectionHead h2 {
   margin: 0;
   color: var(--text-bright);
@@ -225,7 +294,7 @@
   letter-spacing: 0.02em;
 }
 
-.sectionHead span {
+.sectionHead > div:first-child > span {
   font-family: var(--font-mono), "Spline Sans Mono", monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
@@ -299,7 +368,7 @@
   justify-content: center;
   flex-shrink: 0;
   border: var(--border-outline) solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--text-muted);
   font-family: var(--font-display), "Saira Condensed", sans-serif;
   font-size: 13px;
@@ -468,10 +537,10 @@
     font-size: 27px;
   }
 
-  .routeLine {
+  .description {
     margin-bottom: 14px;
-    font-size: 9px;
-    letter-spacing: 0.05em;
+    font-size: 13.5px;
+    line-height: 1.5;
   }
 
   .departure {
@@ -503,11 +572,22 @@
 
   .tabs button {
     flex-shrink: 0;
-    margin: 0;
     padding: 7px 15px;
     border: var(--border-hairline) solid var(--line);
     border-radius: var(--radius-pill);
     font-size: 12px;
+  }
+
+  .tabSoon {
+    flex-shrink: 0;
+    border: var(--border-hairline) dashed var(--line-dashed);
+    border-radius: var(--radius-pill);
+    padding: 7px 13px;
+    font-size: 12px;
+  }
+
+  .tabSoon em {
+    display: none;
   }
 
   .tabActive {
@@ -539,7 +619,32 @@
   }
 
   .sectionHead {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .sectionHead > div:first-child {
     display: none;
+  }
+
+  .routeLine {
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 10px 11px;
+    font-size: 8px;
+  }
+
+  .routeLine small {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 2px;
+  }
+
+  .routeLine span {
+    max-width: 42%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .timeline {
